@@ -26,6 +26,7 @@ it does not belong in Common.
 | `azazel_common.audit` | JSONL writer, trace-id generator, config-hash helper, HMAC helper, (future) chain-of-custody helper | Standardizes the *envelope* audit events are written in. The content and triggering of an audit event stays product-owned. |
 | `azazel_common.api` | token-auth helper, role helper (viewer/operator/responder/admin), fail-closed default response, standard JSON error model | Security posture conventions, not endpoint logic. Framework-neutral; Flask/FastAPI adapters are separate optional modules. |
 | `azazel_common.notify` | notification event schema, thin ntfy/Mattermost send helpers, SSE bridge model | Payload shape and transport plumbing only. No product-specific copy, tone, or UI. |
+| `azazel_common.view` | `StatusView` display view-model + `build_status_view` helper | A shared *data contract* for what a status surface shows, plus one shared builder that derives it. It is the shape a display *reads*, not a renderer — standardizing it lets Edge and Gadget render the same status the same way without moving any product's UI into Common. Edge-lineage but a generalized superset (Gadget-only fields ride in `product_view`), so Gadget is never narrowed to "Edge minus features." |
 | `azazel_common.testing` | shared fixtures and contract test cases | Lets each product's CI assert it still satisfies the shared contract, without depending on another product's test suite. |
 
 Everything in this list is chosen because it is safe to be wrong about in
@@ -44,8 +45,28 @@ or arbitration decision.
 | Azazel-Gadget's USB gadget control | Gadget-hardware-specific; Edge has no USB gadget role. |
 | nft / tc / OpenCanary execution | Execution adapters differ by network topology and deployment target; a shared executor would either be too generic to be useful or would silently encode one product's assumptions into the others. |
 | AI Assist (as a decision subject) | Each product's safety boundary around AI-assisted suggestions differs; Common must never let AI Assist output be treated as authoritative across products. |
-| Web UI | UI is inherently product-specific (Edge dashboard vs. Gadget portable UX vs. CTI console). |
-| E-Paper rendering | Device/screen-specific; not a contract concern. |
+| Web UI **rendering** (templates, widgets, routes, CSS) | The rendered UI is product-specific (Edge dashboard vs. Gadget portable UX vs. CTI console). Only the *view-model* it reads (`azazel_common.view`, §2) is shared; the rendering stays product-side. |
+| E-Paper **rendering** | Device/screen-specific drawing stays product-side. The *status data* a panel shows comes from the shared `StatusView`; turning that data into pixels does not. |
+
+### 3.1 The view-model boundary (in) vs. the renderer (out)
+
+Sharing display was originally excluded wholesale. It is now split along the
+one line that keeps the First Principle intact: **the view-model is a shared
+contract; the renderer is product behavior.**
+
+- **In Common:** `StatusView` — the normalized data a status surface shows
+  (mode, posture, headline, reasons, next actions, current action, health
+  dimensions, evidence), plus `build_status_view`, the single shared function
+  that derives it. Two products calling one builder is exactly the "shared
+  mechanism, not just a shared shape" that makes Common worth having.
+- **Never in Common:** how those fields become a Web page, a TUI, or an
+  E-Paper frame. Each product owns its renderer, its layout, its device
+  quirks, and its copy.
+- **Superset, not subset:** `StatusView` takes Edge's more mature status model
+  as its base *vocabulary*, but every Gadget-only field (`DECEPTION` posture,
+  `scapegoat` decoy state, canary-delay telemetry) is preserved via
+  `product_view`. "Edge-based" means Edge-lineage, not Edge-only — §4.4 still
+  holds.
 
 ## 4. Safety boundaries that must hold across every phase
 

@@ -11,16 +11,18 @@ engine, Gadget's device control — stays in its own repository.
 
 ## Status
 
-**`v0.1.0` — schema-only.** The `azazel_common` package now ships the shared
-schema and the CTI advisory contract, per
-[`docs/migration-plan.md`](docs/migration-plan.md) Phase 1. The
-`paths`/`audit`/`api`/`notify` helpers are later phases and are not present
-yet. No existing Azazel product depends on this package yet.
+**`v0.2.0` — schema + shared status view-model.** `azazel_common` ships the
+shared schema and CTI advisory contract (`v0.1.0`), plus `azazel_common.view` —
+the shared `StatusView` view-model and `build_status_view` builder that let
+Edge and Gadget present the same status the same way. Common owns the
+view-model; each product keeps its own renderer (see
+[`docs/design-principles.md`](docs/design-principles.md) §3.1). The
+`paths`/`audit`/`api`/`notify` helpers are later phases and are not present yet.
 
 ## Install
 
 ```bash
-pip install "azazel-common @ git+https://github.com/01rabbit/Azazel-Common.git@v0.1.0"
+pip install "azazel-common @ git+https://github.com/01rabbit/Azazel-Common.git@v0.2.0"
 ```
 
 Consumers pin an exact tag, never a branch (see
@@ -29,6 +31,7 @@ Consumers pin an exact tag, never a branch (see
 ```python
 from azazel_common.schema import StateSnapshot, DecisionExplanation
 from azazel_common.cti_contracts import CtiContextResponse
+from azazel_common.view import StatusView, build_status_view
 ```
 
 ## Versioning

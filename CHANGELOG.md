@@ -7,6 +7,34 @@ exact tag (see `docs/migration-plan.md`).
 
 ## [Unreleased]
 
+## [0.2.0] — shared status view-model
+
+Adds `azazel_common.view`, the first shared *mechanism* beyond passive schemas:
+a status view-model both Edge and Gadget derive and render from, so the two
+products present the same status the same way. Common owns the view-model; each
+product keeps its own renderer (see `docs/design-principles.md` §3.1).
+
+### Added
+
+- `azazel_common.view.StatusView` — the normalized data a status surface reads
+  (mode, posture, headline, reasons, operator wording, current action, next
+  actions, health dimensions, evidence), plus `HealthDimension`.
+- `azazel_common.view.build_status_view` — the single shared builder both
+  products call, with shared `derive_posture` / `derive_headline` logic and a
+  `from_state_snapshot` convenience path.
+- Edge-lineage but a **generalized superset**: every product-specific field
+  rides in `StatusView.product_view`, so Gadget-only concepts (`deception`
+  posture, `scapegoat` decoy state, canary telemetry) are never dropped;
+  `posture` and `HealthDimension.status` are open enums.
+- Unit tests for shared posture/headline derivation and superset preservation.
+
+### Changed
+
+- Charter update: `docs/design-principles.md` (§2, new §3.1) and
+  `docs/architecture.md` now allow a shared display *view-model* in Common
+  while keeping the *renderer* (Web/TUI/E-Paper) product-side. The
+  sibling-not-subset invariant (§4.4) is preserved.
+
 ## [0.1.0] — schema-only / contract-only
 
 First release. Ships the shared schema and the CTI advisory contract only, per
@@ -30,5 +58,6 @@ execution logic, no product integration.
 - `pyproject.toml` (Pydantic-only runtime dependency; `flask`/`fastapi`/`test`
   optional extras) and GitHub Actions CI running the test suite.
 
-[Unreleased]: https://github.com/01rabbit/Azazel-Common/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/01rabbit/Azazel-Common/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/01rabbit/Azazel-Common/releases/tag/v0.2.0
 [0.1.0]: https://github.com/01rabbit/Azazel-Common/releases/tag/v0.1.0
