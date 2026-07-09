@@ -57,6 +57,10 @@ Azazel-Common/
 │       │   ├── model.py            # shared notification event schema
 │       │   ├── ntfy.py             # thin ntfy send helper
 │       │   └── mattermost.py       # thin Mattermost send helper
+│       ├── view/                    # v0.2.0 — shared status view-model
+│       │   ├── __init__.py
+│       │   ├── status.py            # StatusView, HealthDimension (Edge-lineage superset)
+│       │   └── build.py             # build_status_view helper (shared derivation)
 │       └── testing/
 │           ├── __init__.py
 │           ├── fixtures.py         # shared pytest fixtures for consumer contract tests

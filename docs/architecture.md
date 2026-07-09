@@ -114,6 +114,9 @@ Common holds representation, not behavior:
   framework-neutral by default),
 - shared **notification payload models** and thin send helpers (ntfy,
   Mattermost, SSE bridge shape) — not product-specific message copy or UI,
+- a shared **status view-model** (`StatusView` + `build_status_view`) — the
+  normalized data a status surface reads, so Edge and Gadget can present the
+  same status the same way; the renderer (Web/TUI/E-Paper) stays product-side,
 - the **CTI advisory contract** (Edge/Gadget → CTI ingestion shapes, CTI →
   Edge/Gadget advisory response shape).
 
@@ -125,9 +128,11 @@ See `design-principles.md` for the full in/out list and rationale, and
 Common is not where Edge's Action Arbiter, NOC/SOC Evaluators, CTI's
 Correlation Engine or Behavioral CTI Generator, Gadget's Wi-Fi/USB control,
 nft/tc/OpenCanary execution, AI Assist, or any product's UI/E-Paper
-rendering live. These stay in their owning repository. See
-`design-principles.md` §2 for the full exclusion list and the reasoning
-behind each entry.
+*rendering* live. These stay in their owning repository. Note the boundary
+added for the shared status view-model: Common owns the *view-model* (the
+data a display reads) but never the *renderer* that turns it into a page,
+screen, or panel — see `design-principles.md` §3.1. See `design-principles.md`
+§2–§3 for the full exclusion list and the reasoning behind each entry.
 
 ## 6. Relationship to this task
 
