@@ -19,6 +19,17 @@ view-model; each product keeps its own renderer (see
 [`docs/design-principles.md`](docs/design-principles.md) §3.1). The
 `paths`/`audit`/`api`/`notify` helpers are later phases and are not present yet.
 
+## Consumer status
+
+| Product | Status |
+|---|---|
+| Azazel-Gadget (AZ-02) | Shipping — pins `v0.2.0`, emits and reads back `StatusView` (`/api/state` `status_view` key) |
+| Azazel-Edge (AZ-01) | Design stage — adapter plan doc in the Edge repository, no code or dependency pin yet |
+| Azazel-CTI | Not adopted — gated on Azazel-CTI's dependency-minimality policy (stdlib + PyYAML + idna + PyNaCl core; no `pydantic`), pending a `pyproject.toml`/ADR decision on that side |
+
+See `docs/migration-plan.md` for the phase-by-phase detail behind this
+table.
+
 ## Install
 
 ```bash

@@ -1,8 +1,27 @@
 # Azazel-Common: Migration Plan
 
-Status: **Design proposal only. No package code has been written and no
-existing Azazel product repository (Edge, Gadget, CTI) has been modified
-as part of this task.**
+Status: **In progress, out of the originally planned order.** Phases 0 and
+1 are done and tagged. Phase 4 (Gadget) is effectively done — ahead of
+Phases 2/3 — because Gadget adopted `azazel_common.view` in `v0.2.0` before
+either Edge or CTI integrated the package at all. See the status table
+below; the phase write-ups further down are kept as originally written for
+their scope/non-goals, with a status line added to each.
+
+### Status by phase
+
+| Phase | What | Status |
+|---|---|---|
+| 0 | Design only | **Done** — design docs in this repo |
+| 1 | Bootstrap package, schema-only | **Done** — `v0.1.0` tagged (`schema` + `cti_contracts`) |
+| 2 | Introduce into Azazel-CTI | **Not started** — gated on a dependency-policy exception; Azazel-CTI's core dependency set (stdlib + PyYAML + idna + PyNaCl) excludes `pydantic` today, so adoption needs a `pyproject.toml` change plus an ADR and owner decision on the CTI side before any code lands |
+| 3 | Introduce into Azazel-Edge | **Plan-doc stage only** — `docs/AZAZEL_COMMON_EDGE_ADAPTER_PLAN.md` in the `Azazel-Edge` repository (dated 2026-07-09, the Issue 5 deliverable) proposes emit-alongside adapters for `DecisionExplanation`/`TrustCapsule`/`AuditEvent`; no code, no dependency pin yet. That plan explicitly defers real Edge↔CTI integration (and therefore real `cti_contracts` usage on the Edge side) to FY2027+ |
+| 4 | Introduce into Azazel-Gadget | **Effectively done, ahead of order** — Azazel-Gadget pins `azazel-common @ git+...@v0.2.0` in `requirements.txt`, emits `StatusView` alongside its own snapshot (`py/azazel_gadget/common_view.py`), reads it back (`control_plane.py`), and surfaces it via its web API (`/api/state`, `status_view` key) using the `product_view={"gadget_snapshot": ...}` superset pattern. Note this happened via the `view` module (`v0.2.0`), which was not part of this phase's original scope (`StateSnapshot`/`ModeState`/`ActionIntent`/`AuditEvent`/notify) — the phase's *intent* (Gadget as a real Common consumer) is satisfied, but not via the exact schema list originally planned, and it landed before Phases 2/3 |
+| 5 | path / auth / notify helper consolidation | **Not started** |
+| 6 | Future tools | **Not started** |
+
+This is an honest deviation from the plan's original sequencing (Phase 4
+before Phase 2/3), not a silent one — flagged here per this repository's
+own change-safety expectations.
 
 ## Guiding constraint
 
@@ -15,6 +34,8 @@ migration speed at every phase.
 
 ## Phase 0 — Design only (this task)
 
+**Status: Done.**
+
 Deliverables: the six documents in `docs/` in this repository
 (`architecture.md`, `design-principles.md`, `contracts.md`,
 `migration-plan.md`, `repository-layout.md`, `issue-breakdown.md`). No
@@ -24,6 +45,9 @@ repository.
 Exit condition: design reviewed and approved by the repository owner.
 
 ## Phase 1 — Bootstrap `Azazel-Common` package, schema-only
+
+**Status: Done.** `v0.1.0` tagged; `schema` and `cti_contracts` shipped
+exactly as scoped below.
 
 Add the `src/azazel_common` package to this repository per
 `repository-layout.md`. First release is `v0.1.0` and contains **only**:
@@ -44,6 +68,10 @@ it yet.
 
 ## Phase 2 — Introduce into Azazel-CTI
 
+**Status: Not started.** Blocked on a dependency-policy exception on the
+CTI side (see status table above) — this phase's description below is
+still the intended approach once that gate clears.
+
 Azazel-CTI adopts `azazel_common.cti_contracts` for payload *validation*
 on `/v1/events`, `/v1/flows`, `/v1/reactions`, `/v1/context`.
 
@@ -60,6 +88,12 @@ CI; no observed behavior change for existing callers; existing CTI test
 suite still passes unmodified.
 
 ## Phase 3 — Introduce into Azazel-Edge
+
+**Status: Plan-doc stage.** `AZAZEL_COMMON_EDGE_ADAPTER_PLAN.md` in the
+`Azazel-Edge` repository (2026-07-09, Issue 5's deliverable) covers this
+phase's scope as a plan; no code or dependency pin yet, and the plan defers
+Edge↔CTI integration to FY2027+. The description below is that plan's
+target, not yet implemented.
 
 Edge adopts Common schemas for:
 
@@ -82,6 +116,13 @@ checks before merge.
 
 ## Phase 4 — Introduce into Azazel-Gadget
 
+**Status: Effectively done, ahead of order (v0.2.0).** Gadget shipped a
+real integration via `azazel_common.view.StatusView` (emit-alongside its
+snapshot, plus readback and web-API surfacing) before Phases 2/3 started —
+see the status table above. That satisfies this phase's intent (a real
+Gadget consumer) but via `view`, not the exact schema list below, which
+was the original, not-yet-realized plan for this phase:
+
 Gadget adopts Common schemas for `StateSnapshot`, `ModeState`,
 `ActionIntent`, `AuditEvent`, and notification payloads.
 
@@ -95,6 +136,8 @@ against Common schemas in CI; Gadget's existing hardware-control code
 paths untouched.
 
 ## Phase 5 — path / auth / notify helper consolidation
+
+**Status: Not started.**
 
 Once Phase 2–4 prove the schema layer is stable in production-adjacent
 use, extract the genuinely duplicated helpers:
@@ -114,6 +157,8 @@ at least two of {Edge, Gadget, CTI} in favor of the Common helper, with
 contract tests passing.
 
 ## Phase 6 — Future tools
+
+**Status: Not started.**
 
 `Azazel-Boot` and any new Azazel-series tool depend on `Azazel-Common`
 from their first commit, rather than inventing their own state/audit/CTI

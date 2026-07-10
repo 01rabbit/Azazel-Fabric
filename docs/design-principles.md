@@ -1,6 +1,9 @@
 # Azazel-Common: Design Principles
 
-Status: **Design proposal only.**
+Status: **Governing charter for shipped code (`v0.2.0`).** §2/§3.1 reflect
+the `schema`/`cti_contracts`/`view` modules as actually implemented and
+released; the `paths`/`api`/`notify`/`testing` rows in §2 are still design
+proposal — not yet built (see `migration-plan.md` Phase 5).
 
 ## 1. First principle
 

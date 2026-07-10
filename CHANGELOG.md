@@ -7,6 +7,17 @@ exact tag (see `docs/migration-plan.md`).
 
 ## [Unreleased]
 
+### Documentation
+
+- Synced the six `docs/` design documents with shipped reality: they
+  previously still read as a frozen Phase-0 "design proposal only, no
+  implementation code has been written" snapshot despite `v0.1.0`/`v0.2.0`
+  having shipped real, CI-tested code. Added accurate status headers,
+  per-module/per-phase status lines, a consumer-status table in
+  `README.md` (Gadget shipping, Edge plan-stage, CTI not adopted), and an
+  honest note in `migration-plan.md` that Phase 4 (Gadget) landed ahead of
+  Phases 2/3. No code, dependency, or test changes.
+
 ## [0.2.0] — shared status view-model
 
 Adds `azazel_common.view`, the first shared *mechanism* beyond passive schemas:

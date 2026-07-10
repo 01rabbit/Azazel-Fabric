@@ -1,7 +1,13 @@
 # Azazel-Common: Architecture and Series Positioning
 
-Status: **Design proposal only. No implementation started. No changes to
-existing repositories.**
+Status: **Shipped, `v0.2.0`.** `azazel_common.schema` and
+`azazel_common.cti_contracts` shipped in `v0.1.0`; `azazel_common.view`
+(the shared `StatusView` view-model) shipped in `v0.2.0`. CI runs the test
+suite on 3.10/3.11/3.12 and releases are tag-driven. `paths`/`audit`/`api`/
+`notify` remain design proposal only (not yet implemented). See
+`CHANGELOG.md` and `migration-plan.md` for the phase-by-phase status,
+including per-consumer adoption (Gadget has integrated; Edge has a plan
+doc; CTI has not started — `migration-plan.md` "Status by phase").
 
 ## 1. What Azazel-Common is
 
@@ -137,11 +143,20 @@ screen, or panel — see `design-principles.md` §3.1. See `design-principles.md
 ## 6. Relationship to this task
 
 This document, together with `design-principles.md`, `contracts.md`,
-`migration-plan.md`, `repository-layout.md`, and `issue-breakdown.md`, is
-the complete deliverable for this design task. This repository
-(`01rabbit/Azazel-Common`) currently holds these design documents only —
-no implementation code has been written, and no existing Azazel product
-repository (Edge, Gadget, CTI) has been modified. Package bootstrap
-(`v0.1.0`, schema-only) and any integration into other repositories are
-follow-up actions gated on review of this design; see `migration-plan.md`
-and `issue-breakdown.md` for the proposed sequence.
+`migration-plan.md`, `repository-layout.md`, and `issue-breakdown.md`, was
+the complete deliverable for the original design task (Phase 0). That
+design has since shipped: this repository (`01rabbit/Azazel-Common`) now
+holds real, tested, released code — `azazel_common.schema` and
+`azazel_common.cti_contracts` (`v0.1.0`), plus `azazel_common.view`
+(`v0.2.0`) — under CI on 3.10/3.11/3.12, alongside these design documents.
+Adoption by other Azazel product repositories has started, out of the
+order this document originally anticipated: Azazel-Gadget is the first
+real consumer (pins `v0.2.0`, emits and reads back `StatusView`), ahead of
+Edge or CTI integration. Azazel-Edge has an adapter *plan* document
+(`AZAZEL_COMMON_EDGE_ADAPTER_PLAN.md` in the Edge repository) but no code
+or dependency pin yet. Azazel-CTI has not adopted Common at all — doing so
+requires a dependency-policy exception (Common's runtime dependency is
+`pydantic`; Azazel-CTI's core is stdlib + PyYAML + idna + PyNaCl only) plus
+an ADR on the CTI side. See `migration-plan.md` for the phase-by-phase
+status and `issue-breakdown.md` for how the originally proposed issues map
+onto what has actually happened.

@@ -1,7 +1,13 @@
 # Azazel-Common: Issue Breakdown
 
-Status: **Design proposal only. These are proposed GitHub issues to be
-filed after this design is reviewed — none have been created yet.**
+Status: **Proposed at design time; work has proceeded without these being
+filed as tracked GitHub issues in this repository.** Issues 1 and 2's
+deliverables shipped (this design record, plus `v0.1.0`). Issue 5's
+deliverable exists as a document in the `Azazel-Edge` repository
+(`AZAZEL_COMMON_EDGE_ADAPTER_PLAN.md`, 2026-07-09) rather than as a
+tracked GitHub issue here — see its note below. Issues 3, 4, 6, 7, 8 remain
+unstarted. The numbering and content below are kept as originally proposed
+(not renumbered or rewritten) — this status note is the only change.
 
 Each issue below states target repository, goal, deliverables, explicit
 non-goals, and the acceptance condition that closes it. Ordering follows
@@ -64,6 +70,13 @@ alongside it.
 introduced payload-shape drift in a test branch is caught by the job.
 
 ## Issue 5 — Prepare Azazel-Edge adapter plan for common decision and audit schemas
+
+**Status: deliverable exists.** `Azazel-Edge`'s
+`docs/AZAZEL_COMMON_EDGE_ADAPTER_PLAN.md` (dated 2026-07-09) is this
+issue's plan-note deliverable, covering `DecisionExplanation`/
+`TrustCapsule`/`AuditEvent` emit-alongside adapters. It was written as a
+repository doc rather than a filed GitHub issue, and it explicitly defers
+real Edge↔CTI integration to FY2027+; no adapter code has landed yet.
 
 **Repository:** `Azazel-Edge`.
 **Goal:** Concrete adapter plan (not yet the adapter itself, unless the

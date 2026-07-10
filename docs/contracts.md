@@ -1,14 +1,22 @@
 # Azazel-Common: Contracts
 
-Status: **Design proposal only. Field lists below are a starting proposal
-for `v0.1.0` and are expected to be refined during Issue 2/3 review, not
-frozen by this document.**
+Status: **Mixed — see per-section status lines.** §1 (`azazel_common.schema`)
+and §2 (`azazel_common.cti_contracts`) SHIPPED in `v0.1.0`; §2's
+advisory-only invariants and the `view.StatusView` model referenced
+alongside them SHIPPED in `v0.2.0` (see `CHANGELOG.md`). §3–§5
+(`api`/`notify`/`paths`) remain **design proposal / not frozen** — no
+implementation exists yet, and field lists there are still illustrative,
+not final signatures.
 
-All schemas are proposed as Pydantic v2 models under `azazel_common.schema`
-and `azazel_common.cti_contracts`. Field types below are illustrative, not
-final signatures.
+Schemas in §1/§2 are implemented as Pydantic v2 models under
+`azazel_common.schema` and `azazel_common.cti_contracts`; consult the
+source and `tests/` for exact, current field signatures — the tables below
+are a readable reference, not the authoritative schema.
 
 ## 1. State / mode / action contracts (`azazel_common.schema`)
+
+**Status: SHIPPED (`v0.1.0`).** No consumer has adopted `StateSnapshot`
+end-to-end yet — see `migration-plan.md` for per-product adoption status.
 
 ### `StateSnapshot`
 
@@ -93,7 +101,21 @@ Standard JSONL audit-log record shape.
 | `hmac` | str | |
 | `issued_at` | str (ISO 8601) | |
 
+Note: `azazel_common.view` (`StatusView`, `build_status_view`) shipped in
+`v0.2.0` alongside this schema layer; it is not tabulated in this document
+— see `design-principles.md` §3.1 and the CHANGELOG for its shape.
+
 ## 2. CTI contract (`azazel_common.cti_contracts`)
+
+**Status: SHIPPED (`v0.1.0`), advisory-only invariants hardened in
+`v0.2.0`.** Despite shipping, this remains, as described below, "the
+highest-priority contract" with **no adopting consumer on either side
+today**: Azazel-CTI has not adopted `cti_contracts` (blocked on its
+dependency-minimality constraint — see `migration-plan.md` Phase 2), and
+Azazel-Edge's adoption is still at the plan-document stage (Phase 3), which
+itself defers real Edge↔CTI integration to FY2027+. This is a known gap,
+not a regression — the schema shipping ahead of any consumer wiring it in
+was Common's own choice to keep `v0.1.0` small and reviewable.
 
 This is the highest-priority contract in the initial release: it is the
 only place where two *different* repositories (Edge/Gadget and CTI) must
@@ -175,7 +197,9 @@ alongside the schema wherever it is implemented:
 
 ## 3. API / auth contracts (`azazel_common.api`)
 
-Not full endpoint specs — just the shared vocabulary:
+**Status: design proposal / not frozen.** Not yet implemented — no
+`azazel_common.api` module exists (Phase 5). Not full endpoint specs —
+just the shared vocabulary:
 
 | concept | shape |
 |---|---|
@@ -185,6 +209,8 @@ Not full endpoint specs — just the shared vocabulary:
 | error shape | `{"error": {"code": str, "message": str, "trace_id": str | None}}` |
 
 ## 4. Notification contract (`azazel_common.notify`)
+
+**Status: design proposal / not frozen.** Not yet implemented (Phase 5).
 
 | field | type | notes |
 |---|---|---|
@@ -200,6 +226,8 @@ Transport-specific adapters (ntfy, Mattermost, SSE) consume this shape;
 they do not define their own competing payload shape.
 
 ## 5. Path contract (`azazel_common.paths`)
+
+**Status: design proposal / not frozen.** Not yet implemented (Phase 5).
 
 | concept | convention |
 |---|---|
