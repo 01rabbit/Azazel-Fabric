@@ -1,10 +1,14 @@
-# Azazel-Fabric Contract (formerly Azazel-Common)
+# AZ-05 Azazel-Fabric - Shared Contracts and Interoperability Foundation
+
+> **Codename:** `COVENANT`
 
 Shared contracts and interoperability foundation for the Azazel System.
 
-> Series designation **AZ-05**, ratified 2026-07-10. Development codename:
-> **Covenant** — the binding agreement the series' products sign (used for
-> changelogs and release names, never in formal external naming).
+> Formal series name **Azazel-Fabric Contract** (**AZ-05**), ratified
+> 2026-07-10; formerly **Azazel-Common**. The codename `COVENANT` follows the
+> series convention (Edge: `SENTINEL`, Gadget: `TACMOD`): the binding
+> agreement the series' products sign — used for changelogs and release
+> names, never formal external naming.
 
 Thin, shared contract package for the Azazel series (`Azazel-Edge`,
 `Azazel-Gadget`, `Azazel-Knowledge`, and future tools such as `Azazel-Boot`).
