@@ -42,7 +42,7 @@ view-model; each product keeps its own renderer (see
 | Product | Status |
 |---|---|
 | Azazel-Gadget (AZ-02) | Shipping — currently pins `v0.2.0` under the old `azazel-common` name, emits and reads back `StatusView` (`/api/state` `status_view` key). Migration path: bump the pin to `v0.3.0` and switch imports to `azazel_fabric` |
-| Azazel-Edge (AZ-01) | Shipping (PR under review, 2026-07-10) — commit-pinned `azazel-fabric`; emits `DecisionExplanation`/`TrustCapsule`/`AuditEvent` projections plus `StatusView` (`/api/state` `status_view` key). The series' largest Fabric consumer |
+| Azazel-Edge (AZ-01) | Shipping (merged 2026-07-10, Azazel-Edge#309) — commit-pinned `azazel-fabric`; emits `DecisionExplanation`/`TrustCapsule`/`AuditEvent` projections plus `StatusView` (`/api/state` `status_view` key). The series' largest Fabric consumer |
 | Azazel-Knowledge (AZ-04, formerly Azazel-CTI) | Not adopted — gated on Azazel-Knowledge's dependency-minimality policy (stdlib + PyYAML + idna + PyNaCl core; no `pydantic`), pending a `pyproject.toml`/ADR decision on that side |
 
 See `docs/migration-plan.md` for the phase-by-phase detail behind this

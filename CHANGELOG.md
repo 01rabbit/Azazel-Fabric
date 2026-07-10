@@ -10,7 +10,7 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ### Documentation
 
-- Consumer-status sync: Azazel-Edge implemented Phase 3 (2026-07-10) —
+- Consumer-status sync: Azazel-Edge implemented Phase 3 (2026-07-10, Azazel-Edge#309) —
   emit-alongside `DecisionExplanation`/`TrustCapsule`/`AuditEvent`
   projections plus a `StatusView` emit/read-back, making Edge the series'
   largest Fabric consumer. Migration-plan Phase 3 status updated.

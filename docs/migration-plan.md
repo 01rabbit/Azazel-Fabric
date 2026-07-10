@@ -18,7 +18,7 @@ scope/non-goals, with a status line added to each.
 | 0 | Design only | **Done** — design docs in this repo |
 | 1 | Bootstrap package, schema-only | **Done** — `v0.1.0` tagged (`schema` + `cti_contracts`) |
 | 2 | Introduce into Azazel-Knowledge | **Not started** — gated on a dependency-policy exception; Azazel-Knowledge's core dependency set (stdlib + PyYAML + idna + PyNaCl) excludes `pydantic` today, so adoption needs a `pyproject.toml` change plus an ADR and owner decision on the Knowledge side before any code lands |
-| 3 | Introduce into Azazel-Edge | **Implemented (2026-07-10, PR under review)** — Edge pins `azazel-fabric` (commit-pinned until the `v0.3.0` tag is published) and ships emit-alongside projections for `DecisionExplanation` / `TrustCapsule` / `AuditEvent` per its adapter plan §3, plus a `StatusView` emit + `/api/state` read-back beyond the original scope — making Edge the series' largest Fabric consumer. Edge↔Knowledge integration (real `cti_contracts` use) remains FY2027+ |
+| 3 | Introduce into Azazel-Edge | **Implemented & merged (2026-07-10, Azazel-Edge#309)** — Edge pins `azazel-fabric` (commit-pinned until the `v0.3.0` tag is published) and ships emit-alongside projections for `DecisionExplanation` / `TrustCapsule` / `AuditEvent` per its adapter plan §3, plus a `StatusView` emit + `/api/state` read-back beyond the original scope — making Edge the series' largest Fabric consumer. Edge↔Knowledge integration (real `cti_contracts` use) remains FY2027+ |
 | 4 | Introduce into Azazel-Gadget | **Effectively done, ahead of order, migration to `v0.3.0` pending** — Azazel-Gadget currently pins `azazel-common @ git+...@v0.2.0` (the old distribution name) in `requirements.txt`, emits `StatusView` alongside its own snapshot (`py/azazel_gadget/common_view.py`), reads it back (`control_plane.py`), and surfaces it via its web API (`/api/state`, `status_view` key) using the `product_view={"gadget_snapshot": ...}` superset pattern. Note this happened via the `view` module (`v0.2.0`), which was not part of this phase's original scope (`StateSnapshot`/`ModeState`/`ActionIntent`/`AuditEvent`/notify) — the phase's *intent* (Gadget as a real Fabric consumer) is satisfied, but not via the exact schema list originally planned, and it landed before Phases 2/3. Gadget's migration to the `v0.3.0` `azazel-fabric`/`azazel_fabric` names is a follow-up, not yet done |
 | 5 | path / auth / notify helper consolidation | **Not started** |
 | 6 | Future tools | **Not started** |
@@ -105,7 +105,7 @@ test suite still passes unmodified.
 
 ## Phase 3 — Introduce into Azazel-Edge
 
-**Status: Implemented (2026-07-10, PR under review).** Edge ships the three
+**Status: Implemented & merged (2026-07-10, Azazel-Edge#309).** Edge ships the three
 emit-alongside adapters plus a `StatusView` emit/read-back extension; the
 description below is the original plan target, now realized (CTI-side usage
 still FY2027+).
