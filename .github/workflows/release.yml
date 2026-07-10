@@ -2,7 +2,7 @@ name: Release
 
 # Tag-driven version management. Pushing a `vX.Y.Z` tag validates that the tag
 # matches the packaged version, runs the test suite, and cuts a GitHub Release.
-# This keeps the source of truth (src/azazel_covenant/version.py) and the GitHub
+# This keeps the source of truth (src/azazel_fabric/version.py) and the GitHub
 # Release in lockstep — see docs/migration-plan.md "Versioning and consumption
 # policy".
 
@@ -30,7 +30,7 @@ jobs:
       - name: Verify tag matches package version
         run: |
           tag="${GITHUB_REF_NAME#v}"
-          pkg="$(python -c 'import azazel_covenant; print(azazel_covenant.__version__)')"
+          pkg="$(python -c 'import azazel_fabric; print(azazel_fabric.__version__)')"
           echo "tag=$tag package=$pkg"
           if [ "$tag" != "$pkg" ]; then
             echo "::error::Tag v$tag does not match package version $pkg"

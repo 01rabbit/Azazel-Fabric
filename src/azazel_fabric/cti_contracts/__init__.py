@@ -6,18 +6,18 @@ boundary. Fixing the *shape* of advice does not grant CTI authority over
 Edge/Gadget — the response is advisory only. See design-principles.md §4.2.
 """
 
-from azazel_covenant.cti_contracts.advisory import (
+from azazel_fabric.cti_contracts.advisory import (
     BANNED_DIRECTIVE_FIELDS,
     BehavioralCtiBlock,
     assert_advisory_only,
     is_advisory_only,
 )
-from azazel_covenant.cti_contracts.context import (
+from azazel_fabric.cti_contracts.context import (
     CtiContextRequest,
     CtiContextResponse,
     IocMatch,
 )
-from azazel_covenant.cti_contracts.ingest import (
+from azazel_fabric.cti_contracts.ingest import (
     CtiEventBatch,
     CtiFlowBatch,
     CtiReactionBatch,

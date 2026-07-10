@@ -6,7 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from azazel_covenant.schema.mode import ModeState
+from azazel_fabric.schema.mode import ModeState
 
 # Known products. Open enum: future tools (e.g. "boot") may emit snapshots,
 # so the field type stays `str`. See architecture.md §1 and design-principles

@@ -17,11 +17,11 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from azazel_covenant.cti_contracts.advisory import (
+from azazel_fabric.cti_contracts.advisory import (
     BehavioralCtiBlock,
     assert_advisory_only,
 )
-from azazel_covenant.cti_contracts.ingest import SourceProduct
+from azazel_fabric.cti_contracts.ingest import SourceProduct
 
 
 class CtiContextRequest(BaseModel):

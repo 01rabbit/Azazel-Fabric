@@ -25,8 +25,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from azazel_covenant.schema.action import ActionIntent
-from azazel_covenant.schema.mode import ModeState
+from azazel_fabric.schema.action import ActionIntent
+from azazel_fabric.schema.mode import ModeState
 
 # Known overall-posture words. Open enum: products may use additional values,
 # so the field type stays `str`. `deception` is Gadget-specific and is a first

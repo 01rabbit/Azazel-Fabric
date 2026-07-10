@@ -1,7 +1,7 @@
-# Azazel-Covenant (formerly Azazel-Common): Contracts
+# Azazel-Fabric (formerly Azazel-Common): Contracts
 
-Status: **Mixed — see per-section status lines.** §1 (`azazel_covenant.schema`)
-and §2 (`azazel_covenant.cti_contracts`) SHIPPED in `v0.1.0`; §2's
+Status: **Mixed — see per-section status lines.** §1 (`azazel_fabric.schema`)
+and §2 (`azazel_fabric.cti_contracts`) SHIPPED in `v0.1.0`; §2's
 advisory-only invariants and the `view.StatusView` model referenced
 alongside them SHIPPED in `v0.2.0` (see `CHANGELOG.md`). §3–§5
 (`api`/`notify`/`paths`) remain **design proposal / not frozen** — no
@@ -9,11 +9,11 @@ implementation exists yet, and field lists there are still illustrative,
 not final signatures.
 
 Schemas in §1/§2 are implemented as Pydantic v2 models under
-`azazel_covenant.schema` and `azazel_covenant.cti_contracts`; consult the
+`azazel_fabric.schema` and `azazel_fabric.cti_contracts`; consult the
 source and `tests/` for exact, current field signatures — the tables below
 are a readable reference, not the authoritative schema.
 
-## 1. State / mode / action contracts (`azazel_covenant.schema`)
+## 1. State / mode / action contracts (`azazel_fabric.schema`)
 
 **Status: SHIPPED (`v0.1.0`).** No consumer has adopted `StateSnapshot`
 end-to-end yet — see `migration-plan.md` for per-product adoption status.
@@ -44,7 +44,7 @@ render "what is the system doing right now."
 
 Describes an *intended* action shape — not an executor, not a command to
 nft/tc/OpenCanary. See `architecture.md` §4 and `migration-plan.md` for why
-execution stays out of Covenant.
+execution stays out of Fabric.
 
 | field | type | notes |
 |---|---|---|
@@ -101,40 +101,40 @@ Standard JSONL audit-log record shape.
 | `hmac` | str | |
 | `issued_at` | str (ISO 8601) | |
 
-Note: `azazel_covenant.view` (`StatusView`, `build_status_view`) shipped in
+Note: `azazel_fabric.view` (`StatusView`, `build_status_view`) shipped in
 `v0.2.0` alongside this schema layer; it is not tabulated in this document
 — see `design-principles.md` §3.1 and the CHANGELOG for its shape.
 
-## 2. CTI contract (`azazel_covenant.cti_contracts`)
+## 2. CTI contract (`azazel_fabric.cti_contracts`)
 
 **Status: SHIPPED (`v0.1.0`), advisory-only invariants hardened in
 `v0.2.0`.** Despite shipping, this remains, as described below, "the
 highest-priority contract" with **no adopting consumer on either side
-today**: Azazel-Grimoire has not adopted `cti_contracts` (blocked on its
+today**: Azazel-Knowledge has not adopted `cti_contracts` (blocked on its
 dependency-minimality constraint — see `migration-plan.md` Phase 2), and
 Azazel-Edge's adoption is still at the plan-document stage (Phase 3), which
-itself defers real Edge↔Grimoire integration to FY2027+. This is a known
+itself defers real Edge↔Knowledge integration to FY2027+. This is a known
 gap, not a regression — the schema shipping ahead of any consumer wiring it
-in was Covenant's own choice to keep `v0.1.0` small and reviewable.
+in was Fabric's own choice to keep `v0.1.0` small and reviewable.
 
 This is the highest-priority contract in the initial release: it is the
-only place where two *different* repositories (Edge/Gadget and Grimoire)
+only place where two *different* repositories (Edge/Gadget and Knowledge)
 must agree on wire format across a network boundary today.
 
 ### Direction and endpoints
 
 | Direction | Endpoint | Payload schema |
 |---|---|---|
-| Edge/Gadget → Grimoire | `POST /v1/events` | `CtiEventBatch` |
-| Edge/Gadget → Grimoire | `POST /v1/flows` | `CtiFlowBatch` |
-| Edge/Gadget → Grimoire | `POST /v1/reactions` | `CtiReactionBatch` |
-| Edge/Gadget → Grimoire | `POST /v1/context` | `CtiContextRequest` |
-| Grimoire → Edge/Gadget | response to `/v1/context` | `CtiContextResponse` |
+| Edge/Gadget → Knowledge | `POST /v1/events` | `CtiEventBatch` |
+| Edge/Gadget → Knowledge | `POST /v1/flows` | `CtiFlowBatch` |
+| Edge/Gadget → Knowledge | `POST /v1/reactions` | `CtiReactionBatch` |
+| Edge/Gadget → Knowledge | `POST /v1/context` | `CtiContextRequest` |
+| Knowledge → Edge/Gadget | response to `/v1/context` | `CtiContextResponse` |
 
 ### `CtiEventBatch` / `CtiFlowBatch` / `CtiReactionBatch`
 
 Common envelope shape (exact per-event field lists to be finalized against
-current Azazel-Grimoire API during Issue 3, without breaking its existing
+current Azazel-Knowledge API during Issue 3, without breaking its existing
 consumers):
 
 | field | type | notes |
@@ -188,17 +188,17 @@ and must be rejected in review if proposed later.
 This is a behavioral contract, not just a schema, and must be documented
 alongside the schema wherever it is implemented:
 
-- A Grimoire response that fails validation, times out, or is unreachable
+- A Knowledge response that fails validation, times out, or is unreachable
   **must** be treated by the caller as "no advisory context available,"
   and must **not** raise an exception that halts the calling product's own
   decision path.
 - `CtiContextResponse.behavioral_cti` being absent is a normal, expected
   state, not an error state.
 
-## 3. API / auth contracts (`azazel_covenant.api`)
+## 3. API / auth contracts (`azazel_fabric.api`)
 
 **Status: design proposal / not frozen.** Not yet implemented — no
-`azazel_covenant.api` module exists (Phase 5). Not full endpoint specs —
+`azazel_fabric.api` module exists (Phase 5). Not full endpoint specs —
 just the shared vocabulary:
 
 | concept | shape |
@@ -208,7 +208,7 @@ just the shared vocabulary:
 | default posture | fail-closed: missing/invalid credentials → reject, never default-allow |
 | error shape | `{"error": {"code": str, "message": str, "trace_id": str | None}}` |
 
-## 4. Notification contract (`azazel_covenant.notify`)
+## 4. Notification contract (`azazel_fabric.notify`)
 
 **Status: design proposal / not frozen.** Not yet implemented (Phase 5).
 
@@ -225,7 +225,7 @@ just the shared vocabulary:
 Transport-specific adapters (ntfy, Mattermost, SSE) consume this shape;
 they do not define their own competing payload shape.
 
-## 5. Path contract (`azazel_covenant.paths`)
+## 5. Path contract (`azazel_fabric.paths`)
 
 **Status: design proposal / not frozen.** Not yet implemented (Phase 5).
 

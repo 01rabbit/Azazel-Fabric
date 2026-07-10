@@ -6,13 +6,13 @@ present the same status the same way. Common owns the view-model; each product
 keeps its own renderer (see `docs/design-principles.md` §3.1).
 """
 
-from azazel_covenant.view.build import (
+from azazel_fabric.view.build import (
     build_status_view,
     derive_headline,
     derive_posture,
     from_state_snapshot,
 )
-from azazel_covenant.view.status import (
+from azazel_fabric.view.status import (
     KNOWN_HEALTH_STATUSES,
     KNOWN_POSTURES,
     HealthDimension,

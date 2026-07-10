@@ -1,9 +1,9 @@
-# Azazel-Covenant (formerly Azazel-Common): Repository and Package Layout
+# Azazel-Fabric (formerly Azazel-Common): Repository and Package Layout
 
-Status: **Partially implemented.** `src/azazel_covenant/schema/`,
+Status: **Partially implemented.** `src/azazel_fabric/schema/`,
 `cti_contracts/`, and `view/` exist on disk exactly as laid out below and
 shipped in `v0.1.0`/`v0.2.0` (under the `azazel_common` import path at the
-time; `v0.3.0` renamed the package to `azazel_covenant` with no change to
+time; `v0.3.0` renamed the package to `azazel_fabric` with no change to
 this layout — see `CHANGELOG.md`). `paths/`, `audit/`, `api/`, `notify/`,
 and `testing/` remain proposal only — not yet scaffolded, per the Phase-5
 note below.
@@ -11,7 +11,7 @@ note below.
 ## Repository name
 
 ```
-01rabbit/Azazel-Covenant
+01rabbit/Azazel-Fabric
 ```
 
 (Not `Azazel-Core` — see `architecture.md` §1 and `design-principles.md`
@@ -20,13 +20,13 @@ note below.
 ## Repository layout
 
 ```
-Azazel-Covenant/
+Azazel-Fabric/
 ├── README.md
 ├── LICENSE
 ├── pyproject.toml
 ├── CHANGELOG.md
 ├── src/
-│   └── azazel_covenant/
+│   └── azazel_fabric/
 │       ├── __init__.py
 │       ├── version.py
 │       ├── schema/
@@ -96,7 +96,7 @@ Notes:
   `test_schema_state.py`, `test_schema_decision.py`,
   `test_schema_records.py`, `test_cti_contracts.py`, and
   `test_view_status.py`.
-- `azazel_covenant.paths`, `.audit`, `.api`, `.notify`, and `.testing`
+- `azazel_fabric.paths`, `.audit`, `.api`, `.notify`, and `.testing`
   directories are shown now for completeness of the target layout, but
   remain **not scaffolded** — they are added when their phase starts (see
   `migration-plan.md` Phase 5), so released code has no dead code.
@@ -110,7 +110,7 @@ Notes:
 
 ```toml
 [project]
-name = "azazel-covenant"
+name = "azazel-fabric"
 version = "0.1.0"
 description = "Shared contracts for the Azazel series (schema, CTI advisory contract, audit/path/api/notify helpers)"
 requires-python = ">=3.10"
@@ -135,8 +135,8 @@ consistent with the Raspberry Pi weight constraint in
 ## Consumption pattern from a product repository
 
 ```toml
-# in Azazel-Edge / Azazel-Gadget / Azazel-Grimoire's own requirements
-azazel-covenant @ git+https://github.com/01rabbit/Azazel-Covenant.git@v0.3.0
+# in Azazel-Edge / Azazel-Gadget / Azazel-Knowledge's own requirements
+azazel-fabric @ git+https://github.com/01rabbit/Azazel-Fabric.git@v0.3.0
 ```
 
 Tag-pinned, not branch-pinned, not a submodule (see

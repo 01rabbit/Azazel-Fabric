@@ -13,7 +13,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from azazel_covenant.schema.evidence import EvidenceRef
+from azazel_fabric.schema.evidence import EvidenceRef
 
 ActionKind = Literal[
     "observe",
