@@ -1,6 +1,6 @@
 """Tests for StateSnapshot / ModeState construction and round-trip."""
 
-from azazel_common.schema import ModeState, StateSnapshot
+from azazel_covenant.schema import ModeState, StateSnapshot
 
 
 def _snapshot() -> StateSnapshot:

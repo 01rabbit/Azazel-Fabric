@@ -1,6 +1,6 @@
 """Tests for AuditEvent, TrustCapsule, and EvidenceRef round-trips."""
 
-from azazel_common.schema import AuditEvent, EvidenceRef, TrustCapsule
+from azazel_covenant.schema import AuditEvent, EvidenceRef, TrustCapsule
 
 
 def test_audit_event_round_trip():

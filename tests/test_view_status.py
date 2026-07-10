@@ -7,8 +7,8 @@ to an Edge subset).
 
 import pytest
 
-from azazel_common.schema import ActionIntent, ModeState, StateSnapshot
-from azazel_common.view import (
+from azazel_covenant.schema import ActionIntent, ModeState, StateSnapshot
+from azazel_covenant.view import (
     HealthDimension,
     StatusView,
     build_status_view,

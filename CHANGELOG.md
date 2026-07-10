@@ -1,11 +1,27 @@
 # Changelog
 
-All notable changes to Azazel-Common are recorded here. The project follows
-[Semantic Versioning](https://semver.org/). Each release corresponds to a
-`vX.Y.Z` tag and GitHub Release on `01rabbit/Azazel-Common`; consumers pin an
-exact tag (see `docs/migration-plan.md`).
+All notable changes to Azazel-Covenant (formerly Azazel-Common) are recorded
+here. The project follows [Semantic Versioning](https://semver.org/). Each
+release corresponds to a `vX.Y.Z` tag and GitHub Release on
+`01rabbit/Azazel-Covenant`; consumers pin an exact tag (see
+`docs/migration-plan.md`).
 
 ## [Unreleased]
+
+## [0.3.0] — renamed to Azazel-Covenant
+
+**BREAKING:**
+
+- Distribution name changed: `azazel-common` → `azazel-covenant`.
+- Import namespace changed: `azazel_common` → `azazel_covenant`.
+- Repository renamed: `01rabbit/Azazel-Common` → `01rabbit/Azazel-Covenant`
+  (old repository URLs redirect).
+
+`v0.1.0` and `v0.2.0` tags remain installable under the old
+`azazel-common`/`azazel_common` names — pinning those tags is unaffected.
+Consumers (currently Azazel-Gadget, which pins `v0.2.0`) migrate by bumping
+their pin to `v0.3.0` and switching their imports from `azazel_common` to
+`azazel_covenant`; no schema or behavior changes accompany the rename.
 
 ### Documentation
 
@@ -69,6 +85,7 @@ execution logic, no product integration.
 - `pyproject.toml` (Pydantic-only runtime dependency; `flask`/`fastapi`/`test`
   optional extras) and GitHub Actions CI running the test suite.
 
-[Unreleased]: https://github.com/01rabbit/Azazel-Common/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/01rabbit/Azazel-Common/releases/tag/v0.2.0
-[0.1.0]: https://github.com/01rabbit/Azazel-Common/releases/tag/v0.1.0
+[Unreleased]: https://github.com/01rabbit/Azazel-Covenant/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/01rabbit/Azazel-Covenant/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/01rabbit/Azazel-Covenant/releases/tag/v0.2.0
+[0.1.0]: https://github.com/01rabbit/Azazel-Covenant/releases/tag/v0.1.0

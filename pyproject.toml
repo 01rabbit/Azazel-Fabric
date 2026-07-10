@@ -1,5 +1,5 @@
 [project]
-name = "azazel-common"
+name = "azazel-covenant"
 dynamic = ["version"]
 description = "Shared contracts for the Azazel series (schema, CTI advisory contract, audit/path/api/notify helpers)"
 readme = "README.md"
@@ -16,7 +16,7 @@ fastapi = ["fastapi>=0.100"]
 test = ["pytest>=7"]
 
 [project.urls]
-Homepage = "https://github.com/01rabbit/Azazel-Common"
+Homepage = "https://github.com/01rabbit/Azazel-Covenant"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
@@ -26,7 +26,7 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.setuptools.dynamic]
-version = { attr = "azazel_common.version.__version__" }
+version = { attr = "azazel_covenant.version.__version__" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

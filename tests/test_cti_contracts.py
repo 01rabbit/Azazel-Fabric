@@ -8,7 +8,7 @@ explicitly here.
 import pytest
 from pydantic import ValidationError
 
-from azazel_common.cti_contracts import (
+from azazel_covenant.cti_contracts import (
     BANNED_DIRECTIVE_FIELDS,
     BehavioralCtiBlock,
     CtiContextRequest,

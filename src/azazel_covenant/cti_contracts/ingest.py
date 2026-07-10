@@ -3,7 +3,7 @@
 `CtiEventBatch`, `CtiFlowBatch`, and `CtiReactionBatch` share one envelope
 shape. The per-item field lists are intentionally left as `list[dict]` in
 v0.1.0: the product-typed sub-schema is layered on during Issue 3 against the
-real Azazel-CTI API, without breaking its existing consumers (see
+real Azazel-Grimoire API, without breaking its existing consumers (see
 contracts.md §2).
 """
 

@@ -11,10 +11,10 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
 
-from azazel_common.schema.action import ActionIntent
-from azazel_common.schema.mode import ModeState
-from azazel_common.schema.state import StateSnapshot
-from azazel_common.view.status import HealthDimension, StatusView
+from azazel_covenant.schema.action import ActionIntent
+from azazel_covenant.schema.mode import ModeState
+from azazel_covenant.schema.state import StateSnapshot
+from azazel_covenant.view.status import HealthDimension, StatusView
 
 # Maps a raw state/stage/mode word (lower-cased) to a shared posture. Both Edge
 # (NORMAL/DEGRADED/CONTAIN/DECEPTION) and Gadget (same FSM stages) feed this, so

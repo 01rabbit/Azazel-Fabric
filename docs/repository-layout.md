@@ -1,30 +1,32 @@
-# Azazel-Common: Repository and Package Layout
+# Azazel-Covenant (formerly Azazel-Common): Repository and Package Layout
 
-Status: **Partially implemented.** `src/azazel_common/schema/`,
+Status: **Partially implemented.** `src/azazel_covenant/schema/`,
 `cti_contracts/`, and `view/` exist on disk exactly as laid out below and
-ship in `v0.1.0`/`v0.2.0`. `paths/`, `audit/`, `api/`, `notify/`, and
-`testing/` remain proposal only — not yet scaffolded, per the Phase-5
+shipped in `v0.1.0`/`v0.2.0` (under the `azazel_common` import path at the
+time; `v0.3.0` renamed the package to `azazel_covenant` with no change to
+this layout — see `CHANGELOG.md`). `paths/`, `audit/`, `api/`, `notify/`,
+and `testing/` remain proposal only — not yet scaffolded, per the Phase-5
 note below.
 
 ## Repository name
 
 ```
-01rabbit/Azazel-Common
+01rabbit/Azazel-Covenant
 ```
 
 (Not `Azazel-Core` — see `architecture.md` §1 and `design-principles.md`
-§4.6 for why.)
+§4.6 for why. Not `Azazel-Common` either, as of `v0.3.0` — same section.)
 
 ## Repository layout
 
 ```
-Azazel-Common/
+Azazel-Covenant/
 ├── README.md
 ├── LICENSE
 ├── pyproject.toml
 ├── CHANGELOG.md
 ├── src/
-│   └── azazel_common/
+│   └── azazel_covenant/
 │       ├── __init__.py
 │       ├── version.py
 │       ├── schema/
@@ -94,7 +96,7 @@ Notes:
   `test_schema_state.py`, `test_schema_decision.py`,
   `test_schema_records.py`, `test_cti_contracts.py`, and
   `test_view_status.py`.
-- `azazel_common.paths`, `.audit`, `.api`, `.notify`, and `.testing`
+- `azazel_covenant.paths`, `.audit`, `.api`, `.notify`, and `.testing`
   directories are shown now for completeness of the target layout, but
   remain **not scaffolded** — they are added when their phase starts (see
   `migration-plan.md` Phase 5), so released code has no dead code.
@@ -108,7 +110,7 @@ Notes:
 
 ```toml
 [project]
-name = "azazel-common"
+name = "azazel-covenant"
 version = "0.1.0"
 description = "Shared contracts for the Azazel series (schema, CTI advisory contract, audit/path/api/notify helpers)"
 requires-python = ">=3.10"
@@ -133,9 +135,12 @@ consistent with the Raspberry Pi weight constraint in
 ## Consumption pattern from a product repository
 
 ```toml
-# in Azazel-Edge / Azazel-Gadget / Azazel-CTI's own requirements
-azazel-common @ git+https://github.com/01rabbit/Azazel-Common.git@v0.1.0
+# in Azazel-Edge / Azazel-Gadget / Azazel-Grimoire's own requirements
+azazel-covenant @ git+https://github.com/01rabbit/Azazel-Covenant.git@v0.3.0
 ```
 
 Tag-pinned, not branch-pinned, not a submodule (see
-`design-principles.md` §6).
+`design-principles.md` §6). Tags `v0.1.0`/`v0.2.0` predate the `v0.3.0`
+rename and use the old `azazel-common` distribution name against the same,
+redirected repository URL — see `README.md`'s Install section and
+`CHANGELOG.md`.
