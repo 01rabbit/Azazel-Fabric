@@ -5,7 +5,7 @@ explanation, audit event, and trust capsule. Describing a decision that
 already happened is not the same as making it — see design-principles.md §1.
 """
 
-from azazel_common.schema.action import (
+from azazel_fabric.schema.action import (
     ActionIntent,
     ActionKind,
     ActionPlan,
@@ -17,12 +17,12 @@ from azazel_common.schema.action import (
     ReleasePlan,
     ThrottlePlan,
 )
-from azazel_common.schema.audit import AuditEvent
-from azazel_common.schema.decision import DecisionExplanation
-from azazel_common.schema.evidence import EvidenceRef
-from azazel_common.schema.mode import KNOWN_MODE_NAMES, ModeState
-from azazel_common.schema.state import KNOWN_PRODUCTS, StateSnapshot
-from azazel_common.schema.trust import TrustCapsule
+from azazel_fabric.schema.audit import AuditEvent
+from azazel_fabric.schema.decision import DecisionExplanation
+from azazel_fabric.schema.evidence import EvidenceRef
+from azazel_fabric.schema.mode import KNOWN_MODE_NAMES, ModeState
+from azazel_fabric.schema.state import KNOWN_PRODUCTS, StateSnapshot
+from azazel_fabric.schema.trust import TrustCapsule
 
 __all__ = [
     "ActionIntent",

@@ -10,6 +10,6 @@ already use.
 
 from __future__ import annotations
 
-from azazel_common.cti_contracts.ingest import CtiReactionBatch
+from azazel_fabric.cti_contracts.ingest import CtiReactionBatch
 
 __all__ = ["CtiReactionBatch"]

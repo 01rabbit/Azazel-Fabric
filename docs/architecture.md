@@ -1,30 +1,51 @@
-# Azazel-Common: Architecture and Series Positioning
+# Azazel-Fabric: Architecture and Series Positioning
 
-Status: **Design proposal only. No implementation started. No changes to
-existing repositories.**
+Status: **Shipped, `v0.3.0`.** `azazel_fabric.schema` and
+`azazel_fabric.cti_contracts` shipped in `v0.1.0`; `azazel_fabric.view`
+(the shared `StatusView` view-model) shipped in `v0.2.0`; `v0.3.0` renamed
+the package from Azazel-Common/`azazel_common` to
+Azazel-Fabric/`azazel_fabric` (breaking; see `CHANGELOG.md`) with no
+schema or behavior change. CI runs the test suite on 3.10/3.11/3.12 and
+releases are tag-driven. `paths`/`audit`/`api`/`notify` remain design
+proposal only (not yet implemented). See `CHANGELOG.md` and
+`migration-plan.md` for the phase-by-phase status, including per-consumer
+adoption (Gadget has integrated; Edge has a plan doc; Knowledge has not
+started — `migration-plan.md` "Status by phase").
 
-## 1. What Azazel-Common is
+## 1. What Azazel-Fabric is
 
-`Azazel-Common` (recommended repository name: `01rabbit/Azazel-Common`) is a
-thin, shared **contract package** for the Azazel series — Doctrine Hub
-(`Azazel`), Edge (`Azazel-Edge`, AZ-01), Gadget (`Azazel-Gadget`, AZ-02), and
-CTI (`Azazel-CTI`) — plus future tools such as `Azazel-Boot`.
+`Azazel-Fabric` (formerly `Azazel-Common`; repository:
+`01rabbit/Azazel-Fabric`) is a thin, shared **contract package** for the
+Azazel series — Doctrine Hub (`Azazel`), Edge (`Azazel-Edge`, AZ-01), Gadget
+(`Azazel-Gadget`, AZ-02), and the Knowledge Plane (`Azazel-Knowledge`, AZ-04,
+formerly `Azazel-CTI`) — plus future tools such as `Azazel-Boot`.
 
 It is not a runtime, not a decision engine, and not a shared execution core.
 It exists so that every Azazel product can describe state, actions,
 decisions, audit events, and CTI exchanges the same way, without forcing
 those products to share a brain.
 
-> Azazel-Common is not the heart of the series. It is the series' common
-> language.
+> Azazel-Fabric is not the heart of the series. It is the series' common
+> language — a fabric, in the sense of the shared foundation the products
+> are woven into, which is precisely what a contracts library holds.
 
 This is why the name `Azazel-Core` was rejected: "Core" implies a shared
 decision core, which would blur AZ-01's Deterministic Arbiter boundary.
-"Common" correctly signals a shared vocabulary, not a shared judgment.
+`Azazel-Common` was chosen instead because "Common" correctly signals a
+shared vocabulary, not a shared judgment — that reasoning still holds. The
+repository and package have since been renamed, from `Azazel-Common` to
+`Azazel-Fabric` (AZ-05, formal name Azazel-Fabric Contract), as part of the
+ratified series naming register: `Fabric` names the shared foundation
+connecting the Azazel products, and `Contract` names the shared schemas,
+state representations, audit/notification formats, and exchange contracts
+between Edge/Gadget and the Knowledge Plane that this repository holds — it
+holds no product's decision logic, for exactly the reason `Core` was
+rejected. The rename changes the label, not the first-principle constraint
+it labels — see §4.6 of `design-principles.md`.
 
 ## 2. Why this is needed
 
-Today, Edge, Gadget, and CTI each independently invent:
+Today, Edge, Gadget, and the Knowledge Plane each independently invent:
 
 - their own state/mode representations,
 - their own audit log JSON shapes,
@@ -44,7 +65,7 @@ becomes a liability once:
 - audits, demos (e.g. BHUSA), or partner integrations need one documented
   format to point at instead of three slightly different ones.
 
-Azazel-Common addresses this by extracting only the parts that are safe to
+Azazel-Fabric addresses this by extracting only the parts that are safe to
 extract: shapes, contracts, and thin helpers — never judgment.
 
 ## 3. Series responsibility map
@@ -55,53 +76,55 @@ extract: shapes, contracts, and thin helpers — never judgment.
                       └──────────┬───────────┘
                                  │ informs
                                  ▼
-                      ┌─────────────────────┐
-                      │    Azazel-Common     │   shared schema / contracts /
-                      │  (this repository)   │   audit format / path helpers /
-                      │                      │   notify payloads / api helpers
-                      └───┬─────────┬────────┘
-              depends on  │         │  depends on
-                          ▼         ▼
-      ┌───────────────────┐   ┌───────────────────┐        ┌──────────────────┐
-      │   Azazel-Edge      │   │  Azazel-Gadget     │        │   Azazel-CTI      │
-      │   AZ-01            │   │  AZ-02             │        │  Knowledge Plane  │
-      │   Decision Plane    │   │  Personal Tactical │        │                  │
-      │                    │   │  Defense Gateway    │        │                  │
-      └─────────┬──────────┘   └─────────┬──────────┘        └────────┬─────────┘
-                │                        │                            │
-                │   advisory context (never a command)                │
-                └───────────────►  CTI contract (Azazel-Common)  ◄────┘
+                      ┌───────────────────────┐
+                      │    Azazel-Fabric     │   shared schema / contracts /
+                      │   (this repository)    │   audit format / path helpers /
+                      │                        │   notify payloads / api helpers
+                      └────┬──────────┬────────┘
+              depends on   │          │  depends on
+                           ▼          ▼
+      ┌───────────────────┐   ┌───────────────────┐        ┌────────────────────┐
+      │   Azazel-Edge      │   │  Azazel-Gadget     │        │  Azazel-Knowledge    │
+      │   AZ-01            │   │  AZ-02             │        │  Knowledge Plane    │
+      │   Decision Plane    │   │  Personal Tactical │        │                    │
+      │                    │   │  Defense Gateway    │        │                    │
+      └─────────┬──────────┘   └─────────┬──────────┘        └─────────┬──────────┘
+                │                        │                             │
+                │   advisory context (never a command)                 │
+                └───────────────►  CTI contract (Azazel-Fabric)  ◄────┘
 ```
 
 Key invariant: **arrows into "Decision Plane" never carry command
-authority.** Common and CTI can hand Edge/Gadget information; only
-Edge's/Gadget's own arbiter decides what happens next.
+authority.** Fabric and the Knowledge Plane can hand Edge/Gadget
+information; only Edge's/Gadget's own arbiter decides what happens next.
 
 ### Azazel-Edge — Decision Plane
 
 Owns Evidence Plane, NOC Evaluator, SOC Evaluator, Action Arbiter, Decision
-Explanation, and Audit Logger. Holds final decision authority. Common,
-CTI, and AI Assist may inform this decision; none of them may override it.
+Explanation, and Audit Logger. Holds final decision authority. Fabric,
+the Knowledge Plane, and AI Assist may inform this decision; none of them
+may override it.
 
 ### Azazel-Gadget — Personal Tactical Defense Gateway
 
 Owns `usb0`-protected / `wlan0`-upstream topology, portal / shield /
 scapegoat modes, portable UX. Gadget is a sibling of Edge, not a "lite
-Edge" — it is not layered underneath Edge, and Common must not encode any
+Edge" — it is not layered underneath Edge, and Fabric must not encode any
 assumption that Gadget is a subset of Edge.
 
-### Azazel-CTI — Knowledge Plane
+### Azazel-Knowledge — Knowledge Plane
 
-Owns IOC management, correlation, campaign analysis, Behavioral CTI
-generation, feed import, offline bundle import. CTI is **advisory-only**:
-it may return `recommended_action` / `suggested_posture` fields, but these
-are recommendations, never commands. CTI never has authority to act on
-Edge or Gadget, and a CTI response being missing, malformed, or timed out
-must never block an Edge/Gadget decision.
+Formal name Azazel-Knowledge Advisor; formerly `Azazel-CTI`. Owns IOC
+management, correlation, campaign analysis, Behavioral CTI generation, feed
+import, offline bundle import. Knowledge is **advisory-only**: it may return
+`recommended_action` / `suggested_posture` fields, but these are
+recommendations, never commands. Knowledge never has authority to act on
+Edge or Gadget, and a Knowledge response being missing, malformed, or timed
+out must never block an Edge/Gadget decision.
 
-## 4. What "Common" is allowed to hold
+## 4. What "Fabric" is allowed to hold
 
-Common holds representation, not behavior:
+Fabric holds representation, not behavior:
 
 - shared Pydantic **schemas** for state, mode, action intent, evidence
   reference, decision explanation, audit event, trust capsule, and the CTI
@@ -117,19 +140,19 @@ Common holds representation, not behavior:
 - a shared **status view-model** (`StatusView` + `build_status_view`) — the
   normalized data a status surface reads, so Edge and Gadget can present the
   same status the same way; the renderer (Web/TUI/E-Paper) stays product-side,
-- the **CTI advisory contract** (Edge/Gadget → CTI ingestion shapes, CTI →
-  Edge/Gadget advisory response shape).
+- the **CTI advisory contract** (Edge/Gadget → Knowledge ingestion shapes,
+  Knowledge → Edge/Gadget advisory response shape).
 
 See `design-principles.md` for the full in/out list and rationale, and
 `contracts.md` for the schema definitions themselves.
 
-## 5. What Common explicitly is not
+## 5. What Fabric explicitly is not
 
-Common is not where Edge's Action Arbiter, NOC/SOC Evaluators, CTI's
+Fabric is not where Edge's Action Arbiter, NOC/SOC Evaluators, Knowledge's
 Correlation Engine or Behavioral CTI Generator, Gadget's Wi-Fi/USB control,
 nft/tc/OpenCanary execution, AI Assist, or any product's UI/E-Paper
 *rendering* live. These stay in their owning repository. Note the boundary
-added for the shared status view-model: Common owns the *view-model* (the
+added for the shared status view-model: Fabric owns the *view-model* (the
 data a display reads) but never the *renderer* that turns it into a page,
 screen, or panel — see `design-principles.md` §3.1. See `design-principles.md`
 §2–§3 for the full exclusion list and the reasoning behind each entry.
@@ -137,11 +160,23 @@ screen, or panel — see `design-principles.md` §3.1. See `design-principles.md
 ## 6. Relationship to this task
 
 This document, together with `design-principles.md`, `contracts.md`,
-`migration-plan.md`, `repository-layout.md`, and `issue-breakdown.md`, is
-the complete deliverable for this design task. This repository
-(`01rabbit/Azazel-Common`) currently holds these design documents only —
-no implementation code has been written, and no existing Azazel product
-repository (Edge, Gadget, CTI) has been modified. Package bootstrap
-(`v0.1.0`, schema-only) and any integration into other repositories are
-follow-up actions gated on review of this design; see `migration-plan.md`
-and `issue-breakdown.md` for the proposed sequence.
+`migration-plan.md`, `repository-layout.md`, and `issue-breakdown.md`, was
+the complete deliverable for the original design task (Phase 0). That
+design has since shipped: this repository (`01rabbit/Azazel-Fabric`) now
+holds real, tested, released code —
+`azazel_fabric.schema` and `azazel_fabric.cti_contracts` (`v0.1.0`),
+plus `azazel_fabric.view` (`v0.2.0`) — under CI on 3.10/3.11/3.12,
+alongside these design documents. `v0.3.0` renamed the distribution and
+import namespace to `azazel-fabric`/`azazel_fabric`; see `CHANGELOG.md`.
+Adoption by other Azazel product repositories has started, out of the
+order this document originally anticipated: Azazel-Gadget is the first
+real consumer (pins `v0.2.0` under the old name; migration to `v0.3.0` is
+tracked in `migration-plan.md`), ahead of Edge or Knowledge integration.
+Azazel-Edge has an adapter *plan* document
+(`AZAZEL_COMMON_EDGE_ADAPTER_PLAN.md` in the Edge repository) but no code
+or dependency pin yet. Azazel-Knowledge has not adopted Fabric at all —
+doing so requires a dependency-policy exception (Fabric's runtime
+dependency is `pydantic`; Azazel-Knowledge's core is stdlib + PyYAML + idna
++ PyNaCl only) plus an ADR on the Knowledge side. See `migration-plan.md`
+for the phase-by-phase status and `issue-breakdown.md` for how the
+originally proposed issues map onto what has actually happened.

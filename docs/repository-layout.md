@@ -1,27 +1,32 @@
-# Azazel-Common: Repository and Package Layout
+# Azazel-Fabric (formerly Azazel-Common): Repository and Package Layout
 
-Status: **Design proposal only. This layout is not yet implemented — the
-repository currently holds design documents only.**
+Status: **Partially implemented.** `src/azazel_fabric/schema/`,
+`cti_contracts/`, and `view/` exist on disk exactly as laid out below and
+shipped in `v0.1.0`/`v0.2.0` (under the `azazel_common` import path at the
+time; `v0.3.0` renamed the package to `azazel_fabric` with no change to
+this layout — see `CHANGELOG.md`). `paths/`, `audit/`, `api/`, `notify/`,
+and `testing/` remain proposal only — not yet scaffolded, per the Phase-5
+note below.
 
 ## Repository name
 
 ```
-01rabbit/Azazel-Common
+01rabbit/Azazel-Fabric
 ```
 
 (Not `Azazel-Core` — see `architecture.md` §1 and `design-principles.md`
-§4.6 for why.)
+§4.6 for why. Not `Azazel-Common` either, as of `v0.3.0` — same section.)
 
 ## Repository layout
 
 ```
-Azazel-Common/
+Azazel-Fabric/
 ├── README.md
 ├── LICENSE
 ├── pyproject.toml
 ├── CHANGELOG.md
 ├── src/
-│   └── azazel_common/
+│   └── azazel_fabric/
 │       ├── __init__.py
 │       ├── version.py
 │       ├── schema/
@@ -84,11 +89,17 @@ Notes:
 - The `docs/` files listed above already exist in this repository as the
   design record; they are kept in sync as implementation lands under
   `src/`.
-- `azazel_common.paths`, `.audit`, `.api`, `.notify` directories are shown
-  now for completeness of the target layout, but per `migration-plan.md`
-  Phase 1, only `schema/` and `cti_contracts/` ship in `v0.1.0`. The empty
-  Phase-5 directories are **not** scaffolded in `v0.1.0` — they are added
-  when their phase starts, so the initial release has no dead code.
+- **Implemented as of `v0.2.0`:** `schema/` (seven modules, `v0.1.0`),
+  `cti_contracts/` (four modules, `v0.1.0`), and `view/` (`status.py` +
+  `build.py`, `v0.2.0` — added a phase ahead of its originally-planned
+  slot; see `migration-plan.md` Phase 4). `tests/` correspondingly has
+  `test_schema_state.py`, `test_schema_decision.py`,
+  `test_schema_records.py`, `test_cti_contracts.py`, and
+  `test_view_status.py`.
+- `azazel_fabric.paths`, `.audit`, `.api`, `.notify`, and `.testing`
+  directories are shown now for completeness of the target layout, but
+  remain **not scaffolded** — they are added when their phase starts (see
+  `migration-plan.md` Phase 5), so released code has no dead code.
 - `action.py`'s `ObservePlan`..`ReleasePlan` are abstract, data-only plan
   descriptions (see `architecture.md`'s Action Plan section) — they carry
   no execution logic and no adapter to nft/tc/OpenCanary. Converting a
@@ -99,7 +110,7 @@ Notes:
 
 ```toml
 [project]
-name = "azazel-common"
+name = "azazel-fabric"
 version = "0.1.0"
 description = "Shared contracts for the Azazel series (schema, CTI advisory contract, audit/path/api/notify helpers)"
 requires-python = ">=3.10"
@@ -124,9 +135,12 @@ consistent with the Raspberry Pi weight constraint in
 ## Consumption pattern from a product repository
 
 ```toml
-# in Azazel-Edge / Azazel-Gadget / Azazel-CTI's own requirements
-azazel-common @ git+https://github.com/01rabbit/Azazel-Common.git@v0.1.0
+# in Azazel-Edge / Azazel-Gadget / Azazel-Knowledge's own requirements
+azazel-fabric @ git+https://github.com/01rabbit/Azazel-Fabric.git@v0.3.0
 ```
 
 Tag-pinned, not branch-pinned, not a submodule (see
-`design-principles.md` §6).
+`design-principles.md` §6). Tags `v0.1.0`/`v0.2.0` predate the `v0.3.0`
+rename and use the old `azazel-common` distribution name against the same,
+redirected repository URL — see `README.md`'s Install section and
+`CHANGELOG.md`.

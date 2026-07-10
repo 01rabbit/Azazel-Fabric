@@ -1,11 +1,38 @@
 # Changelog
 
-All notable changes to Azazel-Common are recorded here. The project follows
-[Semantic Versioning](https://semver.org/). Each release corresponds to a
-`vX.Y.Z` tag and GitHub Release on `01rabbit/Azazel-Common`; consumers pin an
-exact tag (see `docs/migration-plan.md`).
+All notable changes to Azazel-Fabric (formerly Azazel-Common) are recorded
+here. The project follows [Semantic Versioning](https://semver.org/). Each
+release corresponds to a `vX.Y.Z` tag and GitHub Release on
+`01rabbit/Azazel-Fabric`; consumers pin an exact tag (see
+`docs/migration-plan.md`).
 
 ## [Unreleased]
+
+## [0.3.0] — renamed to Azazel-Fabric
+
+**BREAKING:**
+
+- Distribution name changed: `azazel-common` → `azazel-fabric`.
+- Import namespace changed: `azazel_common` → `azazel_fabric`.
+- Repository renamed: `01rabbit/Azazel-Common` → `01rabbit/Azazel-Fabric`
+  (old repository URLs redirect).
+
+`v0.1.0` and `v0.2.0` tags remain installable under the old
+`azazel-common`/`azazel_common` names — pinning those tags is unaffected.
+Consumers (currently Azazel-Gadget, which pins `v0.2.0`) migrate by bumping
+their pin to `v0.3.0` and switching their imports from `azazel_common` to
+`azazel_fabric`; no schema or behavior changes accompany the rename.
+
+### Documentation
+
+- Synced the six `docs/` design documents with shipped reality: they
+  previously still read as a frozen Phase-0 "design proposal only, no
+  implementation code has been written" snapshot despite `v0.1.0`/`v0.2.0`
+  having shipped real, CI-tested code. Added accurate status headers,
+  per-module/per-phase status lines, a consumer-status table in
+  `README.md` (Gadget shipping, Edge plan-stage, CTI not adopted), and an
+  honest note in `migration-plan.md` that Phase 4 (Gadget) landed ahead of
+  Phases 2/3. No code, dependency, or test changes.
 
 ## [0.2.0] — shared status view-model
 
@@ -58,6 +85,7 @@ execution logic, no product integration.
 - `pyproject.toml` (Pydantic-only runtime dependency; `flask`/`fastapi`/`test`
   optional extras) and GitHub Actions CI running the test suite.
 
-[Unreleased]: https://github.com/01rabbit/Azazel-Common/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/01rabbit/Azazel-Common/releases/tag/v0.2.0
-[0.1.0]: https://github.com/01rabbit/Azazel-Common/releases/tag/v0.1.0
+[Unreleased]: https://github.com/01rabbit/Azazel-Fabric/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/01rabbit/Azazel-Fabric/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/01rabbit/Azazel-Fabric/releases/tag/v0.2.0
+[0.1.0]: https://github.com/01rabbit/Azazel-Fabric/releases/tag/v0.1.0

@@ -3,7 +3,7 @@
 import pytest
 from pydantic import ValidationError
 
-from azazel_common.schema import (
+from azazel_fabric.schema import (
     ActionIntent,
     DecisionExplanation,
     EvidenceRef,

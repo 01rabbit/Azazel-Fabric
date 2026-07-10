@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from azazel_common.schema.action import ActionIntent
+from azazel_fabric.schema.action import ActionIntent
 
 
 class DecisionExplanation(BaseModel):

@@ -1,7 +1,7 @@
 [project]
-name = "azazel-common"
+name = "azazel-fabric"
 dynamic = ["version"]
-description = "Shared contracts for the Azazel series (schema, CTI advisory contract, audit/path/api/notify helpers)"
+description = "Azazel-Fabric Contract: shared contracts and interoperability foundation for the Azazel System (formerly Azazel-Common)"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "TBD" }
@@ -16,7 +16,7 @@ fastapi = ["fastapi>=0.100"]
 test = ["pytest>=7"]
 
 [project.urls]
-Homepage = "https://github.com/01rabbit/Azazel-Common"
+Homepage = "https://github.com/01rabbit/Azazel-Fabric"
 
 [build-system]
 requires = ["setuptools>=68", "wheel"]
@@ -26,7 +26,7 @@ build-backend = "setuptools.build_meta"
 where = ["src"]
 
 [tool.setuptools.dynamic]
-version = { attr = "azazel_common.version.__version__" }
+version = { attr = "azazel_fabric.version.__version__" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
