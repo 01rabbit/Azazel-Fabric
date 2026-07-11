@@ -2,6 +2,8 @@
 
 > **Codename:** `COVENANT`
 
+![Azazel-Fabric Banner](images/Azazel-Fabric_Banner.svg)
+
 Shared contracts and interoperability foundation for the Azazel System.
 
 > Formal series name **Azazel-Fabric Contract** (**AZ-05**), ratified
