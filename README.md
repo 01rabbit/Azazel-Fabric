@@ -118,4 +118,4 @@ and start there before reading the rest:
 
 ## License
 
-TBD.
+MIT. See [`LICENSE`](LICENSE).
