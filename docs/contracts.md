@@ -4,9 +4,11 @@ Status: **Mixed — see per-section status lines.** §1 (`azazel_fabric.schema`)
 and §2 (`azazel_fabric.cti_contracts`) SHIPPED in `v0.1.0`; §2's
 advisory-only invariants and the `view.StatusView` model referenced
 alongside them SHIPPED in `v0.2.0` (see `CHANGELOG.md`). §3–§5
-(`api`/`notify`/`paths`) remain **design proposal / not frozen** — no
-implementation exists yet, and field lists there are still illustrative,
-not final signatures.
+(`api`/`notify`/`paths`) are now **ratified and implemented in `v0.4.0`**
+(Phase 5); each section carries a status line noting deviations from the
+original proposal. Consult the source and `tests/` for exact, current field
+signatures — the tables below are a readable reference, not the authoritative
+schema.
 
 Schemas in §1/§2 are implemented as Pydantic v2 models under
 `azazel_fabric.schema` and `azazel_fabric.cti_contracts`; consult the
@@ -91,6 +93,19 @@ Standard JSONL audit-log record shape.
 | `payload` | dict[str, Any] | product-defined body |
 | `config_hash` | str \| None | |
 | `hmac` | str \| None | tamper-evidence signature, optional |
+
+**`azazel_fabric.audit` helpers — Status: implemented (`v0.4.0`).** The module
+ships the shared-`AuditEvent` **projection** (`project_audit_event`,
+`make_event_id`) and **JSONL formatters** (`to_jsonl_line` / `from_jsonl_line` /
+`iter_jsonl` / `write_jsonl` / `read_jsonl`) — the *envelope* an audit event is
+written in. **Explicit non-goal (owner decision, 2026-07-10/11): no hash chain
+and no chain verification.** Edge's P0 hash-chain / tamper-evidence audit is
+deliberately product-local and out of Fabric's scope; the `config_hash`/`hmac`
+fields above are carried verbatim if a product supplies them, but Fabric neither
+computes nor verifies them, and ships no chain-of-custody linkage. (This
+supersedes the "(future) chain-of-custody helper" note in
+`design-principles.md` §2, which is not built and, per this decision, will not
+be.)
 
 ### `TrustCapsule`
 
@@ -197,9 +212,9 @@ alongside the schema wherever it is implemented:
 
 ## 3. API / auth contracts (`azazel_fabric.api`)
 
-**Status: design proposal / not frozen.** Not yet implemented — no
-`azazel_fabric.api` module exists (Phase 5). Not full endpoint specs —
-just the shared vocabulary:
+**Status: ratified / implemented (`v0.4.0`, Phase 5).** Framework-neutral
+security-posture helpers, not endpoint specs — just the shared vocabulary, now
+built:
 
 | concept | shape |
 |---|---|
@@ -208,9 +223,26 @@ just the shared vocabulary:
 | default posture | fail-closed: missing/invalid credentials → reject, never default-allow |
 | error shape | `{"error": {"code": str, "message": str, "trace_id": str | None}}` |
 
+Implemented as: `ErrorEnvelope`/`ErrorBody` models + `error_payload` /
+`fail_closed_error` builders (`errors.py`); `ROLES` / `role_rank` / `role_allows`
+/ `is_known_role` (`roles.py`, fail-closed — an unknown role never satisfies or
+out-ranks); `TOKEN_HEADER` / `COMPAT_TOKEN_HEADER` / `extract_token` (primary
+then compat, case-insensitive) / `token_matches` (constant-time, fail-closed)
+(`auth.py`). No Flask/FastAPI import in core — adapters stay optional extras
+(design-principles §5).
+
+**Deviations from the proposal:** (a) `error_payload`/`fail_closed_error` omit
+`trace_id` from the payload when it is `None` (absent, not `null`), matching the
+series' absent-not-null convention elsewhere in this document; the model still
+*permits* `trace_id: str | None`. (b) The proposal named "fail-closed default
+response" abstractly; it is realized as `fail_closed_error()` returning the
+standard error payload with code `unauthenticated` — Fabric returns the payload,
+a framework adapter attaches the HTTP status.
+
 ## 4. Notification contract (`azazel_fabric.notify`)
 
-**Status: design proposal / not frozen.** Not yet implemented (Phase 5).
+**Status: ratified / implemented (`v0.4.0`, Phase 5).** `NotificationEvent`
+(`model.py`) ships exactly as tabulated:
 
 | field | type | notes |
 |---|---|---|
@@ -225,9 +257,19 @@ just the shared vocabulary:
 Transport-specific adapters (ntfy, Mattermost, SSE) consume this shape;
 they do not define their own competing payload shape.
 
+**Deviation from the proposal:** the transport helpers are implemented as pure
+payload *mappers* — `to_ntfy_payload` / `to_mattermost_payload`
+(`transports.py`) — that build and return a transport-shaped `dict` but **do not
+send** anything. No HTTP client or socket is imported; actual delivery (endpoint,
+auth, retry) stays product-side, consistent with the dependency-weight and
+offline-first principles. The SSE "bridge" from design-principles §2 is not a
+separate model — `NotificationEvent` is itself the SSE payload shape.
+
 ## 5. Path contract (`azazel_fabric.paths`)
 
-**Status: design proposal / not frozen.** Not yet implemented (Phase 5).
+**Status: ratified / implemented (`v0.4.0`, Phase 5).** Implemented as pure
+candidate-path **hints**, never authority — a product keeps its own path schema
+(Edge's legacy-compat paths are not forced through this).
 
 | concept | convention |
 |---|---|
@@ -236,3 +278,21 @@ they do not define their own competing payload shape.
 | log dir | `/var/log/azazel-<product>` |
 | legacy compatibility | `azazel-pi` → maps to `azazel-edge` path schema; `azazel-zero` → maps to `azazel-gadget` path schema |
 | migration | dry-run-first helper; never silently moves/deletes files |
+
+Implemented as: `candidate_runtime_dirs` / `candidate_config_dirs` /
+`candidate_log_dirs` / `candidate_dirs` / `preferred_dir`, `normalize_product`
+(legacy-alias resolution), and `plan_migration` → `MigrationPlan`/`MigrationStep`
+(`schema.py`, `migration.py`). All pure and deterministic — no filesystem,
+environment, or clock access.
+
+**Deviations from the proposal:** (a) The runtime/config/log rows describe a
+single conventional directory; the helpers return **candidate *lists*** (best
+canonical path first, any legacy-alias path after) rather than one authoritative
+path — per the owner's Phase-5 decision that these are hints returning candidate
+lists, so a caller can discover a legacy sibling's directory while preferring the
+modern one. `preferred_dir` returns just the first (canonical) candidate for
+callers that want a single string. (b) The migration helper is **plan-only**:
+`plan_migration` returns a described `MigrationPlan` (`dry_run=True` always) and
+there is deliberately **no `execute` function** — stronger than "dry-run-first,"
+since Fabric never performs a move at all; executing the plan is the product's
+choice.

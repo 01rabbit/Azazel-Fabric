@@ -1,16 +1,19 @@
 # Azazel-Fabric: Architecture and Series Positioning
 
-Status: **Shipped, `v0.3.0`.** `azazel_fabric.schema` and
+Status: **Shipped, `v0.4.0`.** `azazel_fabric.schema` and
 `azazel_fabric.cti_contracts` shipped in `v0.1.0`; `azazel_fabric.view`
 (the shared `StatusView` view-model) shipped in `v0.2.0`; `v0.3.0` renamed
 the package from Azazel-Common/`azazel_common` to
 Azazel-Fabric/`azazel_fabric` (breaking; see `CHANGELOG.md`) with no
-schema or behavior change. CI runs the test suite on 3.10/3.11/3.12 and
-releases are tag-driven. `paths`/`audit`/`api`/`notify` remain design
-proposal only (not yet implemented). See `CHANGELOG.md` and
-`migration-plan.md` for the phase-by-phase status, including per-consumer
-adoption (Gadget has integrated; Edge has a plan doc; Knowledge has not
-started — `migration-plan.md` "Status by phase").
+schema or behavior change. `v0.4.0` added the Phase-5 helper modules
+(`paths`/`audit`/`api`/`notify`) and Phase-6 adoption tooling
+(`docs/adoption-guide.md` + `azazel_fabric.testing`), additively — note
+`audit` ships **no hash chain / no chain verification** (chains stay
+product-local, owner decision). CI runs the test suite on 3.10/3.11/3.12 and
+releases are tag-driven. See `CHANGELOG.md` and `migration-plan.md` for the
+phase-by-phase status, including per-consumer adoption (Gadget has integrated;
+Edge has integrated; Knowledge has not started — `migration-plan.md` "Status by
+phase").
 
 ## 1. What Azazel-Fabric is
 

@@ -26,16 +26,31 @@ why `Core` was avoided as a name.
 
 ## Status
 
-**`v0.3.0` — renamed to Azazel-Fabric.** The distribution and import
-namespace changed from `azazel-common`/`azazel_common` to
-`azazel-fabric`/`azazel_fabric`; this is a breaking change (see
-`CHANGELOG.md`). Functionally, `azazel_fabric` still ships the shared
-schema and CTI advisory contract (`v0.1.0`), plus `azazel_fabric.view` —
-the shared `StatusView` view-model and `build_status_view` builder that let
-Edge and Gadget present the same status the same way. Fabric owns the
-view-model; each product keeps its own renderer (see
-[`docs/design-principles.md`](docs/design-principles.md) §3.1). The
-`paths`/`audit`/`api`/`notify` helpers are later phases and are not present yet.
+**`v0.4.0` — Phase 5 helpers + Phase 6 adoption tooling.** Additive, no
+breaking change from `v0.3.0` (the rename release). `azazel_fabric` ships:
+
+- `azazel_fabric.schema` / `azazel_fabric.cti_contracts` — shared schema and
+  the advisory-only CTI contract (`v0.1.0`).
+- `azazel_fabric.view` — the shared `StatusView` view-model + `build_status_view`
+  builder so Edge and Gadget present the same status the same way; Fabric owns
+  the view-model, each product keeps its own renderer (see
+  [`docs/design-principles.md`](docs/design-principles.md) §3.1) (`v0.2.0`).
+- `azazel_fabric.paths` — candidate-path **hints** (never authoritative) +
+  dry-run-only legacy-migration planner (`v0.4.0`).
+- `azazel_fabric.audit` — shared `AuditEvent` projection + JSONL formatters.
+  **No hash chain, no chain verification** — that integrity mechanism stays
+  product-local (Edge's P0 hash chain) by owner decision (`v0.4.0`).
+- `azazel_fabric.api` — framework-neutral error/role/token helpers, fail-closed
+  (`v0.4.0`).
+- `azazel_fabric.notify` — the shared `NotificationEvent` payload + pure
+  ntfy/Mattermost payload mappers (no network send) (`v0.4.0`).
+- `azazel_fabric.testing` — shared factories + invariant assertions for consumer
+  CI, with no pytest dependency (`v0.4.0`).
+
+`v0.3.0` renamed the distribution and import namespace from
+`azazel-common`/`azazel_common` to `azazel-fabric`/`azazel_fabric` (breaking;
+see [`CHANGELOG.md`](CHANGELOG.md)). New series products should start from the
+[day-1 adoption guide](docs/adoption-guide.md).
 
 ## Consumer status
 
@@ -65,7 +80,15 @@ Consumers pin an exact tag, never a branch (see
 from azazel_fabric.schema import StateSnapshot, DecisionExplanation
 from azazel_fabric.cti_contracts import CtiContextResponse
 from azazel_fabric.view import StatusView, build_status_view
+from azazel_fabric.api import error_payload, role_allows, extract_token
+from azazel_fabric.notify import NotificationEvent, to_ntfy_payload
+from azazel_fabric.paths import candidate_runtime_dirs, plan_migration
+from azazel_fabric.audit import project_audit_event, to_jsonl_line
+from azazel_fabric.testing import make_status_view, assert_advisory_only
 ```
+
+Adopting Fabric in a new series product? Start with the
+[day-1 adoption guide](docs/adoption-guide.md).
 
 ## Versioning
 
@@ -85,9 +108,10 @@ and start there before reading the rest:
 |---|---|
 | [`docs/architecture.md`](docs/architecture.md) | Azazel-Fabric's position in the series and responsibility boundaries |
 | [`docs/design-principles.md`](docs/design-principles.md) | What goes in Fabric vs. what never does, and why |
-| [`docs/contracts.md`](docs/contracts.md) | Proposed schema and the Edge/Gadget ↔ CTI advisory contract |
+| [`docs/contracts.md`](docs/contracts.md) | The shared schema and the Edge/Gadget ↔ CTI advisory contract (§3–§5 ratified/implemented in `v0.4.0`) |
+| [`docs/adoption-guide.md`](docs/adoption-guide.md) | Day-1 adoption playbook for a new series product |
 | [`docs/migration-plan.md`](docs/migration-plan.md) | Phased, additive, reversible rollout plan |
-| [`docs/repository-layout.md`](docs/repository-layout.md) | Proposed package layout |
+| [`docs/repository-layout.md`](docs/repository-layout.md) | Package layout (real as of `v0.4.0`) |
 | [`docs/issue-breakdown.md`](docs/issue-breakdown.md) | Proposed GitHub issues for implementation |
 
 ## License

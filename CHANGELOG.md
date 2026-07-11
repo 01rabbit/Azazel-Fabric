@@ -8,12 +8,76 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ## [Unreleased]
 
-### Documentation
+_Nothing yet._
 
-- Consumer-status sync: Azazel-Edge implemented Phase 3 (2026-07-10, Azazel-Edge#309) —
-  emit-alongside `DecisionExplanation`/`TrustCapsule`/`AuditEvent`
-  projections plus a `StatusView` emit/read-back, making Edge the series'
-  largest Fabric consumer. Migration-plan Phase 3 status updated.
+## [0.4.0] — Phase 5 helpers + Phase 6 adoption tooling
+
+Adds the five Phase-5/Phase-6 helper modules — the `paths`/`api`/`notify`/
+`audit` helpers that were "design proposal / not frozen" since `v0.1.0`, plus
+the `testing` module — as **additive, non-breaking** code. No change to
+`schema`, `cti_contracts`, or `view` semantics; consumers on `v0.3.0` upgrade by
+bumping the pin, with nothing to migrate.
+
+Two owner decisions (2026-07-10/11) shaped this release:
+
+- **Audit hash chains stay product-local.** `azazel_fabric.audit` ships the
+  shared `AuditEvent` projection and JSONL format **only** — **no hash chain,
+  no chain verification**. Edge's P0 hash-chain / tamper-evidence audit is
+  deliberately out of Fabric's scope and lives in Edge. Stated explicitly in the
+  module docstring and `docs/contracts.md` §1.
+- **`contracts.md` §3 (api) / §4 (notify) / §5 (paths) are ratified as
+  implemented** — built as specified, with deviations noted inline in that doc.
+
+### Added
+
+- `azazel_fabric.paths` — candidate-path **hints** per `contracts.md` §5:
+  `candidate_runtime_dirs` / `candidate_config_dirs` / `candidate_log_dirs` /
+  `candidate_dirs` / `preferred_dir`, `normalize_product` (legacy alias
+  resolution: `azazel-pi`→`edge`, `azazel-zero`→`gadget`), and a **dry-run-only**
+  `plan_migration` (`MigrationPlan`/`MigrationStep`) that describes a
+  legacy→canonical move and never performs one. Pure/deterministic — no
+  filesystem, environment, or clock reads. Hints, never authority: a product
+  keeps its own path schema.
+- `azazel_fabric.api` — framework-neutral security-posture helpers per
+  `contracts.md` §3: the shared JSON error model (`ErrorEnvelope`/`ErrorBody`,
+  `error_payload`, `fail_closed_error`), the ordered role vocabulary
+  (`ROLES`, `role_rank`, `role_allows`, fail-closed), and token-header
+  extraction (`TOKEN_HEADER`/`COMPAT_TOKEN_HEADER`, `extract_token`,
+  constant-time `token_matches`). No Flask/FastAPI import in core — adapters
+  stay optional extras.
+- `azazel_fabric.notify` — the shared `NotificationEvent` payload model per
+  `contracts.md` §4 (closed `info`/`warning`/`critical` severity), plus pure
+  transport mappers `to_ntfy_payload` / `to_mattermost_payload` that build a
+  payload and **never send** (no network in Fabric).
+- `azazel_fabric.audit` — `AuditEvent` projection (`project_audit_event`,
+  `make_event_id`) and JSONL formatters (`to_jsonl_line` / `from_jsonl_line` /
+  `iter_jsonl` / `write_jsonl` / `read_jsonl`). **No chain, no verification**
+  (owner decision above).
+- `azazel_fabric.testing` — shared factories (`make_*` populated / `minimal_*`
+  required-only for `StateSnapshot`, `ModeState`, `StatusView`, `AuditEvent`,
+  `ActionIntent`, `CtiContextRequest`/`Response`) and invariant assertions
+  (`assert_advisory_only`, `assert_behavioral_absent_not_null`). **No pytest
+  dependency** — plain functions usable from any test framework.
+- `docs/adoption-guide.md` — day-1 adoption playbook for a new series product
+  (e.g. the reserved `Azazel-Boot`): tag-pinning, the guarded-import idiom,
+  adopt-`view`-first, emit-alongside, using `azazel_fabric.testing`, the
+  advisory-only doctrine, and the pointer to the umbrella naming spec. Linked
+  from `README.md`.
+- Unit tests for all five modules (46 new): path purity/determinism and legacy
+  resolution, audit round-trips and the no-chain guard, error-shape building and
+  fail-closed roles/token auth, notify round-trips and transport mapping, and
+  testing-module factory validity + invariant assertions.
+
+### Changed
+
+- Docs synced to shipped reality: `contracts.md` §3–§5 headers moved from
+  "design proposal / not frozen" to **ratified/implemented (`v0.4.0`)** with
+  deviations noted inline; `design-principles.md` §2 module-table statuses;
+  `repository-layout.md` tree marked real (and reconciled with the actual
+  files); `migration-plan.md` Phase 5 → **Implemented (`v0.4.0`; consumer
+  adoption follows as separate PRs)** and Phase 6 → **Complete** per the owner's
+  definition (adoption guide + testing module); `README.md` module list and doc
+  table updated.
 
 ## [0.3.0] — renamed to Azazel-Fabric
 
@@ -92,7 +156,8 @@ execution logic, no product integration.
 - `pyproject.toml` (Pydantic-only runtime dependency; `flask`/`fastapi`/`test`
   optional extras) and GitHub Actions CI running the test suite.
 
-[Unreleased]: https://github.com/01rabbit/Azazel-Fabric/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/01rabbit/Azazel-Fabric/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/01rabbit/Azazel-Fabric/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/01rabbit/Azazel-Fabric/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/01rabbit/Azazel-Fabric/releases/tag/v0.2.0
 [0.1.0]: https://github.com/01rabbit/Azazel-Fabric/releases/tag/v0.1.0
