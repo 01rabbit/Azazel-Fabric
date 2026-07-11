@@ -8,7 +8,11 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+
+- `LICENSE` — MIT (owner decision 2026-07-11: unlicensed series repos align
+  to MIT). `pyproject.toml` `license` field and `README.md` updated from
+  `TBD` to MIT accordingly.
 
 ## [0.4.0] — Phase 5 helpers + Phase 6 adoption tooling
 
