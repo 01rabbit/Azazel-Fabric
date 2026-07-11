@@ -20,8 +20,8 @@ scope/non-goals, with a status line added to each.
 | 2 | Introduce into Azazel-Knowledge | **Not started** — gated on a dependency-policy exception; Azazel-Knowledge's core dependency set (stdlib + PyYAML + idna + PyNaCl) excludes `pydantic` today, so adoption needs a `pyproject.toml` change plus an ADR and owner decision on the Knowledge side before any code lands |
 | 3 | Introduce into Azazel-Edge | **Implemented & merged (2026-07-10, Azazel-Edge#309)** — Edge pins `azazel-fabric` (commit-pinned until the `v0.3.0` tag is published) and ships emit-alongside projections for `DecisionExplanation` / `TrustCapsule` / `AuditEvent` per its adapter plan §3, plus a `StatusView` emit + `/api/state` read-back beyond the original scope — making Edge the series' largest Fabric consumer. Edge↔Knowledge integration (real `cti_contracts` use) remains FY2027+ |
 | 4 | Introduce into Azazel-Gadget | **Effectively done, ahead of order, migration to `v0.3.0` pending** — Azazel-Gadget currently pins `azazel-common @ git+...@v0.2.0` (the old distribution name) in `requirements.txt`, emits `StatusView` alongside its own snapshot (`py/azazel_gadget/common_view.py`), reads it back (`control_plane.py`), and surfaces it via its web API (`/api/state`, `status_view` key) using the `product_view={"gadget_snapshot": ...}` superset pattern. Note this happened via the `view` module (`v0.2.0`), which was not part of this phase's original scope (`StateSnapshot`/`ModeState`/`ActionIntent`/`AuditEvent`/notify) — the phase's *intent* (Gadget as a real Fabric consumer) is satisfied, but not via the exact schema list originally planned, and it landed before Phases 2/3. Gadget's migration to the `v0.3.0` `azazel-fabric`/`azazel_fabric` names is a follow-up, not yet done |
-| 5 | path / auth / notify helper consolidation | **Not started** |
-| 6 | Future tools | **Not started** |
+| 5 | path / auth / notify helper consolidation | **Implemented (`v0.4.0`)** — `paths`/`api`/`notify`/`audit` helper modules shipped in Fabric per `contracts.md` §3–§5 (ratified as implemented). Consumer adoption (removing real duplication in Edge/Gadget/Knowledge) follows as separate PRs on each product's own schedule |
+| 6 | Future tools | **Complete (per owner definition, `v0.4.0`)** — defined as a day-1 adoption guide for future series products (`docs/adoption-guide.md`) plus the `azazel_fabric.testing` module; both shipped. Remains a standing policy for each new repository going forward |
 
 This is an honest deviation from the plan's original sequencing (Phase 4
 before Phase 2/3), not a silent one — flagged here per this repository's
@@ -156,33 +156,52 @@ paths untouched.
 
 ## Phase 5 — path / auth / notify helper consolidation
 
-**Status: Not started.**
+**Status: Implemented in Fabric (`v0.4.0`); consumer adoption follows as
+separate PRs.** The helper modules are built and released; `contracts.md`
+§3–§5 moved from "design proposal / not frozen" to ratified/implemented. The
+originally-planned helpers, now shipped:
 
-Once Phase 2–4 prove the schema layer is stable in production-adjacent
-use, extract the genuinely duplicated helpers:
+- `azazel_fabric.paths` (candidate-path **hints** + legacy-alias resolution +
+  dry-run-only migration planner; generalized from Gadget's path-schema/
+  legacy-migration design without copying its product-specific assumptions —
+  hints only, never authoritative, so Edge's legacy-compat paths are not forced
+  through it)
+- `azazel_fabric.api` (token/role/fail-closed helpers; framework-neutral)
+- `azazel_fabric.notify` (`NotificationEvent` + pure ntfy/Mattermost payload
+  mappers; the SSE bridge is the same `NotificationEvent` shape)
+- `azazel_fabric.audit` (shared `AuditEvent` projection + JSONL formatters;
+  **no hash chain / no chain verification** — owner decision, chains stay
+  product-local)
 
-- `azazel_fabric.paths` (informed by Gadget's existing path-schema and
-  legacy-migration design, generalized — not copied wholesale, since
-  Gadget-specific assumptions must not leak into the shared version)
-- `azazel_fabric.api` (token/role/fail-closed helpers)
-- `azazel_fabric.notify` (ntfy/Mattermost/SSE payload helpers)
+Each repository adopts these incrementally and only where it removes actual
+duplication — not as a mandate to touch code that isn't already duplicated.
 
-Each repository adopts these incrementally and only where it removes
-actual duplication — not as a mandate to touch code that isn't already
-duplicated.
-
-Exit condition: at least one real duplicated implementation removed from
-at least two of {Edge, Gadget, Knowledge} in favor of the Fabric helper,
-with contract tests passing.
+Exit condition (Fabric side, met): the helper modules ship with full unit
+tests, additively, breaking no existing `schema`/`cti_contracts`/`view`
+semantics. Exit condition (adoption side, ongoing): at least one real
+duplicated implementation removed from at least two of {Edge, Gadget,
+Knowledge} in favor of the Fabric helper, with contract tests passing —
+tracked in each product's repository, not gated on this release.
 
 ## Phase 6 — Future tools
 
-**Status: Not started.**
+**Status: Complete (per owner definition, `v0.4.0`).** Scoped by owner
+decision (2026-07-10/11) to two concrete deliverables, both now shipped:
 
-`Azazel-Boot` and any new Azazel-series tool depend on `Azazel-Fabric`
-from their first commit, rather than inventing their own state/audit/CTI
-formats. This phase has no exit condition of its own — it's a standing
-policy for new repositories going forward.
+- `docs/adoption-guide.md` — a day-1 adoption playbook for a new series product
+  (e.g. the reserved `Azazel-Boot`): tag-pinning, the guarded-import idiom,
+  which module to adopt first (`view`/`StatusView`), emit-alongside without
+  coupling, using `azazel_fabric.testing`, the advisory-only doctrine, and the
+  pointer that the umbrella naming spec (`docs/specs/naming.md`) governs product
+  names/codenames.
+- `azazel_fabric.testing` — shared factories and invariant assertions so a new
+  product's CI can assert it satisfies the shared contract from its first
+  commit, without depending on another product's test suite.
+
+`Azazel-Boot` and any new Azazel-series tool depend on `Azazel-Fabric` from
+their first commit, rather than inventing their own state/audit/CTI formats.
+Beyond the two deliverables above, this remains a standing policy for new
+repositories going forward — it has no recurring exit condition of its own.
 
 ## Versioning and consumption policy (applies to every phase)
 
@@ -191,7 +210,8 @@ policy for new repositories going forward.
   - `v0.2.0` — shared status view-model added
   - `v0.3.0` — repository/distribution/import namespace renamed to
     Azazel-Fabric/`azazel_fabric` (breaking; no schema change)
-  - `v0.4.0` — api auth helper + notify model added
+  - `v0.4.0` — Phase 5 helper modules (`paths`/`api`/`notify`/`audit`) +
+    Phase 6 adoption tooling (`docs/adoption-guide.md` + `testing`) added
   - `v0.5.0` — CTI contract stabilized against real Edge↔Knowledge traffic
   - `v1.0.0` — after Edge, Gadget, and Knowledge each pass their contract
     test suite against Fabric

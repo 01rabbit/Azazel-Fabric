@@ -1,12 +1,13 @@
 # Azazel-Fabric (formerly Azazel-Common): Repository and Package Layout
 
-Status: **Partially implemented.** `src/azazel_fabric/schema/`,
-`cti_contracts/`, and `view/` exist on disk exactly as laid out below and
-shipped in `v0.1.0`/`v0.2.0` (under the `azazel_common` import path at the
-time; `v0.3.0` renamed the package to `azazel_fabric` with no change to
-this layout — see `CHANGELOG.md`). `paths/`, `audit/`, `api/`, `notify/`,
-and `testing/` remain proposal only — not yet scaffolded, per the Phase-5
-note below.
+Status: **Implemented.** `src/azazel_fabric/schema/`, `cti_contracts/`, and
+`view/` shipped in `v0.1.0`/`v0.2.0` (under the `azazel_common` import path at
+the time; `v0.3.0` renamed the package to `azazel_fabric` with no change to this
+layout — see `CHANGELOG.md`). `paths/`, `audit/`, `api/`, `notify/`, and
+`testing/` are now scaffolded and real as of `v0.4.0` (Phase 5/6). The tree
+below reflects the actual files on disk; a few leaf filenames differ from the
+original proposal (noted inline) where the real implementation consolidated or
+renamed a file.
 
 ## Repository name
 
@@ -44,39 +45,44 @@ Azazel-Fabric/
 │       │   ├── reactions.py        # (reaction-specific sub-shapes, if they diverge from ingest.py)
 │       │   ├── context.py          # CtiContextRequest, CtiContextResponse, IocMatch
 │       │   └── advisory.py         # BehavioralCtiBlock, advisory_notice / limitations helpers
-│       ├── paths/                  # Phase 5
+│       ├── paths/                  # Phase 5 (v0.4.0)
 │       │   ├── __init__.py
-│       │   ├── schema.py           # runtime/config/log dir resolution
-│       │   └── migration.py        # legacy-path dry-run migration helper
-│       ├── audit/                  # Phase 5
+│       │   ├── schema.py           # candidate-path hints + legacy-alias resolution
+│       │   └── migration.py        # dry-run-only legacy-path migration planner
+│       ├── audit/                  # Phase 5 (v0.4.0)
 │       │   ├── __init__.py
-│       │   ├── jsonl.py            # JSONL writer, trace_id generator, config_hash helper
-│       │   └── chain.py            # HMAC / chain-of-custody helper (future extension point)
-│       ├── api/                    # Phase 5
+│       │   ├── jsonl.py            # JSONL formatters (to/from line, read/write stream)
+│       │   └── events.py           # AuditEvent projection + event_id convention
+│       │                           # (no chain.py — no hash chain/verification, owner decision)
+│       ├── api/                    # Phase 5 (v0.4.0)
 │       │   ├── __init__.py
-│       │   ├── auth.py             # token auth helper (X-AZAZEL-TOKEN / X-Auth-Token)
-│       │   ├── roles.py            # viewer/operator/responder/admin
+│       │   ├── auth.py             # token extraction (X-AZAZEL-TOKEN / X-Auth-Token)
+│       │   ├── roles.py            # viewer/operator/responder/admin, fail-closed
 │       │   └── errors.py           # standard JSON error model, fail-closed default
-│       ├── notify/                 # Phase 5
+│       ├── notify/                 # Phase 5 (v0.4.0)
 │       │   ├── __init__.py
-│       │   ├── model.py            # shared notification event schema
-│       │   ├── ntfy.py             # thin ntfy send helper
-│       │   └── mattermost.py       # thin Mattermost send helper
+│       │   ├── model.py            # shared NotificationEvent schema
+│       │   └── transports.py       # pure ntfy/Mattermost payload mappers (no send)
+│       │                           # (consolidates the proposed ntfy.py + mattermost.py)
 │       ├── view/                    # v0.2.0 — shared status view-model
 │       │   ├── __init__.py
 │       │   ├── status.py            # StatusView, HealthDimension (Edge-lineage superset)
 │       │   └── build.py             # build_status_view helper (shared derivation)
-│       └── testing/
+│       └── testing/                 # Phase 6 (v0.4.0)
 │           ├── __init__.py
-│           ├── fixtures.py         # shared pytest fixtures for consumer contract tests
-│           └── contract_cases.py   # canonical valid/invalid payload examples per schema
+│           ├── factories.py        # make_*/minimal_* builders (no pytest dependency)
+│           └── invariants.py       # assert_advisory_only + friends (plain functions)
 ├── tests/
 │   ├── test_schema_state.py
 │   ├── test_schema_decision.py
+│   ├── test_schema_records.py
 │   ├── test_cti_contracts.py
-│   ├── test_audit_jsonl.py
+│   ├── test_view_status.py
 │   ├── test_paths.py
-│   └── test_api_auth_models.py
+│   ├── test_audit.py
+│   ├── test_api.py
+│   ├── test_notify.py
+│   └── test_testing_module.py
 └── docs/
     ├── architecture.md
     ├── design-principles.md
@@ -96,10 +102,16 @@ Notes:
   `test_schema_state.py`, `test_schema_decision.py`,
   `test_schema_records.py`, `test_cti_contracts.py`, and
   `test_view_status.py`.
-- `azazel_fabric.paths`, `.audit`, `.api`, `.notify`, and `.testing`
-  directories are shown now for completeness of the target layout, but
-  remain **not scaffolded** — they are added when their phase starts (see
-  `migration-plan.md` Phase 5), so released code has no dead code.
+- **Implemented as of `v0.4.0` (Phase 5/6):** `paths/`, `audit/`, `api/`,
+  `notify/`, and `testing/`, with matching `test_paths.py`, `test_audit.py`,
+  `test_api.py`, `test_notify.py`, and `test_testing_module.py`. A few leaf
+  filenames diverged from the original proposal, reconciled in the tree above:
+  `audit/` has `jsonl.py` + `events.py` and **no `chain.py`** (no hash chain or
+  verification — owner decision; chains stay product-local); `notify/`
+  consolidates the proposed `ntfy.py` + `mattermost.py` into a single pure
+  `transports.py` (payload mappers, no network send); `testing/` ships
+  `factories.py` + `invariants.py` (plain functions, no pytest dependency)
+  rather than `fixtures.py` + `contract_cases.py`.
 - `action.py`'s `ObservePlan`..`ReleasePlan` are abstract, data-only plan
   descriptions (see `architecture.md`'s Action Plan section) — they carry
   no execution logic and no adapter to nft/tc/OpenCanary. Converting a

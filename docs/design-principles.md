@@ -1,11 +1,11 @@
 # Azazel-Fabric (formerly Azazel-Common): Design Principles
 
-Status: **Governing charter for shipped code (`v0.3.0`).** §2/§3.1 reflect
-the `schema`/`cti_contracts`/`view` modules as actually implemented and
-released; the `paths`/`api`/`notify`/`testing` rows in §2 are still design
-proposal — not yet built (see `migration-plan.md` Phase 5). `v0.3.0` renamed
-the repository and package from `Azazel-Common`/`azazel_common` to
-`Azazel-Fabric`/`azazel_fabric`; the principles below are unchanged by
+Status: **Governing charter for shipped code (`v0.4.0`).** §2/§3.1 reflect
+the `schema`/`cti_contracts`/`view` modules (`v0.1.0`/`v0.2.0`) and the
+`paths`/`audit`/`api`/`notify`/`testing` modules (`v0.4.0`, Phase 5/6) as
+actually implemented and released — every row in the §2 table is now built.
+`v0.3.0` renamed the repository and package from `Azazel-Common`/`azazel_common`
+to `Azazel-Fabric`/`azazel_fabric`; the principles below are unchanged by
 the rename — see §4.6.
 
 ## 1. First principle
@@ -29,7 +29,7 @@ it does not belong in Fabric.
 | `azazel_fabric.schema` | `StateSnapshot`, `ModeState`, `ActionIntent`, `EvidenceRef`, `DecisionExplanation`, `AuditEvent`, `TrustCapsule` | Pure data shape. Describing a decision that already happened is not the same as making it. |
 | `azazel_fabric.cti_contracts` | `CtiEventBatch`, `CtiFlowBatch`, `CtiReactionBatch`, `CtiContextRequest`, `CtiContextResponse` | Wire format for an advisory exchange. Fixing the *shape* of advice does not grant the Knowledge Plane (Azazel-Knowledge) authority over Edge/Gadget. |
 | `azazel_fabric.paths` | runtime/config/log dir schema, legacy-path compatibility, migration dry-run helper, active-schema discovery | Directory naming convention only; no product logic depends on where a log file happens to sit. |
-| `azazel_fabric.audit` | JSONL writer, trace-id generator, config-hash helper, HMAC helper, (future) chain-of-custody helper | Standardizes the *envelope* audit events are written in. The content and triggering of an audit event stays product-owned. |
+| `azazel_fabric.audit` | `AuditEvent` projection (`project_audit_event`, `make_event_id`) + JSONL formatters (`to_jsonl_line`/`from_jsonl_line`/`write_jsonl`/`read_jsonl`). **No hash chain, no chain verification** (owner decision) — the "(future) chain-of-custody helper" once noted here is deliberately *not* built; chains stay product-local (Edge's P0 hash chain). | Standardizes the *envelope* audit events are written in. The content, integrity mechanism, and triggering of an audit event stay product-owned. |
 | `azazel_fabric.api` | token-auth helper, role helper (viewer/operator/responder/admin), fail-closed default response, standard JSON error model | Security posture conventions, not endpoint logic. Framework-neutral; Flask/FastAPI adapters are separate optional modules. |
 | `azazel_fabric.notify` | notification event schema, thin ntfy/Mattermost send helpers, SSE bridge model | Payload shape and transport plumbing only. No product-specific copy, tone, or UI. |
 | `azazel_fabric.view` | `StatusView` display view-model + `build_status_view` helper | A shared *data contract* for what a status surface shows, plus one shared builder that derives it. It is the shape a display *reads*, not a renderer — standardizing it lets Edge and Gadget render the same status the same way without moving any product's UI into Fabric. Edge-lineage but a generalized superset (Gadget-only fields ride in `product_view`), so Gadget is never narrowed to "Edge minus features." |

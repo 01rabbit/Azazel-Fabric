@@ -5,4 +5,4 @@ GitHub corresponds to this value. Bump here, tag the merge commit on
 GitHub, and cut the matching GitHub Release. See ``CHANGELOG.md``.
 """
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
