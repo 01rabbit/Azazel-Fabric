@@ -2,7 +2,7 @@
 
 > **Codename:** `COVENANT`
 
-![Azazel-Fabric Banner](assets/branding/Azazel-Fabric_Banner.svg)
+![Azazel-Fabric Banner](assets/branding/Azazel-Fabric_Banner.png)
 
 Shared contracts and interoperability foundation for the Azazel System.
 
