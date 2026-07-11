@@ -1,1 +1,79 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="500" viewBox="0 0 1600 500" role="img" aria-labelledby="title desc"><title id="title">Azazel-Fabric series banner</title><desc id="desc">AZ-05 COVENANT shared contracts and interoperability foundation</desc><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#030508"/><stop offset="0.52" stop-color="#10070a"/><stop offset="1" stop-color="#05070a"/></linearGradient><radialGradient id="glow" cx="20%" cy="50%" r="55%"><stop offset="0" stop-color="#7a1118" stop-opacity=".48"/><stop offset="1" stop-color="#7a1118" stop-opacity="0"/></radialGradient><pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M64 0H0V64" fill="none" stroke="#fff" stroke-opacity=".025"/></pattern></defs><rect width="1600" height="500" fill="url(#bg)"/><rect width="1600" height="500" fill="url(#glow)"/><rect width="1600" height="500" fill="url(#grid)"/><path d="M0 406L1600 304" stroke="#8d171e" stroke-opacity=".45" stroke-width="3"/><path d="M0 438L1600 336" stroke="#8d171e" stroke-opacity=".16"/><rect x="18" y="18" width="1564" height="464" fill="none" stroke="#9e1c23" stroke-opacity=".45" stroke-width="2"/><g transform="translate(248 250)"><circle r="154" fill="#09080a" fill-opacity=".72" stroke="#8e171e" stroke-opacity=".6" stroke-width="3"/><circle r="116" fill="none" stroke="#9e1c23" stroke-opacity=".42" stroke-width="2"/><path d="M-45-78C-118-118-135-35-77 8M45-78C118-118 135-35 77 8" fill="none" stroke="#d03a42" stroke-width="13" stroke-linecap="round"/><path d="M0-74L74-20 49 92 0 126-49 92-74-20Z" fill="#13080b" stroke="#df454d" stroke-width="4"/><path d="M-34-2L0 28 34-2M0 28V85" fill="none" stroke="#df454d" stroke-width="8"/><text x="0" y="184" text-anchor="middle" fill="#c34a50" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="700" letter-spacing="3">AZAZEL SYSTEM // AZ-05</text></g><g font-family="Arial,Helvetica,sans-serif"><text x="478" y="96" fill="#d8434b" font-size="24" font-weight="700" letter-spacing="4">CODENAME: COVENANT</text><text x="474" y="184" fill="#f2f2f2" font-size="72" font-weight="800">Azazel-Fabric</text><line x1="478" y1="220" x2="1492" y2="220" stroke="#a21d24" stroke-width="3"/><text x="478" y="271" fill="#d1d1d1" font-size="30" font-weight="700">SHARED CONTRACTS AND INTEROPERABILITY FOUNDATION</text><text x="478" y="329" fill="#969696" font-size="23" letter-spacing="2">SCHEMA • STATE • AUDIT • EXCHANGE</text><text x="478" y="404" fill="#c63a42" font-size="22" font-weight="700" letter-spacing="3">CYBER SCAPEGOAT GATEWAY</text><text x="478" y="440" fill="#777" font-size="18" letter-spacing="2">DETERMINISTIC • LOCAL-FIRST • AUDITABLE</text></g><g stroke="#d33c44" stroke-width="3" opacity=".8"><path d="M36 78V36H78M1522 36H1564V78M36 422V464H78M1522 464H1564V422"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="768" viewBox="0 0 2048 768" role="img" aria-labelledby="title desc">
+<title id="title">AZ-05 Azazel-Fabric — Shared Contracts and Interoperability Foundation</title>
+<desc id="desc">Indigo and graphite Azazel banner showing a recognizable circuit goat formed by woven contract traces, four peer contract domains, and independent products sharing the same contract structure.</desc>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#050608"/><stop offset="0.56" stop-color="#0a0b11"/><stop offset="1" stop-color="#11131a"/></linearGradient>
+  <linearGradient id="violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a3a86"/><stop offset="0.55" stop-color="#6e58b8"/><stop offset="1" stop-color="#9a86dd"/></linearGradient>
+  <pattern id="grid" width="64" height="64" patternUnits="userSpaceOnUse"><path d="M64 0H0V64" fill="none" stroke="#d9dbe2" stroke-opacity=".035"/></pattern>
+  <filter id="soft"><feGaussianBlur stdDeviation="5"/></filter>
+</defs>
+<rect width="2048" height="768" fill="url(#bg)"/><rect width="2048" height="768" fill="url(#grid)"/><rect x="18" y="18" width="2012" height="732" rx="18" fill="none" stroke="#51486d" stroke-width="2"/>
+
+<!-- identity zone -->
+<g font-family="Arial,Helvetica,sans-serif">
+  <rect x="54" y="48" width="206" height="64" rx="12" fill="#090a0f" stroke="#6e58b8" stroke-width="2"/>
+  <text x="83" y="91" fill="#bba9ef" font-family="ui-monospace,Consolas,monospace" font-size="34" letter-spacing="3">AZ-05</text>
+  <text x="54" y="199" fill="#f1f2f5" font-size="72" font-weight="800" letter-spacing="1">AZAZEL-FABRIC</text>
+  <text x="58" y="247" fill="#aeb2bc" font-size="28">Shared Contracts and Interoperability Foundation</text>
+  <text x="58" y="292" fill="#b39de8" font-family="ui-monospace,Consolas,monospace" font-size="23" letter-spacing="1.5">CODENAME: COVENANT</text>
+  <line x1="58" y1="322" x2="677" y2="322" stroke="#5f4e9f" stroke-width="2"/>
+  <text x="58" y="379" fill="#eceef2" font-size="39" font-weight="700" letter-spacing="1.5">SHARED CONTRACTS.</text>
+  <text x="58" y="427" fill="#eceef2" font-size="39" font-weight="700" letter-spacing="1.5">LOCAL AUTHORITY.</text>
+</g>
+
+<!-- four peer domains -->
+<g font-family="ui-monospace,Consolas,monospace" text-anchor="middle">
+  <g transform="translate(70 474)"><rect width="132" height="104" rx="14" fill="#090a0f" stroke="#6b5c91" stroke-width="2"/><text x="66" y="50" fill="#b49fe9" font-size="33">&lt;&gt;</text><text x="66" y="86" fill="#aeb2bc" font-size="17">SCHEMA</text></g>
+  <g transform="translate(244 474)"><rect width="132" height="104" rx="14" fill="#090a0f" stroke="#6b5c91" stroke-width="2"/><text x="66" y="50" fill="#b49fe9" font-size="35">≡</text><text x="66" y="86" fill="#aeb2bc" font-size="17">STATE</text></g>
+  <g transform="translate(418 474)"><rect width="132" height="104" rx="14" fill="#090a0f" stroke="#6b5c91" stroke-width="2"/><text x="66" y="50" fill="#b49fe9" font-size="35">✓</text><text x="66" y="86" fill="#aeb2bc" font-size="17">AUDIT</text></g>
+  <g transform="translate(592 474)"><rect width="132" height="104" rx="14" fill="#090a0f" stroke="#6b5c91" stroke-width="2"/><text x="66" y="50" fill="#b49fe9" font-size="35">⇄</text><text x="66" y="86" fill="#aeb2bc" font-size="17">EXCHANGE</text></g>
+</g>
+
+<!-- woven contract field; parallel, non-commanding -->
+<g fill="none" stroke-linecap="round">
+  <path d="M720 150C860 80 1020 80 1230 150S1440 170 1588 150" stroke="#59478f" stroke-width="2" opacity=".55"/>
+  <path d="M720 175C880 120 1010 110 1230 175S1420 195 1588 175" stroke="#6e58b8" stroke-width="2" opacity=".62"/>
+  <path d="M720 200C900 160 1010 140 1230 200S1420 220 1588 200" stroke="#8b73cf" stroke-width="2" opacity=".72"/>
+  <path d="M720 285C900 220 1040 230 1230 285S1420 305 1588 285" stroke="#59478f" stroke-width="2" opacity=".55"/>
+  <path d="M720 310C900 260 1040 260 1230 310S1420 330 1588 310" stroke="#6e58b8" stroke-width="2" opacity=".62"/>
+  <path d="M720 335C900 300 1040 295 1230 335S1420 355 1588 335" stroke="#8b73cf" stroke-width="2" opacity=".72"/>
+  <path d="M720 420C900 360 1040 365 1230 420S1420 440 1588 420" stroke="#59478f" stroke-width="2" opacity=".55"/>
+  <path d="M720 445C900 405 1040 400 1230 445S1420 465 1588 445" stroke="#6e58b8" stroke-width="2" opacity=".62"/>
+  <path d="M720 470C900 440 1040 435 1230 470S1420 490 1588 470" stroke="#8b73cf" stroke-width="2" opacity=".72"/>
+</g>
+
+<!-- brand zone: recognizable goat silhouette built from contract traces -->
+<g transform="translate(1000 348)">
+  <circle r="252" fill="#08090d" fill-opacity=".45" stroke="#4f4472" stroke-width="2"/>
+  <circle r="224" fill="none" stroke="#6e58b8" stroke-opacity=".4" stroke-width="2"/>
+  <path d="M-64-125C-165-190-208-61-119 23M64-125C165-190 208-61 119 23" fill="none" stroke="url(#violet)" stroke-width="24" stroke-linecap="round"/>
+  <path d="M-82-44L-146-12-104 25-61 10M82-44L146-12 104 25 61 10" fill="none" stroke="#9279d8" stroke-width="14" stroke-linejoin="round"/>
+  <path d="M0-126L84-55 57 108 0 154-57 108-84-55Z" fill="#0b0c12" stroke="url(#violet)" stroke-width="7"/>
+  <path d="M0-118V118M-54-70L-20-36V64L-53 88M54-70L20-36V64L53 88M-38 6L0 36 38 6M0 36V112" fill="none" stroke="#9a86dd" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="-54" cy="-34" r="7" fill="#b6a3ef"/><circle cx="54" cy="-34" r="7" fill="#b6a3ef"/><circle cx="0" cy="36" r="6" fill="#b6a3ef"/>
+  <path d="M-40 123L0 166 40 123" fill="none" stroke="#7b67bf" stroke-width="8"/>
+</g>
+
+<!-- semantic statement -->
+<g font-family="ui-monospace,Consolas,monospace" text-anchor="middle">
+  <rect x="790" y="592" width="420" height="72" rx="12" fill="#090a0f" stroke="#6e58b8" stroke-width="2"/>
+  <text x="1000" y="623" fill="#b49fe9" font-size="24" letter-spacing="1">ONE SET OF CONTRACTS</text>
+  <text x="1000" y="650" fill="#9ea3ad" font-size="14" letter-spacing="1.5">MANY INDEPENDENT PRODUCTS</text>
+</g>
+
+<!-- independent products, same repeated contract token -->
+<g font-family="Arial,Helvetica,sans-serif">
+  <g transform="translate(1588 106)"><rect width="400" height="100" rx="14" fill="#090a0f" stroke="#595666" stroke-width="2"/><rect x="18" y="16" width="70" height="68" rx="10" fill="none" stroke="#6e58b8" stroke-width="2"/><path d="M34 50H72M53 31V69" stroke="#b49fe9" stroke-width="3"/><text x="116" y="45" fill="#eceef2" font-size="25">EDGE</text><text x="116" y="72" fill="#9ea3ad" font-family="ui-monospace,Consolas,monospace" font-size="13">SAME CONTRACT STRUCTURE</text></g>
+  <g transform="translate(1588 246)"><rect width="400" height="100" rx="14" fill="#090a0f" stroke="#595666" stroke-width="2"/><rect x="18" y="16" width="70" height="68" rx="10" fill="none" stroke="#6e58b8" stroke-width="2"/><path d="M34 50H72M53 31V69" stroke="#b49fe9" stroke-width="3"/><text x="116" y="45" fill="#eceef2" font-size="25">GADGET</text><text x="116" y="72" fill="#9ea3ad" font-family="ui-monospace,Consolas,monospace" font-size="13">SAME CONTRACT STRUCTURE</text></g>
+  <g transform="translate(1588 386)"><rect width="400" height="100" rx="14" fill="#090a0f" stroke="#595666" stroke-width="2"/><rect x="18" y="16" width="70" height="68" rx="10" fill="none" stroke="#6e58b8" stroke-width="2"/><path d="M34 50H72M53 31V69" stroke="#b49fe9" stroke-width="3"/><text x="116" y="45" fill="#eceef2" font-size="25">KNOWLEDGE</text><text x="116" y="72" fill="#9ea3ad" font-family="ui-monospace,Consolas,monospace" font-size="13">SAME CONTRACT STRUCTURE</text></g>
+  <g transform="translate(1588 526)"><rect width="400" height="100" rx="14" fill="#090a0f" stroke="#595666" stroke-width="2"/><rect x="18" y="16" width="70" height="68" rx="10" fill="none" stroke="#6e58b8" stroke-width="2"/><path d="M34 50H72M53 31V69" stroke="#b49fe9" stroke-width="3"/><text x="116" y="45" fill="#eceef2" font-size="25">FUTURE NODES</text><text x="116" y="72" fill="#9ea3ad" font-family="ui-monospace,Consolas,monospace" font-size="13">SAME CONTRACT STRUCTURE</text></g>
+</g>
+
+<!-- footer: three characteristics only -->
+<g font-family="ui-monospace,Consolas,monospace" fill="#eceef2" font-size="20" letter-spacing="1.2">
+  <rect x="42" y="688" width="1964" height="48" rx="13" fill="#090a0f" stroke="#4f4960" stroke-width="2"/>
+  <text x="90" y="720">INTEROPERABLE BY DESIGN</text><line x1="650" y1="698" x2="650" y2="727" stroke="#5b5272" stroke-width="2"/>
+  <text x="715" y="720">CONSISTENT STATE MODEL</text><line x1="1354" y1="698" x2="1354" y2="727" stroke="#5b5272" stroke-width="2"/>
+  <text x="1415" y="720">FAIL-CLOSED BY DEFAULT</text>
+</g>
+</svg>
