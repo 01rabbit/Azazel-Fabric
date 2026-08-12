@@ -1,13 +1,15 @@
 """Shared test factories + invariant assertions for Fabric consumers.
 
 Lets each product's CI assert it still satisfies the shared contract without
-depending on another product's test suite (design-principles §2). **No pytest
-dependency** — every export is a plain function usable from any test framework
-(a ``test`` extra exists for consumers that want pytest itself). Factories build
-valid Fabric objects (``make_*`` populated, ``minimal_*`` required-only);
-:func:`assert_advisory_only` and friends assert the safety invariants.
+depending on another product's test suite. No pytest dependency: every export
+is a plain function usable from any test framework.
 """
 
+from azazel_fabric.testing.deception import (
+    make_deception_host_capabilities,
+    make_deception_package,
+    make_deception_placement,
+)
 from azazel_fabric.testing.factories import (
     FIXED_TS,
     make_action_intent,
@@ -31,7 +33,6 @@ from azazel_fabric.testing.invariants import (
 
 __all__ = [
     "FIXED_TS",
-    # factories — make_*
     "make_mode_state",
     "make_state_snapshot",
     "make_action_intent",
@@ -39,14 +40,15 @@ __all__ = [
     "make_audit_event",
     "make_cti_context_request",
     "make_cti_context_response",
-    # factories — minimal_*
+    "make_deception_host_capabilities",
+    "make_deception_package",
+    "make_deception_placement",
     "minimal_mode_state",
     "minimal_state_snapshot",
     "minimal_status_view",
     "minimal_audit_event",
     "minimal_cti_context_request",
     "minimal_cti_context_response",
-    # invariants
     "assert_advisory_only",
     "assert_behavioral_absent_not_null",
 ]
