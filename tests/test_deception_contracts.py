@@ -8,6 +8,7 @@ from azazel_fabric.deception_contracts import (
     DeceptionPackage,
     DeploymentTier,
     EnvironmentActivationDecision,
+    EnvironmentTerminationDecision,
     HostCapabilities,
     ImageManifest,
     ImagePlatform,
@@ -31,6 +32,17 @@ def _budget() -> ResourceBudget:
         storage_mb=2048,
         max_connections=100,
         max_duration_seconds=300,
+    )
+
+
+def _maximum_budget() -> ResourceBudget:
+    return ResourceBudget(
+        cpu_cores=4,
+        memory_mb=4096,
+        storage_mb=8192,
+        max_connections=500,
+        max_duration_seconds=600,
+        bandwidth_kbps=10000,
     )
 
 
@@ -64,6 +76,7 @@ def _package() -> DeceptionPackage:
             minimum=minimum,
             required_runtime_features=["isolated_network", "resource_limits"],
         ),
+        maximum_budget=_maximum_budget(),
         safety=SafetyPolicy(),
         components=[component],
         deployment_tiers=[
@@ -86,6 +99,7 @@ def test_valid_package_round_trip() -> None:
     assert {p.architecture for p in restored.components[0].image.platforms} == {"arm64", "amd64"}
     assert restored.safety.outbound_allowed is False
     assert restored.safety.production_access is False
+    assert restored.maximum_budget.max_duration_seconds == 600
 
 
 def test_tier_cannot_omit_required_component() -> None:
@@ -102,6 +116,13 @@ def test_tier_cannot_omit_required_component() -> None:
         }
     )
     with pytest.raises(ValidationError, match="omits required components"):
+        DeceptionPackage.model_validate(package)
+
+
+def test_tier_minimum_cannot_exceed_package_maximum() -> None:
+    package = _package().model_dump()
+    package["deployment_tiers"][0]["minimum"]["memory_mb"] = 99999
+    with pytest.raises(ValidationError, match="exceeds package maximum budget"):
         DeceptionPackage.model_validate(package)
 
 
@@ -160,6 +181,26 @@ def test_activation_decision_requires_edge_authority_and_expiry() -> None:
             budget=_budget(),
             effective_at=now,
             expires_at=now + timedelta(minutes=5),
+        )
+
+
+def test_termination_decision_is_edge_owned_and_expiring() -> None:
+    now = datetime.now(timezone.utc)
+    decision = EnvironmentTerminationDecision(
+        decision_id="edge-terminate-1",
+        environment_id="env-1",
+        reason="operator_request",
+        issued_at=now,
+        expires_at=now + timedelta(minutes=1),
+    )
+    assert decision.decision_authority == "azazel-edge"
+    with pytest.raises(ValidationError):
+        EnvironmentTerminationDecision(
+            decision_id="edge-terminate-2",
+            environment_id="env-1",
+            reason="operator_request",
+            issued_at=now,
+            expires_at=now,
         )
 
 
