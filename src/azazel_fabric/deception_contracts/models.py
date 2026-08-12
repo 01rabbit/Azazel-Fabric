@@ -38,6 +38,20 @@ class ResourceBudget(BaseModel):
     max_duration_seconds: int = Field(gt=0, default=300)
     bandwidth_kbps: int | None = Field(default=None, gt=0)
 
+    def is_within(self, maximum: "ResourceBudget") -> bool:
+        if self.cpu_cores > maximum.cpu_cores:
+            return False
+        if self.memory_mb > maximum.memory_mb or self.storage_mb > maximum.storage_mb:
+            return False
+        if self.max_connections > maximum.max_connections:
+            return False
+        if self.max_duration_seconds > maximum.max_duration_seconds:
+            return False
+        if maximum.bandwidth_kbps is not None:
+            if self.bandwidth_kbps is None or self.bandwidth_kbps > maximum.bandwidth_kbps:
+                return False
+        return True
+
 
 class SafetyPolicy(BaseModel):
     """Safety policy deliberately cannot express unrestricted live access."""
@@ -203,6 +217,7 @@ class DeceptionPackage(BaseModel):
     package_digest: str
     narrative: NarrativeManifest
     runtime_requirements: RuntimeRequirements
+    maximum_budget: ResourceBudget
     safety: SafetyPolicy = Field(default_factory=SafetyPolicy)
     components: list[ComponentManifest] = Field(min_length=1)
     deployment_tiers: list[DeploymentTier] = Field(min_length=1)
@@ -215,6 +230,9 @@ class DeceptionPackage(BaseModel):
 
     @model_validator(mode="after")
     def package_invariants(self) -> "DeceptionPackage":
+        if not self.runtime_requirements.minimum.is_within(self.maximum_budget):
+            raise ValueError("runtime minimum exceeds package maximum budget")
+
         component_ids = [item.component_id for item in self.components]
         if len(set(component_ids)) != len(component_ids):
             raise ValueError("component_id values must be unique")
@@ -232,6 +250,8 @@ class DeceptionPackage(BaseModel):
             missing = required - included
             if missing:
                 raise ValueError(f"tier {tier.tier_id} omits required components: {sorted(missing)}")
+            if not tier.minimum.is_within(self.maximum_budget):
+                raise ValueError(f"tier {tier.tier_id} minimum exceeds package maximum budget")
         if self.consistency.fatal_contradictions:
             raise ValueError("package has unresolved fatal narrative contradictions")
         return self
@@ -317,7 +337,14 @@ class EnvironmentTerminationDecision(BaseModel):
     environment_id: str = Field(min_length=1)
     reason: str = Field(min_length=1)
     issued_at: datetime
+    expires_at: datetime
     evidence_refs: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def expiry_after_issued(self) -> "EnvironmentTerminationDecision":
+        if self.expires_at <= self.issued_at:
+            raise ValueError("expires_at must be later than issued_at")
+        return self
 
 
 class EnvironmentEvent(BaseModel):
