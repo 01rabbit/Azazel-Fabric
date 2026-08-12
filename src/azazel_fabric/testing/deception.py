@@ -52,12 +52,20 @@ def make_deception_host_capabilities(
 
 
 def make_deception_package(verified: bool = True, **overrides: Any) -> DeceptionPackage:
-    budget = ResourceBudget(
+    minimum = ResourceBudget(
         cpu_cores=2,
         memory_mb=1024,
         storage_mb=2048,
         max_connections=100,
         max_duration_seconds=300,
+    )
+    maximum = ResourceBudget(
+        cpu_cores=4,
+        memory_mb=4096,
+        storage_mb=8192,
+        max_connections=500,
+        max_duration_seconds=600,
+        bandwidth_kbps=10000,
     )
     image = ImageManifest(
         image="example.invalid/az06/intranet-web:0.2",
@@ -87,10 +95,11 @@ def make_deception_package(verified: bool = True, **overrides: Any) -> Deception
         "runtime_requirements": RuntimeRequirements(
             architectures=["arm64", "amd64"],
             runtime_adapter="docker_compose",
-            minimum=budget,
+            minimum=minimum,
             required_runtime_features=["isolated_network", "resource_limits"],
             required_profile_classes=["static_linux"],
         ),
+        "maximum_budget": maximum,
         "safety": SafetyPolicy(),
         "components": [
             ComponentManifest(
@@ -103,7 +112,7 @@ def make_deception_package(verified: bool = True, **overrides: Any) -> Deception
         "deployment_tiers": [
             DeploymentTier(
                 tier_id="lite",
-                minimum=budget,
+                minimum=minimum,
                 include_components=["intranet-web"],
             )
         ],
