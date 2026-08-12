@@ -38,7 +38,21 @@ class ResourceBudget(BaseModel):
     max_duration_seconds: int = Field(gt=0, default=300)
     bandwidth_kbps: int | None = Field(default=None, gt=0)
 
-    def is_within(self, maximum: "ResourceBudget") -> bool:
+    def is_within(
+        self,
+        maximum: "ResourceBudget",
+        *,
+        require_bounded_bandwidth: bool = False,
+    ) -> bool:
+        """Return whether this budget fits within ``maximum``.
+
+        ``bandwidth_kbps=None`` has two intentionally different meanings:
+
+        - for a *minimum requirement* it means no minimum bandwidth is required;
+        - for a live *allocation* it is unsafe/unspecified and is rejected when
+          ``require_bounded_bandwidth=True``.
+        """
+
         if self.cpu_cores > maximum.cpu_cores:
             return False
         if self.memory_mb > maximum.memory_mb or self.storage_mb > maximum.storage_mb:
@@ -47,8 +61,11 @@ class ResourceBudget(BaseModel):
             return False
         if self.max_duration_seconds > maximum.max_duration_seconds:
             return False
-        if maximum.bandwidth_kbps is not None:
-            if self.bandwidth_kbps is None or self.bandwidth_kbps > maximum.bandwidth_kbps:
+
+        if require_bounded_bandwidth and self.bandwidth_kbps is None:
+            return False
+        if maximum.bandwidth_kbps is not None and self.bandwidth_kbps is not None:
+            if self.bandwidth_kbps > maximum.bandwidth_kbps:
                 return False
         return True
 
@@ -230,6 +247,8 @@ class DeceptionPackage(BaseModel):
 
     @model_validator(mode="after")
     def package_invariants(self) -> "DeceptionPackage":
+        if self.maximum_budget.bandwidth_kbps is None:
+            raise ValueError("package maximum budget must declare finite bandwidth_kbps")
         if not self.runtime_requirements.minimum.is_within(self.maximum_budget):
             raise ValueError("runtime minimum exceeds package maximum budget")
 
