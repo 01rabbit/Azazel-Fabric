@@ -1,6 +1,6 @@
 # AZ-06 Deception-Environment Contracts
 
-Status: **unreleased `0.5.0.dev0` development contract family**.
+Status: **released in `v0.5.0`** (first canonical AZ-06 contract baseline).
 
 Tracking issues:
 
@@ -143,15 +143,17 @@ removed after a stable `v0.5.x` Fabric release and migration window.
 
 ## Release gate
 
-Do not tag `v0.5.x` solely because the models exist. Before release:
+`v0.5.0` was cut by owner decision (2026-08-14) with the gate satisfied on
+the Fabric side:
 
-- keep Fabric CI green
-- add/retain cross-repository golden fixtures
-- validate AZ-06 and Edge against the same fixtures
-- replace placeholder OCI provenance in the reference package with real
-  digests/provenance/SBOM data
-- verify consumer documentation and exact pins
-- run adversarial authority-bypass and unsupported-version tests
+- Fabric CI green
+- cross-repository golden fixtures in `azazel_fabric.testing.deception`
+- AZ-06 and Edge validated against the same fixtures
+- adversarial authority-bypass and unsupported-version tests in place
 
-Until then, development consumers pin an exact reviewed commit and must not
-present `0.5.0.dev0` as a stable release.
+Consumer-side follow-ups tracked outside Fabric: the AZ-06 reference package
+carries real multi-arch OCI digests/provenance, with the GH-store SPDX
+attestation refresh handled in `Azazel-Deception#3`; consumer pins reconcile
+to the `v0.5.0` tag.
+
+Consumers pin the exact `v0.5.0` tag, never `main`.
