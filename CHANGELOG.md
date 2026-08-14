@@ -6,13 +6,57 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 `01rabbit/Azazel-Fabric`; consumers pin an exact tag (see
 `docs/migration-plan.md`).
 
-## [Unreleased]
+## [0.5.0] — AZ-06 canonical deception-environment contracts
+
+Adds the canonical AZ-06 deception-environment contract family
+(`Azazel-Fabric#9`) as **additive, non-breaking** code. No change to
+`schema`, `cti_contracts`, `view`, or the Phase-5/6 helper modules;
+consumers on `v0.4.0` upgrade by bumping the pin, with nothing to migrate.
+AZ-06 (`Azazel-Deception#1`) replaces its bootstrap shapes by pinning this
+tag; Edge (`Azazel-Edge#325`) consumes the same golden factories.
+
+Authority rule, unchanged and now encoded in the models: *Fabric describes.
+Edge decides and enforces. Deception Host materializes, transitions, records,
+and resets.* The contract family is intentionally incapable of turning a
+capability report, package, placement plan, or advisory into runtime
+authority.
 
 ### Added
 
+- `azazel_fabric.deception_contracts` — canonical `*/v0.1` wire family:
+  `DeceptionPackage`, `NarrativeManifest`, `NarrativeConsistencyReport`,
+  `CredentialLure`, `DecoySurface`, `ComponentManifest`, `ImageManifest` /
+  `ImagePlatform`, `RuntimeRequirements`, `HostCapabilities`,
+  `DeploymentTier`, `PlacementPlan`, the Edge-only
+  `EnvironmentActivationDecision` / `EnvironmentTransitionDecision` /
+  `EnvironmentTerminationDecision` (with expiry), `EnvironmentEvent`,
+  `EnvironmentOutcome`, and shared `ResourceBudget` / `SafetyPolicy` models.
+  `HostCapabilities` and `PlacementPlan` carry explicit `descriptive_only`
+  authority; unrestricted decoy egress and production access are
+  unrepresentable in the canonical safety policy.
+- `azazel_fabric.deception_contracts.validation` — fail-closed
+  directive-field rejection (`BANNED_RUNTIME_DIRECTIVE_FIELDS`,
+  `contains_runtime_directive`, `assert_no_runtime_directives`).
+- `azazel_fabric.deception_integrity` — canonical normalize-first package
+  content-digest semantics (SHA-256) shared by signer and verifier.
+- `azazel_fabric.testing.deception` — shared ARM64/AMD64 golden fixture
+  factories consumed by Edge and AZ-06 CI.
+- Package/tier minimum-vs-maximum budget validation, finite package maximum
+  resource budgets including a bandwidth ceiling, and OCI
+  provenance/SBOM/verification fields on `ImageManifest`.
+- `docs/deception-contracts.md`, `docs/azazel-deception-contracts.md`, and
+  `docs/deception-contracts-status.md` — contract family, ownership, and
+  adoption status.
 - `LICENSE` — MIT (owner decision 2026-07-11: unlicensed series repos align
   to MIT). `pyproject.toml` `license` field and `README.md` updated from
   `TBD` to MIT accordingly.
+
+### Not in this release
+
+The full artifact/persona/environment-state contract family for AZ-06
+Phase 2, Knowledge/Gadget adoption of the new contract subset, and
+cross-repository live/HIL safety orchestration remain tracked on
+`Azazel-Fabric#9` and are not part of `v0.5.0`.
 
 ## [0.4.0] — Phase 5 helpers + Phase 6 adoption tooling
 

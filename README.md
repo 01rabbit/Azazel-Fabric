@@ -24,14 +24,11 @@ materializes only Edge-approved environments.
 
 ## Status
 
-**Latest stable release: `v0.4.0`.**
+**Latest stable release: `v0.5.0` — canonical AZ-06 deception-environment
+contracts.** The contract family is additive; `v0.4.0` consumers upgrade by
+bumping the pin with nothing to migrate.
 
-**`main`: `0.5.0.dev0` — unreleased AZ-06 deception-environment contracts.**
-The development contract family is additive and is being exercised by
-Azazel-Deception and Azazel-Edge through an exact commit pin before a tagged
-release is cut.
-
-Stable `v0.4.0` ships:
+Stable `v0.5.0` also ships everything from `v0.4.0`:
 
 - `azazel_fabric.schema` / `azazel_fabric.cti_contracts` — shared schema and advisory-only CTI contract.
 - `azazel_fabric.view` — shared `StatusView` view model.
@@ -41,8 +38,7 @@ Stable `v0.4.0` ships:
 - `azazel_fabric.notify` — notification payloads/mappers; no network send.
 - `azazel_fabric.testing` — shared factories and invariant assertions.
 
-Development `0.5.0.dev0` additionally provides
-`azazel_fabric.deception_contracts`:
+`v0.5.0` additionally provides `azazel_fabric.deception_contracts`:
 
 - `DeceptionPackage`, `NarrativeManifest`, `NarrativeConsistencyReport`
 - `HostCapabilities`, `RuntimeRequirements`, `DeploymentTier`
@@ -59,25 +55,18 @@ See [`docs/deception-contracts.md`](docs/deception-contracts.md).
 
 | Product | Current status |
 |---|---|
-| Azazel-Edge (AZ-01) | Shipping Fabric integration; AZ-06 shadow/replay tests currently pin the exact `0.5.0.dev0` contract commit. Fabric remains optional for baseline Edge runtime. |
+| Azazel-Edge (AZ-01) | Shipping Fabric integration; AZ-06 shadow/replay tests consume the canonical contracts, reconciling to the `v0.5.0` tag. Fabric remains optional for baseline Edge runtime. |
 | Azazel-Gadget (AZ-02) | Shipping Fabric integration; current Gadget documentation reports `azazel-fabric` v0.4.0 for StatusView. AZ-06 compatibility remains a constrained future `gadget-lite` subset. |
 | Azazel-Knowledge (AZ-04) | Adopted at the API boundary with `azazel_fabric.cti_contracts` v0.3.0; core remains dependency-minimal and advisory-only. |
-| Azazel-Deception (AZ-06) | Active development consumer of the exact `0.5.0.dev0` contract commit for canonical package/capability/placement models; live exposure remains disabled by default. |
-
-Consumer pins must be reconciled again when `v0.5.x` is tagged. Development
-commit pins must not be presented as stable releases.
+| Azazel-Deception (AZ-06) | Consumes the canonical package/capability/placement models, pinning the `v0.5.0` tag; live exposure remains disabled by default. |
 
 ## Install
 
 Stable consumers should use the latest compatible exact tag, currently:
 
 ```bash
-pip install "azazel-fabric @ git+https://github.com/01rabbit/Azazel-Fabric.git@v0.4.0"
+pip install "azazel-fabric @ git+https://github.com/01rabbit/Azazel-Fabric.git@v0.5.0"
 ```
-
-Development consumers that require the unreleased AZ-06 contracts use an
-**exact reviewed commit**, never `main`, until a matching `v0.5.x` release is
-published.
 
 Consumers pin an exact tag for field deployment (see
 [`docs/design-principles.md`](docs/design-principles.md) §6).
@@ -126,7 +115,7 @@ and runs the test suite before publishing.
 | [`docs/architecture.md`](docs/architecture.md) | Azazel-Fabric's position in the series and responsibility boundaries |
 | [`docs/design-principles.md`](docs/design-principles.md) | What goes in Fabric vs. what never does, and why |
 | [`docs/contracts.md`](docs/contracts.md) | Stable shared schema and Edge/Gadget ↔ CTI contracts |
-| [`docs/deception-contracts.md`](docs/deception-contracts.md) | Unreleased `0.5.0.dev0` AZ-06 contract family, authority and migration rules |
+| [`docs/deception-contracts.md`](docs/deception-contracts.md) | Canonical AZ-06 contract family (`v0.5.0`), authority and migration rules |
 | [`docs/adoption-guide.md`](docs/adoption-guide.md) | Day-1 adoption playbook for a series product |
 | [`docs/migration-plan.md`](docs/migration-plan.md) | Phased, additive, reversible rollout plan |
 | [`docs/repository-layout.md`](docs/repository-layout.md) | Package layout |

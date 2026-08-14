@@ -1,7 +1,7 @@
 # AZ-06 Deception Contract Implementation Status
 
-Status: `main` implements the first canonical AZ-06 contract baseline as
-**unreleased `0.5.0.dev0`**. Latest stable release remains `v0.4.0`.
+Status: the first canonical AZ-06 contract baseline is **released as
+`v0.5.0`** (owner-approved 2026-08-14). Consumers pin the `v0.5.0` tag.
 
 Implemented:
 
@@ -19,11 +19,9 @@ Implemented:
 
 Not complete / do not close `Azazel-Fabric#9` yet:
 
-- stable `v0.5.x` tag and migration window
 - real signed OCI provenance/SBOM golden fixture rather than synthetic test values
 - full artifact/persona/environment-state contract family for AZ-06 Phase 2
 - Knowledge and Gadget adoption of the new contract subset
 - cross-repository live/HIL safety orchestration
 
-A development consumer must pin an exact reviewed commit. Do not pin `main` and
-do not describe `0.5.0.dev0` as a release.
+Consumers must pin the exact `v0.5.0` tag. Do not pin `main`.
