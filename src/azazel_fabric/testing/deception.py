@@ -10,15 +10,18 @@ from azazel_fabric.deception_contracts import (
     ComponentManifest,
     DeceptionPackage,
     DeploymentTier,
+    EffectivenessAdvisory,
     HostCapabilities,
     ImageManifest,
     ImagePlatform,
+    InteractionObservation,
     NarrativeConsistencyReport,
     NarrativeManifest,
     PlacementPlan,
     ResourceBudget,
     RuntimeRequirements,
     SafetyPolicy,
+    TransitionCatalog,
 )
 
 
@@ -148,3 +151,106 @@ def make_deception_placement(
     }
     data.update(overrides)
     return PlacementPlan(**data)
+
+
+def make_interaction_observation(
+    *,
+    observation_class: str = "reaction",
+    surface: str = "credential_lure",
+    reaction_kind: str | None = "authenticate",
+    **overrides: Any,
+) -> "InteractionObservation":
+    """A deterministic fact-only effectiveness observation for cross-repo tests."""
+
+    package = make_deception_package()
+    host = make_deception_host_capabilities()
+    data: dict[str, Any] = {
+        "observation_id": "obs-fixture-1",
+        "environment_id": "env-fixture",
+        "package_id": package.package_id,
+        "node_id": host.node_id,
+        "observed_at": "2026-01-01T00:00:00+00:00",
+        "observation_class": observation_class,
+        "surface": surface,
+        "reaction_kind": reaction_kind if observation_class != "interaction" else None,
+        "lure_id": "lure-municipal-admin",
+        "first_contact_latency_ms": 1200,
+        "dwell_ms": 45000,
+        "attempt_count": 3,
+        "confounder_tags": [],
+        "runtime_context": {
+            "selected_tier": "lite",
+            "architecture": host.architecture,
+            "runtime_adapter": package.runtime_requirements.runtime_adapter,
+            "active_components": ["intranet-web"],
+            "omitted_components": [],
+        },
+        "evidence_refs": [],
+        "metadata": {},
+    }
+    data.update(overrides)
+    return InteractionObservation(**data)
+
+
+def make_effectiveness_advisory(**overrides: Any) -> "EffectivenessAdvisory":
+    """A deterministic advisory-only layer-4 effectiveness judgement for tests."""
+
+    package = make_deception_package()
+    host = make_deception_host_capabilities()
+    data: dict[str, Any] = {
+        "advisory_id": "advisory-fixture-1",
+        "environment_id": "env-fixture",
+        "package_id": package.package_id,
+        "node_id": host.node_id,
+        "produced_at": "2026-01-01T00:05:00+00:00",
+        "assessment": "sustained credential-lure use after banner enumeration",
+        "confidence": 0.6,
+        "counter_evidence": ["overlaps with a known scanner signature window"],
+        "observation_refs": ["obs-fixture-1"],
+        "unknowns": ["attacker attribution", "whether lateral attempt was manual"],
+        "metadata": {},
+    }
+    data.update(overrides)
+    return EffectivenessAdvisory(**data)
+
+
+def make_transition_catalog(**overrides: Any) -> "TransitionCatalog":
+    """A deterministic, correctly-sealed transition catalog for tests."""
+
+    from azazel_fabric.deception_integrity import catalog_content_digest
+
+    package = make_deception_package()
+    transition = {
+        "transition_id": "open-smb-share",
+        "from_state": "baseline",
+        "to_state": "smb-share-open",
+        "evidence_backed_trigger": "attacker enumerated the file service banner",
+        "expected_observation": "attacker mounts the decoy SMB share",
+        "bounds": {
+            "cpu_cores": 1,
+            "memory_mb": 256,
+            "storage_mb": 512,
+            "max_connections": 20,
+            "max_duration_seconds": 600,
+            "bandwidth_kbps": 2000,
+        },
+        "max_new_surfaces": 1,
+        "rollback_state": "baseline",
+        "termination_conditions": ["egress attempt", "duration exceeded"],
+    }
+    data: dict[str, Any] = {
+        "catalog_id": "municipal-linux-transitions-v1",
+        "package_id": package.package_id,
+        "package_digest": package.package_digest,
+        "transitions": [transition],
+        "signer_ref": "fixture:catalog-signer",
+        "signature_ref": "fixture:catalog-signature",
+    }
+    data.update(overrides)
+    if "catalog_digest" in data:
+        return TransitionCatalog(**data)
+    # Seal over the *normalized* model (defaults applied), not the raw mapping,
+    # so the digest is representation-invariant — mirrors package sealing.
+    placeholder = TransitionCatalog(**data, catalog_digest=_sha("0"))
+    data["catalog_digest"] = catalog_content_digest(placeholder)
+    return TransitionCatalog(**data)

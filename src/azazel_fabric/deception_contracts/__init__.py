@@ -35,9 +35,27 @@ from azazel_fabric.deception_contracts.models import (
     RuntimeRequirements,
     SafetyPolicy,
 )
+from azazel_fabric.deception_contracts.observation import (
+    ConfounderTag,
+    EffectivenessAdvisory,
+    InteractionObservation,
+    InteractionSurface,
+    ObservationClass,
+    ReactionKind,
+    RuntimeContext,
+)
+from azazel_fabric.deception_contracts.transitions import (
+    FiniteStateTransition,
+    TransitionCatalog,
+    TransitionNotInCatalog,
+    select_transition,
+)
 from azazel_fabric.deception_contracts.validation import (
+    BANNED_EFFECTIVENESS_VERDICT_FIELDS,
     BANNED_RUNTIME_DIRECTIVE_FIELDS,
+    assert_no_effectiveness_verdict,
     assert_no_runtime_directives,
+    contains_effectiveness_verdict,
     contains_runtime_directive,
 )
 
@@ -63,7 +81,21 @@ __all__ = [
     "EnvironmentTerminationDecision",
     "EnvironmentEvent",
     "EnvironmentOutcome",
+    "ObservationClass",
+    "InteractionSurface",
+    "ReactionKind",
+    "ConfounderTag",
+    "RuntimeContext",
+    "InteractionObservation",
+    "EffectivenessAdvisory",
+    "FiniteStateTransition",
+    "TransitionCatalog",
+    "TransitionNotInCatalog",
+    "select_transition",
     "BANNED_RUNTIME_DIRECTIVE_FIELDS",
     "contains_runtime_directive",
     "assert_no_runtime_directives",
+    "BANNED_EFFECTIVENESS_VERDICT_FIELDS",
+    "contains_effectiveness_verdict",
+    "assert_no_effectiveness_verdict",
 ]

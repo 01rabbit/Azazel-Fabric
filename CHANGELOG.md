@@ -6,6 +6,50 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 `01rabbit/Azazel-Fabric`; consumers pin an exact tag (see
 `docs/migration-plan.md`).
 
+## [0.6.0] — AZ-06 effectiveness observation + transition catalog
+
+Adds two additive, non-breaking AZ-06 contract families. No change to existing
+`schema`, `cti_contracts`, `view`, helper modules, or the `v0.5.0`
+`deception_contracts`; consumers on `v0.5.0` upgrade by bumping the pin with
+nothing to migrate. Grounded in `Azazel-Deception#6`, `Azazel-Knowledge#52`/`#58`,
+and `Azazel#61`.
+
+Authority rule unchanged and encoded in the shapes: *Fabric describes. Edge
+decides. Deception Host materializes.* Observations are `descriptive_only`, the
+effectiveness advisory is `advisory_only` and non-executable, and the transition
+catalog is `descriptive_only` — none can select or authorize an action.
+
+### Added
+
+- **Effectiveness-observation contracts** (`azazel_fabric.deception_contracts`)
+  — `InteractionObservation`, a **fact-only** event carrying the honesty ladder
+  in its shape (`ObservationClass` = interaction / reaction / outcome; layer-4
+  *inference* is deliberately absent), with `InteractionSurface`, `ReactionKind`,
+  `ConfounderTag`, and a `RuntimeContext` (tier/architecture/adapter/active-omitted
+  components/resource saturation/capability drift) so a consumer can separate
+  narrative effectiveness from host-capacity effects. An `interaction`-class
+  observation cannot carry a `reaction_kind` — a stronger claim can't hide in a
+  weaker layer.
+- **Effectiveness advisory** — `EffectivenessAdvisory`, Knowledge's layer-4
+  output: `advisory_only`, `executable` pinned False, carrying an assessment
+  with `confidence`, **`counter_evidence`**, `observation_refs`, and `unknowns`.
+- **Honesty invariant guard** (`azazel_fabric.deception_contracts.validation`)
+  — `assert_no_effectiveness_verdict` / `contains_effectiveness_verdict` /
+  `BANNED_EFFECTIVENESS_VERDICT_FIELDS` reject belief / deception-success /
+  effectiveness-verdict fields (including `confidence`) on a fact-only
+  observation payload — *interaction does not prove attacker belief*.
+- **Finite-state transition catalog** (`azazel_fabric.deception_contracts.transitions`)
+  — `FiniteStateTransition` (mandatory current/target state, evidence-backed
+  trigger, expected observation, resource/time bounds, `max_new_surfaces`,
+  rollback state, non-empty termination conditions, `requires_edge_approval`
+  pinned True, decoy egress pinned denied) and `TransitionCatalog`, a frozen set
+  bound to one package identity by a normalize-first `catalog_digest`
+  (`azazel_fabric.deception_integrity.catalog_content_digest` /
+  `assert_catalog_content_digest`). `select_transition` fails closed on any
+  pair not pre-authored into the catalog.
+- Golden factories `make_interaction_observation`, `make_effectiveness_advisory`,
+  `make_transition_catalog` in `azazel_fabric.testing`.
+
 ## [0.5.0] — AZ-06 canonical deception-environment contracts
 
 Adds the canonical AZ-06 deception-environment contract family
