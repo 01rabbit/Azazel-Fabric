@@ -9,6 +9,9 @@ from azazel_fabric.testing.deception import (
     make_deception_host_capabilities,
     make_deception_package,
     make_deception_placement,
+    make_effectiveness_advisory,
+    make_interaction_observation,
+    make_transition_catalog,
 )
 from azazel_fabric.testing.factories import (
     FIXED_TS,
@@ -43,6 +46,9 @@ __all__ = [
     "make_deception_host_capabilities",
     "make_deception_package",
     "make_deception_placement",
+    "make_interaction_observation",
+    "make_effectiveness_advisory",
+    "make_transition_catalog",
     "minimal_mode_state",
     "minimal_state_snapshot",
     "minimal_status_view",

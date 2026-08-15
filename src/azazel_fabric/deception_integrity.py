@@ -68,3 +68,60 @@ def assert_package_content_digest(value: DeceptionPackage | Mapping[str, Any]) -
         raise PackageIntegrityError(
             f"package_digest mismatch: declared={declared!r} calculated={calculated!r}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Transition-catalog integrity (same normalize-first pattern as packages).
+# ---------------------------------------------------------------------------
+
+
+class CatalogIntegrityError(ValueError):
+    pass
+
+
+def catalog_signing_payload(value: "Any") -> dict[str, Any]:
+    """Return the semantic payload covered by ``catalog_digest``.
+
+    Excludes the digest field itself and the detached ``signature_ref``
+    locator; binds everything else, including ``signer_ref``, the bound
+    ``package_id`` / ``package_digest`` identity, and every transition.
+    """
+
+    from azazel_fabric.deception_contracts.transitions import TransitionCatalog
+
+    if isinstance(value, TransitionCatalog):
+        payload = value.model_dump(mode="json")
+    else:
+        payload = deepcopy(dict(value))
+    payload.pop("catalog_digest", None)
+    payload.pop("signature_ref", None)
+    return payload
+
+
+def canonical_catalog_signing_bytes(value: "Any") -> bytes:
+    payload = catalog_signing_payload(value)
+    return json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+        allow_nan=False,
+    ).encode("utf-8")
+
+
+def catalog_content_digest(value: "Any") -> str:
+    return "sha256:" + hashlib.sha256(canonical_catalog_signing_bytes(value)).hexdigest()
+
+
+def assert_catalog_content_digest(value: "Any") -> None:
+    from azazel_fabric.deception_contracts.transitions import TransitionCatalog
+
+    if isinstance(value, TransitionCatalog):
+        declared = value.catalog_digest
+    else:
+        declared = str(value.get("catalog_digest") or "")
+    calculated = catalog_content_digest(value)
+    if declared != calculated:
+        raise CatalogIntegrityError(
+            f"catalog_digest mismatch: declared={declared!r} calculated={calculated!r}"
+        )
