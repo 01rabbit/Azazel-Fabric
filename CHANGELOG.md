@@ -6,6 +6,25 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 `01rabbit/Azazel-Fabric`; consumers pin an exact tag (see
 `docs/migration-plan.md`).
 
+## [0.7.0] — MITRE Engage-aligned engagement contracts
+
+Adds one additive, non-breaking contract family, `engagement_contracts`
+(Azazel-Fabric#8): `EngagementObjective`/`Approach`/`Activity`, `AttackerReaction`,
+`EngagementConstraint`, `EngagementTrigger`, `EngagementCandidate`,
+`PostureSuggestion`, `EngagementAdvisory`, `EngagementOutcome`, `EngagementEvent`,
+and `validation` helpers (`assert_candidate_not_executable`,
+`assert_engagement_advisory_only`, `assert_no_engagement_directives`). No change
+to existing `schema`, `cti_contracts`, `deception_contracts`, `view`, or helper
+modules; consumers on `v0.6.0` upgrade by bumping the pin with nothing to
+migrate. Grounded in `Azazel-Edge#319` and `Azazel#60`.
+
+Authority rule unchanged and encoded in the shapes: *Engage expresses intent.
+Knowledge advises. Fabric describes. Edge decides and enforces.* A candidate is
+`candidate_only` (a request, never a command), the advisory is `advisory_only`
+and non-executable, activities map 1:1 onto bounded Azazel actions, and unknown
+enum values / schema versions / smuggled runtime-directive or authority-bearing
+fields fail closed.
+
 ## [0.6.0] — AZ-06 effectiveness observation + transition catalog
 
 Adds two additive, non-breaking AZ-06 contract families. No change to existing
