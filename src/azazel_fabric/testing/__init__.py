@@ -29,12 +29,20 @@ from azazel_fabric.testing.factories import (
     minimal_state_snapshot,
     minimal_status_view,
 )
+from azazel_fabric.testing.golden import (
+    GOLDEN_DECISION_SIGNATURE_KEY,
+    golden_decision_names,
+    load_golden_decision,
+)
 from azazel_fabric.testing.invariants import (
     assert_advisory_only,
     assert_behavioral_absent_not_null,
 )
 
 __all__ = [
+    "GOLDEN_DECISION_SIGNATURE_KEY",
+    "golden_decision_names",
+    "load_golden_decision",
     "FIXED_TS",
     "make_mode_state",
     "make_state_snapshot",

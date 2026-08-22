@@ -37,6 +37,24 @@ def _load(name: str) -> dict:
     return json.loads((_GOLDEN / name).read_text(encoding="utf-8"))
 
 
+def test_packaged_loader_agrees_with_committed_fixtures():
+    # The published, cross-repo-consumable API (azazel_fabric.testing.
+    # load_golden_decision) must produce exactly the committed reference
+    # vectors, so consumers importing the loader and readers of the JSON files
+    # never diverge.
+    from azazel_fabric.testing import (
+        GOLDEN_DECISION_SIGNATURE_KEY,
+        golden_decision_names,
+        load_golden_decision,
+    )
+
+    committed = {p.stem for p in _GOLDEN.iterdir() if p.suffix == ".json"}
+    assert set(golden_decision_names()) == committed
+    for name in golden_decision_names():
+        assert load_golden_decision(name) == _load(f"{name}.json"), name
+    assert GOLDEN_DECISION_SIGNATURE_KEY == DECISION_SIGNATURE_KEY
+
+
 def test_all_golden_fixtures_are_valid_json():
     files = sorted(p.name for p in _GOLDEN.iterdir() if p.suffix == ".json")
     assert len(files) >= 7, f"expected the golden decision vectors, found {files}"
