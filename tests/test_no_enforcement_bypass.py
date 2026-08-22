@@ -63,6 +63,9 @@ _PINNED_LITERALS: dict[tuple[str, str], object] = {
     ("ComponentManifest", "privileged"): False,
     ("ComponentManifest", "host_network"): False,
     ("FiniteStateTransition", "network_egress_allowed"): False,
+    ("FiniteStateTransition", "requires_edge_approval"): True,
+    ("CredentialLure", "decoy_only"): True,
+    ("NarrativeManifest", "synthetic_only"): True,
     ("EnvironmentActivationDecision", "decision_authority"): "azazel-edge",
     ("EnvironmentTransitionDecision", "decision_authority"): "azazel-edge",
     ("EnvironmentTerminationDecision", "decision_authority"): "azazel-edge",
@@ -171,6 +174,34 @@ def test_safety_sensitive_fields_are_classified(model: type[BaseModel]):
                 "add it to _PINNED_LITERALS (if it gates egress/authority/execution -- "
                 "and pin it Literal) or _SAFE_DEFAULTS, so it cannot silently ship escalatable"
             )
+
+
+def test_every_bool_literal_field_is_pinned_and_registered():
+    # Definitive, self-discovering guard: EVERY single-value Literal[bool] field
+    # in any contract is a safety toggle pinned in the wire shape. Enumerate them
+    # directly (not by name) and assert each is registered in _PINNED_LITERALS
+    # with its actual pinned value. This closes the name-based blind spot that
+    # let decoy_only / requires_edge_approval / synthetic_only slip past the
+    # hint scanner, and auto-flags any future bool-Literal safety field.
+    discovered: dict[tuple[str, str], bool] = {}
+    for model in MODELS:
+        for field, info in model.model_fields.items():
+            ann = info.annotation
+            if get_origin(ann) is Literal:
+                args = get_args(ann)
+                if len(args) == 1 and isinstance(args[0], bool):
+                    discovered[(model.__name__, field)] = args[0]
+
+    unregistered = sorted(k for k in discovered if k not in _PINNED_LITERALS)
+    assert not unregistered, (
+        "single-value Literal[bool] safety fields missing from _PINNED_LITERALS "
+        f"(register each with its pinned value): {unregistered}"
+    )
+    for key, value in discovered.items():
+        assert _PINNED_LITERALS[key] == value, (
+            f"{key[0]}.{key[1]} is Literal[{value}] in the model but registered as "
+            f"{_PINNED_LITERALS[key]!r}"
+        )
 
 
 def test_engagement_advisory_cannot_be_made_executable():
