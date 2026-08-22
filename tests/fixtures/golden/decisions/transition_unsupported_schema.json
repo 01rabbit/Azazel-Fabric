@@ -1,0 +1,13 @@
+{
+  "current_state": "baseline",
+  "decision_authority": "azazel-edge",
+  "decision_id": "golden-trans-badschema",
+  "effective_at": "2026-08-20T00:00:00Z",
+  "environment_id": "env-1",
+  "evidence_refs": [],
+  "expires_at": "2026-08-22T00:00:00Z",
+  "reason_codes": [],
+  "schema_version": "environment-transition-decision/v9.9",
+  "status": "accepted",
+  "target_state": "smb-share-open"
+}

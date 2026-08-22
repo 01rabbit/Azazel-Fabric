@@ -1,0 +1,32 @@
+{
+  "budget": {
+    "bandwidth_kbps": null,
+    "cpu_cores": 1.0,
+    "max_connections": 100,
+    "max_duration_seconds": 300,
+    "memory_mb": 256,
+    "storage_mb": 512
+  },
+  "decision_authority": "azazel-edge",
+  "decision_id": "golden-act-accepted",
+  "effective_at": "2026-08-20T00:00:00Z",
+  "evidence_refs": [],
+  "expires_at": "2026-08-22T00:00:00Z",
+  "package_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "package_id": "pkg-golden",
+  "reason_codes": [
+    "soc_high_confidence"
+  ],
+  "safety": {
+    "edge_control_access_from_decoys": false,
+    "host_network": false,
+    "outbound_allowed": false,
+    "privileged_containers": false,
+    "production_access": false,
+    "runtime_socket_exposed_to_decoys": false
+  },
+  "schema_version": "environment-activation-decision/v0.1",
+  "selected_tier": "minimal",
+  "status": "accepted",
+  "target_node_id": "node-1"
+}
