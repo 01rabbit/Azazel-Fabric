@@ -44,6 +44,13 @@ from azazel_fabric.deception_contracts.observation import (
     ReactionKind,
     RuntimeContext,
 )
+from azazel_fabric.deception_contracts.decision_signing import (
+    DEFAULT_DECISION_SIGNATURE_FIELD,
+    canonical_decision_bytes,
+    compute_decision_signature,
+    sign_decision,
+    verify_decision_signature,
+)
 from azazel_fabric.deception_contracts.transitions import (
     FiniteStateTransition,
     TransitionCatalog,
@@ -81,6 +88,11 @@ __all__ = [
     "EnvironmentTerminationDecision",
     "EnvironmentEvent",
     "EnvironmentOutcome",
+    "DEFAULT_DECISION_SIGNATURE_FIELD",
+    "canonical_decision_bytes",
+    "compute_decision_signature",
+    "sign_decision",
+    "verify_decision_signature",
     "ObservationClass",
     "InteractionSurface",
     "ReactionKind",
