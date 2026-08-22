@@ -66,6 +66,9 @@ _PINNED_LITERALS: dict[tuple[str, str], object] = {
     ("EngagementCandidate", "authority"): "candidate_only",
     ("EngagementAdvisory", "authority"): "advisory_only",
     ("EngagementAdvisory", "executable"): False,
+    ("EffectivenessAdvisory", "authority"): "advisory_only",
+    ("EffectivenessAdvisory", "executable"): False,
+    ("InteractionObservation", "authority"): "descriptive_only",
 }
 
 # Safety toggles that default to the safe value but are not Literal-pinned.
@@ -130,6 +133,27 @@ def test_safety_toggles_default_denied(key, expected):
         f"{model_name}.{field} must default to {expected!r} (safe/denied by default); "
         f"got {default!r}"
     )
+
+
+_SAFETY_NAME_HINTS = ("authority", "egress", "outbound", "production_access", "executable")
+
+
+@pytest.mark.parametrize("model", MODELS, ids=lambda m: m.__name__)
+def test_safety_sensitive_fields_are_classified(model: type[BaseModel]):
+    # Self-extending guard: any field whose name looks like it gates authority,
+    # egress, or execution MUST be explicitly classified as either Literal-pinned
+    # or safe-default above. A future model that adds such a field (and forgets to
+    # pin/classify it) fails here, forcing a conscious safety decision rather than
+    # silently shipping an escalatable field.
+    for field in model.model_fields:
+        low = field.lower()
+        if any(hint in low for hint in _SAFETY_NAME_HINTS):
+            key = (model.__name__, field)
+            assert key in _PINNED_LITERALS or key in _SAFE_DEFAULTS, (
+                f"{model.__name__}.{field} looks safety-sensitive but is unclassified; "
+                "add it to _PINNED_LITERALS (if it gates egress/authority/execution -- "
+                "and pin it Literal) or _SAFE_DEFAULTS, so it cannot silently ship escalatable"
+            )
 
 
 def test_engagement_advisory_cannot_be_made_executable():
