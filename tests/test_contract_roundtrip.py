@@ -194,6 +194,59 @@ def test_serialization_is_deterministic(model: BaseModel):
     assert restored.model_dump_json() == first
 
 
+def _reachable_model_types(instance: BaseModel, seen: set[type] | None = None) -> set[type]:
+    """Every BaseModel type actually present in ``instance`` (self + nested).
+
+    Walks live field values (not annotations), recursing through nested models,
+    lists, tuples, and dict values, so a type counts as covered only if a sample
+    genuinely instantiates it -- a nested model is round-tripped as part of its
+    parent, so reaching it here means it is exercised.
+    """
+    seen = seen if seen is not None else set()
+    seen.add(type(instance))
+    for name in type(instance).model_fields:
+        value = getattr(instance, name, None)
+        stack = [value]
+        while stack:
+            item = stack.pop()
+            if isinstance(item, BaseModel):
+                if type(item) not in seen:
+                    _reachable_model_types(item, seen)
+            elif isinstance(item, (list, tuple)):
+                stack.extend(item)
+            elif isinstance(item, dict):
+                stack.extend(item.values())
+    return seen
+
+
+def test_every_contract_model_is_round_trip_covered():
+    # Self-extending guard (adversarial-review finding #5): every contract model
+    # in either family's __all__ must be exercised by the round-trip samples --
+    # directly as a top-level SAMPLE or reachable as a nested field of one -- so
+    # a future contract cannot ship with zero round-trip/determinism coverage.
+    import inspect
+
+    enumerated: dict[str, type] = {}
+    for module in (
+        __import__("azazel_fabric.deception_contracts", fromlist=["_"]),
+        __import__("azazel_fabric.engagement_contracts", fromlist=["_"]),
+    ):
+        for name in getattr(module, "__all__", []):
+            obj = getattr(module, name, None)
+            if inspect.isclass(obj) and issubclass(obj, BaseModel) and obj is not BaseModel:
+                enumerated[obj.__name__] = obj
+
+    covered: set[type] = set()
+    for sample in SAMPLES:
+        _reachable_model_types(sample, covered)
+
+    missing = sorted(n for n, t in enumerated.items() if t not in covered)
+    assert not missing, (
+        "contract models with no round-trip/determinism coverage (add a sample "
+        f"or nest them in one): {missing}"
+    )
+
+
 def test_package_digest_stable_across_round_trip():
     pkg = make_deception_package()
     from_pkg = package_signing_payload(pkg)
