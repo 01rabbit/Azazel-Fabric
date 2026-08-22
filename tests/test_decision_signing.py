@@ -38,6 +38,26 @@ def test_sign_then_verify_round_trips():
     assert verify_decision_signature(signed, _KEY) is True
 
 
+def test_non_bytes_key_is_rejected_not_silently_degenerate():
+    # bytes(n) for an int n returns n zero bytes -- NOT an encoding of n -- so a
+    # misconfigured int key would otherwise silently become a predictable
+    # all-zero key. Signing/computing with a non-str/bytes key must fail loudly.
+    with pytest.raises(TypeError):
+        compute_decision_signature(_decision(), 16)
+    with pytest.raises(TypeError):
+        sign_decision(_decision(), 16)
+    # verify is total/fail-closed: an int key can never verify (returns False),
+    # and never falls through to a degenerate all-zero key.
+    assert verify_decision_signature(sign_decision(_decision(), _KEY), 16) is False
+
+
+def test_bytes_like_keys_are_equivalent_to_str():
+    d = _decision()
+    expected = compute_decision_signature(d, _KEY)
+    assert compute_decision_signature(d, _KEY.encode("utf-8")) == expected
+    assert compute_decision_signature(d, bytearray(_KEY.encode("utf-8"))) == expected
+
+
 def test_signature_excludes_only_the_signature_field():
     d = _decision()
     signed = sign_decision(d, _KEY)

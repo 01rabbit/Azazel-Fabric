@@ -21,6 +21,12 @@ Azazel-Deception consumer sign and verify the same bytes and interoperate
 `EnvironmentTransitionDecision` producer to sign decisions the AZ-06
 `TransitionExecutor` already verifies.
 
+Hardening: the signing-key coercion now rejects a non-`str`/bytes-like key with
+`TypeError` instead of falling through to `bytes(key)`, which for an integer
+would silently return an all-zero (fully predictable) key. A misconfigured
+numeric key now fails loudly rather than signing/verifying with degenerate key
+material.
+
 ## [0.7.0] — MITRE Engage-aligned engagement contracts
 
 Adds one additive, non-breaking contract family, `engagement_contracts`
