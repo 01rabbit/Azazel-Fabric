@@ -6,6 +6,21 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 `01rabbit/Azazel-Fabric`; consumers pin an exact tag (see
 `docs/migration-plan.md`).
 
+## [0.8.0] — Canonical Edge-decision transport signature (Fabric#9)
+
+Adds `azazel_fabric.deception_contracts.decision_signing`, the single
+authoritative definition of the HMAC-SHA256 transport signature over an Edge
+decision envelope: `canonical_decision_bytes`, `compute_decision_signature`,
+`sign_decision`, `verify_decision_signature`, and
+`DEFAULT_DECISION_SIGNATURE_FIELD`. Additive and non-breaking. Fabric describes
+the wire format only — a signature proves origin/integrity, never authority.
+The canonicalization is byte-identical to AZ-06's
+`azazel_deception.runtime.transport`, so an Edge-side producer and the
+Azazel-Deception consumer sign and verify the same bytes and interoperate
+(covered by `tests/test_decision_signing.py`). Enables the Edge-side canonical
+`EnvironmentTransitionDecision` producer to sign decisions the AZ-06
+`TransitionExecutor` already verifies.
+
 ## [0.7.0] — MITRE Engage-aligned engagement contracts
 
 Adds one additive, non-breaking contract family, `engagement_contracts`
