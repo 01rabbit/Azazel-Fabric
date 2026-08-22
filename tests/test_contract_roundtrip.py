@@ -23,11 +23,24 @@ from __future__ import annotations
 import pytest
 from pydantic import BaseModel
 
-from azazel_fabric.deception_contracts import EnvironmentTransitionDecision
+from datetime import datetime, timezone
+
+from azazel_fabric.deception_contracts import (
+    CredentialLure,
+    DecoySurface,
+    EnvironmentActivationDecision,
+    EnvironmentEvent,
+    EnvironmentOutcome,
+    EnvironmentTerminationDecision,
+    EnvironmentTransitionDecision,
+    ResourceBudget,
+)
 from azazel_fabric.engagement_contracts import (
     EngagementAdvisory,
     EngagementCandidate,
     EngagementConstraint,
+    EngagementEvent,
+    EngagementOutcome,
     EngagementTrigger,
     PostureSuggestion,
 )
@@ -78,6 +91,64 @@ def _engagement_advisory() -> EngagementAdvisory:
     )
 
 
+_DT_A = datetime(2026, 8, 20, 0, 0, 0, tzinfo=timezone.utc)
+_DT_B = datetime(2026, 8, 22, 0, 0, 0, tzinfo=timezone.utc)
+_SHA = "sha256:" + "a" * 64
+
+
+def _activation_decision() -> EnvironmentActivationDecision:
+    return EnvironmentActivationDecision(
+        decision_id="edge-act-1", status="accepted", package_id="pkg-1",
+        package_digest=_SHA, target_node_id="node-1", selected_tier="minimal",
+        budget=ResourceBudget(cpu_cores=1.0, memory_mb=256, storage_mb=512),
+        effective_at=_DT_A, expires_at=_DT_B,
+    )
+
+
+def _termination_decision() -> EnvironmentTerminationDecision:
+    return EnvironmentTerminationDecision(
+        decision_id="edge-term-1", environment_id="env-1", reason="operator_terminate",
+        issued_at=_DT_A, expires_at=_DT_B,
+    )
+
+
+def _environment_event() -> EnvironmentEvent:
+    # Populated metadata deliberately exercises the dict[str, str|int|float|bool|
+    # None] union round-trip (the classic pydantic bool-vs-int coercion footgun).
+    return EnvironmentEvent(
+        event_id="ev-1", environment_id="env-1", package_id="pkg-1", node_id="node-1",
+        event_type="activated", observed_at=_DT_A,
+        metadata={"flag": True, "count": 5, "ratio": 0.5, "label": "x", "empty": None},
+    )
+
+
+def _environment_outcome() -> EnvironmentOutcome:
+    placement = make_deception_placement()
+    return EnvironmentOutcome(
+        outcome_id="out-1", environment_id="env-1", package_id="pkg-1",
+        package_digest=_SHA, node_id="node-1",
+        architecture=placement.architecture, runtime_adapter=placement.runtime_adapter,
+        selected_tier="minimal", termination_reason="max_duration_reached",
+        reset_succeeded=True,
+    )
+
+
+def _engagement_outcome() -> EngagementOutcome:
+    return EngagementOutcome(attacker_reaction="decoy_engaged", reaction_window_s=42)
+
+
+def _engagement_event() -> EngagementEvent:
+    return EngagementEvent(
+        event_id="engev-1", product="AZ-01", objective="collect", approach="channel",
+        activity="redirect_to_decoy",
+        constraints=EngagementConstraint(
+            max_duration_seconds=300, outbound_allowed=False, production_access=False,
+            termination_conditions=["noc_health_degraded"],
+        ),
+        outcome=_engagement_outcome(),
+    )
+
+
 def _samples() -> list[BaseModel]:
     return [
         make_deception_package(),
@@ -89,6 +160,18 @@ def _samples() -> list[BaseModel]:
         _transition_decision(),
         _engagement_candidate(),
         _engagement_advisory(),
+        # Previously-uncovered contract models (adversarial-review finding #5):
+        DecoySurface(surface_id="s1", protocol="tcp", port=8080, service="smb"),
+        CredentialLure(
+            credential_id="c1", owner_persona_id="p1", target_surface_id="s1",
+            expires_at=_DT_B,
+        ),
+        _activation_decision(),
+        _termination_decision(),
+        _environment_event(),
+        _environment_outcome(),
+        _engagement_outcome(),
+        _engagement_event(),
     ]
 
 

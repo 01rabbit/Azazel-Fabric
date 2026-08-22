@@ -56,6 +56,12 @@ MODELS = _contract_models()
 _PINNED_LITERALS: dict[tuple[str, str], object] = {
     ("SafetyPolicy", "outbound_allowed"): False,
     ("SafetyPolicy", "production_access"): False,
+    ("SafetyPolicy", "privileged_containers"): False,
+    ("SafetyPolicy", "host_network"): False,
+    ("SafetyPolicy", "runtime_socket_exposed_to_decoys"): False,
+    ("SafetyPolicy", "edge_control_access_from_decoys"): False,
+    ("ComponentManifest", "privileged"): False,
+    ("ComponentManifest", "host_network"): False,
     ("FiniteStateTransition", "network_egress_allowed"): False,
     ("EnvironmentActivationDecision", "decision_authority"): "azazel-edge",
     ("EnvironmentTransitionDecision", "decision_authority"): "azazel-edge",
@@ -71,7 +77,13 @@ _PINNED_LITERALS: dict[tuple[str, str], object] = {
     ("InteractionObservation", "authority"): "descriptive_only",
 }
 
-# Safety toggles that default to the safe value but are not Literal-pinned.
+# Safety toggles that default to the safe value but are intentionally NOT
+# Literal-pinned. EngagementConstraint is attached to a candidate_only-authority
+# EngagementCandidate (a *request* the arbiter evaluates), not to SafetyPolicy
+# (which governs what AZ-06 itself will build and is therefore pinned). Per
+# "Fabric describes, Edge decides", a candidate asking for outbound is not a
+# grant -- nothing in Fabric turns this field into an egress action -- so it is
+# a bounded, escalatable-by-request declaration that defaults denied, not a pin.
 _SAFE_DEFAULTS: dict[tuple[str, str], object] = {
     ("EngagementConstraint", "outbound_allowed"): False,
     ("EngagementConstraint", "production_access"): False,
@@ -135,7 +147,12 @@ def test_safety_toggles_default_denied(key, expected):
     )
 
 
-_SAFETY_NAME_HINTS = ("authority", "egress", "outbound", "production_access", "executable")
+_SAFETY_NAME_HINTS = (
+    "authority", "egress", "outbound", "production_access", "executable",
+    # container/host-isolation escalation vectors (privileged, host networking,
+    # runtime-socket / edge-control exposure to decoys)
+    "privileged", "host_network", "socket", "control_access",
+)
 
 
 @pytest.mark.parametrize("model", MODELS, ids=lambda m: m.__name__)
