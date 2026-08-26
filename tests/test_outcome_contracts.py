@@ -121,9 +121,13 @@ def test_execution_has_no_effect_class_or_provider_command_surface():
         ("success", True),
         ("execute", True),
         ("provider_command", "tc qdisc replace ..."),
-        ("attacker_belief", "fooled"),
-        ("model_recommendation", "delay"),
+        ("provider-command", "tc qdisc replace ..."),
+        ("provider command", "tc qdisc replace ..."),
+        ("success-rate", 1.0),
+        ("attacker-belief", "fooled"),
+        ("model recommendation", "delay"),
         ("select_action", "isolate"),
+        ("command-string", "nft add rule ..."),
     ],
 )
 def test_nested_authority_or_overclaim_fields_are_rejected(field, value):
