@@ -6,29 +6,37 @@ import json
 from typing import Any, Mapping, Sequence
 
 _BANNED_KEYS = {
-    "execute",
-    "execution_command",
-    "provider_command",
-    "command",
-    "commands",
-    "approve",
-    "approval",
-    "override",
-    "arbiter_override",
-    "auto_execute",
-    "select_action",
-    "selected_action",
-    "model_recommendation",
-    "attacker_belief",
-    "success",
-    "successful",
+    "execute", "execution_command", "provider_command", "command", "commands",
+    "approve", "approval", "override", "arbiter_override", "auto_execute",
+    "select_action", "selected_action", "model_recommendation", "attacker_belief",
+    "success", "successful",
 }
-
 _MAX_DEPTH = 6
 _MAX_MAP_ITEMS = 64
 _MAX_SEQUENCE_ITEMS = 128
 _MAX_STRING = 2048
 _MAX_CANONICAL_BYTES = 64 * 1024
+
+
+def _normalized_key(raw: str) -> str:
+    normalized = "".join(ch.lower() if ch.isalnum() else "_" for ch in raw.strip())
+    while "__" in normalized:
+        normalized = normalized.replace("__", "_")
+    return normalized.strip("_")
+
+
+def _is_forbidden_key(raw: str) -> bool:
+    key = _normalized_key(raw)
+    return (
+        key in _BANNED_KEYS
+        or "provider_command" in key
+        or key.endswith("_command")
+        or key.startswith("command_")
+        or key.startswith("success_")
+        or key.endswith("_success")
+        or "attacker_belief" in key
+        or "model_recommendation" in key
+    )
 
 
 def _walk(value: Any, *, path: tuple[str, ...] = (), depth: int = 0) -> None:
@@ -46,8 +54,7 @@ def _walk(value: Any, *, path: tuple[str, ...] = (), depth: int = 0) -> None:
         for raw_key, child in value.items():
             if not isinstance(raw_key, str):
                 raise ValueError("fact payload map keys must be strings")
-            key = raw_key.strip().lower()
-            if key in _BANNED_KEYS:
+            if _is_forbidden_key(raw_key):
                 location = ".".join((*path, raw_key))
                 raise ValueError(f"runtime/authority field is forbidden: {location}")
             if len(raw_key) > 128:
@@ -64,14 +71,10 @@ def _walk(value: Any, *, path: tuple[str, ...] = (), depth: int = 0) -> None:
 
 
 def assert_no_runtime_directives(value: Any) -> None:
-    """Reject executable, authority-bearing, or overclaim fields recursively."""
-
     _walk(value)
 
 
 def assert_bounded_fact_payload(value: Any) -> None:
-    """Enforce bounded JSON-compatible fact payloads."""
-
     _walk(value)
     encoded = json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
     if len(encoded.encode("utf-8")) > _MAX_CANONICAL_BYTES:
@@ -79,8 +82,6 @@ def assert_bounded_fact_payload(value: Any) -> None:
 
 
 def canonical_fact_json(value: Any) -> str:
-    """Return deterministic JSON after applying the shared fact safety bounds."""
-
     if hasattr(value, "model_dump"):
         value = value.model_dump(mode="json")
     assert_no_runtime_directives(value)
@@ -94,21 +95,16 @@ def assert_evidence_chain_consistent(
     outcomes: Sequence[Any] = (),
     assessment: Any | None = None,
 ) -> None:
-    """Reject cross-trace/cross-decision joins without creating authority."""
-
     expected = (execution.trace_id, execution.decision_ref, execution.execution_ref)
-    for item in ([mechanism] if mechanism is not None else []):
-        current = (item.trace_id, item.decision_ref, item.execution_ref)
+    if mechanism is not None:
+        current = (mechanism.trace_id, mechanism.decision_ref, mechanism.execution_ref)
         if current != expected:
             raise ValueError("mechanism does not belong to execution evidence chain")
     for outcome in outcomes:
         current = (outcome.trace_id, outcome.decision_ref, outcome.execution_ref)
         if current != expected:
             raise ValueError("outcome does not belong to execution evidence chain")
-        if mechanism is not None and outcome.mechanism_observation_ref not in (
-            None,
-            mechanism.observation_id,
-        ):
+        if mechanism is not None and outcome.mechanism_observation_ref not in (None, mechanism.observation_id):
             raise ValueError("outcome references a different mechanism observation")
     if assessment is not None:
         current = (assessment.trace_id, assessment.decision_ref, assessment.execution_ref)
