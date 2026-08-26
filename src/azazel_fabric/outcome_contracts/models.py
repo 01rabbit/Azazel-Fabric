@@ -10,7 +10,11 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .validation import assert_bounded_fact_payload, assert_no_runtime_directives
+from .validation import (
+    assert_bounded_fact_payload,
+    assert_no_runtime_directives,
+    assert_no_tactical_claim_fields,
+)
 
 
 class _StrictFrozenModel(BaseModel):
@@ -18,12 +22,7 @@ class _StrictFrozenModel(BaseModel):
 
 
 class ExecutionRefV0(_StrictFrozenModel):
-    """Reference to an execution fact produced by a local product.
-
-    This is not an executable request.  ``action`` is the action that the
-    producer attempted/applied; provider commands and arguments are
-    intentionally absent from the shared contract.
-    """
+    """Reference to an execution fact produced by a local product."""
 
     schema_version: Literal["outcome-execution/v0.1"] = "outcome-execution/v0.1"
     producer_product: str = Field(min_length=1, max_length=64)
@@ -32,14 +31,7 @@ class ExecutionRefV0(_StrictFrozenModel):
     decision_ref: str = Field(min_length=1, max_length=256)
     execution_ref: str = Field(min_length=1, max_length=256)
     action: str = Field(min_length=1, max_length=64)
-    status: Literal[
-        "applied",
-        "partial",
-        "failed",
-        "rejected",
-        "unverified",
-        "released",
-    ]
+    status: Literal["applied", "partial", "failed", "rejected", "unverified", "released"]
     observed_at: str = Field(min_length=1, max_length=64)
     release_ref: str | None = Field(default=None, max_length=256)
     evidence_refs: tuple[str, ...] = Field(default_factory=tuple, max_length=64)
@@ -62,21 +54,10 @@ class MechanismObservationV0(_StrictFrozenModel):
     decision_ref: str = Field(min_length=1, max_length=256)
     execution_ref: str = Field(min_length=1, max_length=256)
     mechanism_kind: Literal[
-        "traffic_shaping",
-        "redirection",
-        "isolation",
-        "notification",
-        "observation_only",
-        "unknown",
+        "traffic_shaping", "redirection", "isolation", "notification",
+        "observation_only", "unknown",
     ]
-    status: Literal[
-        "observed",
-        "not_observed",
-        "unverified",
-        "released",
-        "stale",
-        "disputed",
-    ]
+    status: Literal["observed", "not_observed", "unverified", "released", "stale", "disputed"]
     observed_parameters: dict[str, Any] = Field(default_factory=dict)
     observed_at: str = Field(min_length=1, max_length=64)
     evidence_refs: tuple[str, ...] = Field(default_factory=tuple, max_length=64)
@@ -88,11 +69,12 @@ class MechanismObservationV0(_StrictFrozenModel):
         payload = self.model_dump(mode="python")
         assert_no_runtime_directives(payload)
         assert_bounded_fact_payload(self.observed_parameters)
+        assert_no_tactical_claim_fields(self.observed_parameters)
         return self
 
 
 class OutcomeObservationV0(_StrictFrozenModel):
-    """A bounded observation window.  It contains no success/causality verdict."""
+    """A bounded observation window. It contains no success/causality verdict."""
 
     schema_version: Literal["outcome-observation/v0.1"] = "outcome-observation/v0.1"
     observation_id: str = Field(min_length=1, max_length=256)
@@ -119,18 +101,16 @@ class OutcomeObservationV0(_StrictFrozenModel):
     def _validate_fact(self) -> "OutcomeObservationV0":
         payload = self.model_dump(mode="python")
         assert_no_runtime_directives(payload)
-        assert_bounded_fact_payload(self.observation_values)
-        assert_bounded_fact_payload(self.telemetry_coverage)
-        assert_bounded_fact_payload(self.resource_impact)
+        for fact_map in (self.observation_values, self.telemetry_coverage, self.resource_impact):
+            assert_bounded_fact_payload(fact_map)
+            assert_no_tactical_claim_fields(fact_map)
         return self
 
 
 class TacticalEffectAssessmentRefV0(_StrictFrozenModel):
     """A non-executable assessment fact, separate from mechanism and outcome facts."""
 
-    schema_version: Literal["tactical-effect-assessment/v0.1"] = (
-        "tactical-effect-assessment/v0.1"
-    )
+    schema_version: Literal["tactical-effect-assessment/v0.1"] = "tactical-effect-assessment/v0.1"
     assessment_id: str = Field(min_length=1, max_length=256)
     producer_product: str = Field(min_length=1, max_length=64)
     producer_node: str = Field(min_length=1, max_length=128)
@@ -139,14 +119,7 @@ class TacticalEffectAssessmentRefV0(_StrictFrozenModel):
     execution_ref: str = Field(min_length=1, max_length=256)
     mechanism_observation_ref: str = Field(min_length=1, max_length=256)
     outcome_observation_refs: tuple[str, ...] = Field(min_length=1, max_length=128)
-    tactical_effect: Literal[
-        "delay",
-        "divert",
-        "containment",
-        "isolation",
-        "observe",
-        "restore",
-    ]
+    tactical_effect: Literal["delay", "divert", "containment", "isolation", "observe", "restore"]
     assessment: Literal["supported", "unsupported", "inconclusive"]
     evaluator: str = Field(min_length=1, max_length=128)
     policy_ref: str = Field(min_length=1, max_length=256)
