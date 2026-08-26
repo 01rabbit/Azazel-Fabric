@@ -11,6 +11,7 @@ _BANNED_KEYS = {
     "select_action", "selected_action", "model_recommendation", "attacker_belief",
     "success", "successful",
 }
+_TACTICAL_CLAIM_KEYS = {"effect_class", "tactical_effect", "effectiveness", "initiative_score"}
 _MAX_DEPTH = 6
 _MAX_MAP_ITEMS = 64
 _MAX_SEQUENCE_ITEMS = 128
@@ -39,7 +40,24 @@ def _is_forbidden_key(raw: str) -> bool:
     )
 
 
-def _walk(value: Any, *, path: tuple[str, ...] = (), depth: int = 0) -> None:
+def _is_tactical_claim_key(raw: str) -> bool:
+    key = _normalized_key(raw)
+    return (
+        key in _TACTICAL_CLAIM_KEYS
+        or "effect_class" in key
+        or "tactical_effect" in key
+        or key.startswith("initiative_score")
+        or key.endswith("_effectiveness")
+    )
+
+
+def _walk(
+    value: Any,
+    *,
+    path: tuple[str, ...] = (),
+    depth: int = 0,
+    reject_tactical_claims: bool = False,
+) -> None:
     if depth > _MAX_DEPTH:
         raise ValueError("fact payload exceeds maximum nesting depth")
     if isinstance(value, str):
@@ -57,21 +75,40 @@ def _walk(value: Any, *, path: tuple[str, ...] = (), depth: int = 0) -> None:
             if _is_forbidden_key(raw_key):
                 location = ".".join((*path, raw_key))
                 raise ValueError(f"runtime/authority field is forbidden: {location}")
+            if reject_tactical_claims and _is_tactical_claim_key(raw_key):
+                location = ".".join((*path, raw_key))
+                raise ValueError(f"tactical claim field is forbidden in fact payload: {location}")
             if len(raw_key) > 128:
                 raise ValueError("fact payload contains oversized key")
-            _walk(child, path=(*path, raw_key), depth=depth + 1)
+            _walk(
+                child,
+                path=(*path, raw_key),
+                depth=depth + 1,
+                reject_tactical_claims=reject_tactical_claims,
+            )
         return
     if isinstance(value, Sequence) and not isinstance(value, (bytes, bytearray)):
         if len(value) > _MAX_SEQUENCE_ITEMS:
             raise ValueError("fact payload sequence exceeds maximum item count")
         for index, child in enumerate(value):
-            _walk(child, path=(*path, str(index)), depth=depth + 1)
+            _walk(
+                child,
+                path=(*path, str(index)),
+                depth=depth + 1,
+                reject_tactical_claims=reject_tactical_claims,
+            )
         return
     raise ValueError(f"unsupported fact payload type: {type(value).__name__}")
 
 
 def assert_no_runtime_directives(value: Any) -> None:
     _walk(value)
+
+
+def assert_no_tactical_claim_fields(value: Any) -> None:
+    """Reject tactical/effectiveness claims from mechanism/outcome fact maps."""
+
+    _walk(value, reject_tactical_claims=True)
 
 
 def assert_bounded_fact_payload(value: Any) -> None:
