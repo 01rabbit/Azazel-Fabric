@@ -1,6 +1,8 @@
 # AZ-06 Deception-Environment Contracts
 
-Status: **released in `v0.5.0`** (first canonical AZ-06 contract baseline).
+Status: **first canonical AZ-06 contract baseline released in `v0.5.0`; current
+Fabric release is `v0.8.0`.** Later Fabric releases are additive; see
+[release compatibility](release-compatibility.md).
 
 Tracking issues:
 
@@ -153,7 +155,7 @@ the Fabric side:
 
 Consumer-side follow-ups tracked outside Fabric: the AZ-06 reference package
 carries real multi-arch OCI digests/provenance, with the GH-store SPDX
-attestation refresh handled in `Azazel-Deception#3`; consumer pins reconcile
-to the `v0.5.0` tag.
+attestation refresh handled in `Azazel-Deception#3`; current consumer pin
+observations are recorded in [release compatibility](release-compatibility.md).
 
-Consumers pin the exact `v0.5.0` tag, never `main`.
+Consumers pin an exact compatible tag, never `main`.

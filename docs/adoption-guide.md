@@ -30,7 +30,7 @@ submodule (design-principles §6). In your product's dependency file:
 
 ```toml
 # pyproject.toml  (or requirements.txt line)
-azazel-fabric @ git+https://github.com/01rabbit/Azazel-Fabric.git@v0.4.0
+azazel-fabric @ git+https://github.com/01rabbit/Azazel-Fabric.git@v0.8.0
 ```
 
 Bump the pin deliberately when you choose to, on your own release schedule — a
