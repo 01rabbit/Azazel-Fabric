@@ -24,9 +24,11 @@ materializes only Edge-approved environments.
 
 ## Status
 
-**Latest stable release: `v0.5.0` — canonical AZ-06 deception-environment
-contracts.** The contract family is additive; `v0.4.0` consumers upgrade by
-bumping the pin with nothing to migrate.
+**Latest stable release: `v0.8.0` — canonical Edge-decision transport
+signatures.** The first canonical AZ-06 deception-environment contract baseline
+shipped in `v0.5.0`; subsequent `v0.6.0`, `v0.7.0`, and `v0.8.0` releases are
+additive. See [release compatibility](docs/release-compatibility.md) for the
+supported contract families and observed consumer pins.
 
 Stable `v0.5.0` also ships everything from `v0.4.0`:
 
@@ -38,7 +40,7 @@ Stable `v0.5.0` also ships everything from `v0.4.0`:
 - `azazel_fabric.notify` — notification payloads/mappers; no network send.
 - `azazel_fabric.testing` — shared factories and invariant assertions.
 
-`v0.5.0` additionally provides `azazel_fabric.deception_contracts`:
+`v0.5.0` introduced `azazel_fabric.deception_contracts`:
 
 - `DeceptionPackage`, `NarrativeManifest`, `NarrativeConsistencyReport`
 - `HostCapabilities`, `RuntimeRequirements`, `DeploymentTier`
@@ -49,23 +51,28 @@ Stable `v0.5.0` also ships everything from `v0.4.0`:
 - static rejection of directive-bearing Fabric payloads
 - unrepresentable unrestricted egress/production access in the canonical safety model
 
+`v0.6.0` adds effectiveness observation and finite-state transition catalog
+contracts; `v0.7.0` adds advisory-only engagement contracts; `v0.8.0` adds the
+canonical decision-envelope signing helpers. All remain descriptive contracts:
+a valid signature proves transport origin and integrity, never action authority.
+
 See [`docs/deception-contracts.md`](docs/deception-contracts.md).
 
 ## Consumer status
 
 | Product | Current status |
 |---|---|
-| Azazel-Edge (AZ-01) | Shipping Fabric integration; AZ-06 shadow/replay tests consume the canonical contracts, reconciling to the `v0.5.0` tag. Fabric remains optional for baseline Edge runtime. |
+| Azazel-Edge (AZ-01) | Observed dependency pin: `v0.8.0`. Fabric remains optional for baseline Edge runtime. |
 | Azazel-Gadget (AZ-02) | Shipping Fabric integration; current Gadget documentation reports `azazel-fabric` v0.4.0 for StatusView. AZ-06 compatibility remains a constrained future `gadget-lite` subset. |
-| Azazel-Knowledge (AZ-04) | Adopted at the API boundary with `azazel_fabric.cti_contracts` v0.3.0; core remains dependency-minimal and advisory-only. |
-| Azazel-Deception (AZ-06) | Consumes the canonical package/capability/placement models, pinning the `v0.5.0` tag; live exposure remains disabled by default. |
+| Azazel-Knowledge (AZ-04) | Observed API optional-dependency pin: `v0.6.0`; core remains dependency-minimal and advisory-only. |
+| Azazel-Deception (AZ-06) | Observed dependency pin: `v0.8.0`; live exposure remains disabled by default. |
 
 ## Install
 
 Stable consumers should use the latest compatible exact tag, currently:
 
 ```bash
-pip install "azazel-fabric @ git+https://github.com/01rabbit/Azazel-Fabric.git@v0.5.0"
+pip install "azazel-fabric @ git+https://github.com/01rabbit/Azazel-Fabric.git@v0.8.0"
 ```
 
 Consumers pin an exact tag for field deployment (see
@@ -116,6 +123,7 @@ and runs the test suite before publishing.
 | [`docs/design-principles.md`](docs/design-principles.md) | What goes in Fabric vs. what never does, and why |
 | [`docs/contracts.md`](docs/contracts.md) | Stable shared schema and Edge/Gadget ↔ CTI contracts |
 | [`docs/deception-contracts.md`](docs/deception-contracts.md) | Canonical AZ-06 contract family (`v0.5.0`), authority and migration rules |
+| [`docs/release-compatibility.md`](docs/release-compatibility.md) | Current release truth, supported contract families, and observed consumer pins |
 | [`docs/adoption-guide.md`](docs/adoption-guide.md) | Day-1 adoption playbook for a series product |
 | [`docs/migration-plan.md`](docs/migration-plan.md) | Phased, additive, reversible rollout plan |
 | [`docs/repository-layout.md`](docs/repository-layout.md) | Package layout |

@@ -1,7 +1,9 @@
 # AZ-06 Deception Contract Implementation Status
 
-Status: the first canonical AZ-06 contract baseline is **released as
-`v0.5.0`** (owner-approved 2026-08-14). Consumers pin the `v0.5.0` tag.
+Status: the first canonical AZ-06 contract baseline was **released as
+`v0.5.0`** (owner-approved 2026-08-14). The current Fabric release is
+`v0.8.0`; later releases are additive. See
+[release compatibility](release-compatibility.md).
 
 Implemented:
 
@@ -24,4 +26,4 @@ Not complete / do not close `Azazel-Fabric#9` yet:
 - Knowledge and Gadget adoption of the new contract subset
 - cross-repository live/HIL safety orchestration
 
-Consumers must pin the exact `v0.5.0` tag. Do not pin `main`.
+Consumers must pin an exact compatible tag. Do not pin `main`.
