@@ -30,6 +30,11 @@ shipped in `v0.5.0`; subsequent `v0.6.0`, `v0.7.0`, and `v0.8.0` releases are
 additive. See [release compatibility](docs/release-compatibility.md) for the
 supported contract families and observed consumer pins.
 
+`main` currently carries `0.9.0.dev0` — an explicitly **unreleased** version
+adding `azazel_fabric.outcome_contracts`, `azazel_fabric.provisioning_contracts`,
+and `azazel_fabric.mio_contracts`. Consumers keep pinning `v0.8.0` until
+`v0.9.0` is tagged and published.
+
 Stable `v0.5.0` also ships everything from `v0.4.0`:
 
 - `azazel_fabric.schema` / `azazel_fabric.cti_contracts` — shared schema and advisory-only CTI contract.
@@ -64,8 +69,10 @@ See [`docs/deception-contracts.md`](docs/deception-contracts.md).
 |---|---|
 | Azazel-Edge (AZ-01) | Observed dependency pin: `v0.8.0`. Fabric remains optional for baseline Edge runtime. |
 | Azazel-Gadget (AZ-02) | Shipping Fabric integration; current Gadget documentation reports `azazel-fabric` v0.4.0 for StatusView. AZ-06 compatibility remains a constrained future `gadget-lite` subset. |
-| Azazel-Knowledge (AZ-04) | Observed API optional-dependency pin: `v0.6.0`; core remains dependency-minimal and advisory-only. |
+| Azazel-Knowledge (AZ-04) | Observed API optional-dependency pin: `v0.8.0`; core remains dependency-minimal and advisory-only. |
 | Azazel-Deception (AZ-06) | Observed dependency pin: `v0.8.0`; live exposure remains disabled by default. |
+| Azazel-Boot (AZ-03) | Observed `fabric` optional-extra pin: `v0.8.0`; an image lock is still required before a Boot implementation release. |
+| Azazel-Nexus | No pin yet — documentation-only repository. |
 
 ## Install
 
@@ -123,6 +130,7 @@ and runs the test suite before publishing.
 | [`docs/design-principles.md`](docs/design-principles.md) | What goes in Fabric vs. what never does, and why |
 | [`docs/contracts.md`](docs/contracts.md) | Stable shared schema and Edge/Gadget ↔ CTI contracts |
 | [`docs/deception-contracts.md`](docs/deception-contracts.md) | Canonical AZ-06 contract family (`v0.5.0`), authority and migration rules |
+| [`docs/provisioning-contracts.md`](docs/provisioning-contracts.md) | Provisioning and M.I.O. contract families (R1a), authority rules, feature-to-minimum-version matrix |
 | [`docs/release-compatibility.md`](docs/release-compatibility.md) | Current release truth, supported contract families, and observed consumer pins |
 | [`docs/adoption-guide.md`](docs/adoption-guide.md) | Day-1 adoption playbook for a series product |
 | [`docs/migration-plan.md`](docs/migration-plan.md) | Phased, additive, reversible rollout plan |

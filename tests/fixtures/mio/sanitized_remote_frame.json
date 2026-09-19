@@ -1,0 +1,43 @@
+{
+  "alias_scope": {
+    "expires_at": "2026-09-08T00:00:00Z",
+    "key_generation": 4,
+    "schema_version": "mio-alias-scope/v0.1",
+    "scope_id": "request-golden-1",
+    "scope_kind": "request"
+  },
+  "ambiguity_resolution": "deny_on_ambiguity",
+  "authority": "descriptive_only",
+  "contains_raw_evidence": false,
+  "content": {
+    "observed_event_bucket": "10-19",
+    "observed_event_class": "repeated_auth_failure",
+    "subject": "alias:subject:a"
+  },
+  "content_size_bytes": 118,
+  "created_at": "2026-09-01T00:05:00Z",
+  "frame_id": "sframe-golden-1",
+  "privacy_class": "internal",
+  "redactions": [
+    {
+      "action": "aliased",
+      "alias_ref": "alias:subject:a",
+      "field_ref": "content.source_address",
+      "privacy_class": "restricted",
+      "reason": "network identifier is restricted outside the node",
+      "schema_version": "mio-redaction-record/v0.1"
+    },
+    {
+      "action": "bucketed",
+      "alias_ref": null,
+      "field_ref": "content.observed_event_count",
+      "privacy_class": "internal",
+      "reason": "exact counts are reduced to coarse buckets",
+      "schema_version": "mio-redaction-record/v0.1"
+    }
+  ],
+  "sanitizer_ref": "sanitizer:allowlist:1",
+  "schema_version": "mio-sanitized-remote-frame/v0.1",
+  "source_frame_ref": "frame-golden-1",
+  "trace_id": "trace-golden-mio-1"
+}

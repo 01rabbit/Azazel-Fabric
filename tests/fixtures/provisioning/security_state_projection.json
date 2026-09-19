@@ -1,0 +1,21 @@
+{
+  "authority": "descriptive_only",
+  "device_key_state": "installed_local_only",
+  "key_roles_present": [
+    "policy_signing",
+    "update_signing",
+    "audit_checkpoint"
+  ],
+  "limitations": [
+    "no_site_identity_enrolled"
+  ],
+  "maximum_rollback_version": "0.0.9",
+  "minimum_security_epoch": 3,
+  "node_id": "node-golden-1",
+  "observed_at": "2026-09-01T00:10:00Z",
+  "product": "azazel-nexus",
+  "revocation_list_ref": "revocation:golden:1",
+  "schema_version": "security-state-projection/v0.1",
+  "security_epoch": 3,
+  "state_id": "secstate-golden-1"
+}

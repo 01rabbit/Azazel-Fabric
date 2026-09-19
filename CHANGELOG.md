@@ -6,6 +6,119 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 `01rabbit/Azazel-Fabric`; consumers pin an exact tag (see
 `docs/migration-plan.md`).
 
+## [Unreleased] — `0.9.0.dev0`
+
+Not a release. There is no `v0.9.0` tag and no GitHub Release; the packaged
+version carries a `.dev0` suffix precisely so nothing here is mistaken for
+something a consumer can pin. Consumers stay on `v0.8.0`. Everything below is
+additive and non-breaking.
+
+### Added
+
+- **Outcome-as-Evidence shared contracts** (`azazel_fabric.outcome_contracts`,
+  merged after `v0.8.0` in `2ccb2e6`/`1cabf11`/`190ffc2`) — `ExecutionRefV0`,
+  `MechanismObservationV0`, `OutcomeObservationV0`, and
+  `TacticalEffectAssessmentRefV0`, plus `assert_no_runtime_directives`,
+  `assert_bounded_fact_payload`, `assert_evidence_chain_consistent`, and
+  `canonical_fact_json`. The family keeps execution facts, observed mechanism,
+  bounded observation windows, and tactical-effect assessment in four separate
+  shapes so a stronger claim cannot hide inside a weaker layer: an observation
+  carries no success or causality verdict, a mechanism fact may not carry an
+  effect class, and the assessment pins `executable` to `False`. Cross-product
+  golden fixtures live under `tests/fixtures/outcome/`. Documented in
+  `docs/contracts.md` §6 — this changelog entry and that section close the gap
+  where the code was on `main` while every document still described `v0.8.0`.
+
+- **Provisioning contracts** (`azazel_fabric.provisioning_contracts`) — the
+  R1a half of the Nexus/Boot program plan's §5 R1 deliverable:
+  `InterfaceIdentity`, `StorageDeviceIdentity`, `PlatformIdentity`,
+  `HardwareInventory`, `ResourceProfile` (+ `ThermalBudget` / `PowerBudget`),
+  `OperatorConfirmation`, `InterfaceIdentitySelector`, `InterfaceAssignment`,
+  `CaptureSupport`, `IsolationProperty`, `TopologyProfile`,
+  `CommissioningRecord`, `ProductManifest`, `AssetManifest`, `ModelManifest`,
+  `FeatureMinimum` / `TestedCompatibilityTuple` / `CompatibilityManifest`,
+  `ProposedGenerationDescriptor`, observation-only `ActivationReceipt`,
+  `AuditCheckpointProjection`, and `SecurityStateProjection`; canonical bytes
+  and content digests (`integrity`); open extension registries naming
+  `azazel-nexus` and `azazel-boot` (`registry`); and recursive fail-closed
+  validation (`validation`).
+
+- **M.I.O. contracts** (`azazel_fabric.mio_contracts`) — the other half of R1:
+  `SituationFrame`, `AliasScope`, `RedactionRecord`, `SanitizedRemoteFrame`,
+  `Claim`, `ClaimSet`, `Disagreement`, `AdvisoryResult`, and `MergedAdvisory`,
+  plus `assert_advisory_inert`, `assert_frame_sanitized_for_egress`,
+  `assert_claim_provenance_preserved`, `assert_no_mio_directives`, and
+  `canonical_mio_json`.
+
+- **R1a conformance kit** — `azazel_fabric.testing.load_golden_provisioning` /
+  `golden_provisioning_names` / `GOLDEN_PROVISIONING_NEGATIVE` /
+  `GOLDEN_REFERENCE_AS_OF`, with the same content committed under
+  `tests/fixtures/provisioning/` and `tests/fixtures/mio/` so consumers reading
+  the JSON and consumers importing the loader cannot diverge. Ten of the
+  vectors are negative: directive-bearing, unknown-version, expired,
+  digest-mismatched, ambiguous-identity, tier-claiming, inferred-role,
+  restricted-egress, executable-advisory, and follow-up-requesting payloads that
+  a conforming consumer must reject.
+
+- **Static boundary gates** — `tests/test_provisioning_no_side_effects.py`
+  (import allowlist, no module-level execution, no dangerous builtin call, and a
+  subprocess import-delta proving the new modules pull in nothing that probes
+  the OS, touches the network, spawns a process, installs, or controls a
+  runtime), answering the program plan's SR-09 finding. The existing
+  `tests/test_no_enforcement_bypass.py` surface now enumerates the
+  `outcome_contracts`, `provisioning_contracts`, and `mio_contracts` families as
+  well, so every new model is covered by the extra-field, directive-field-name,
+  pinned-literal, safety-classification, and `Literal[bool]` discovery gates.
+
+### Authority rules encoded in the shapes
+
+*Fabric describes. Knowledge advises. Edge decides and enforces. Nexus and Boot
+integrate without creating another decision authority.*
+
+- A `ResourceProfile` records a **measured envelope** — `usable_memory_mib`
+  after firmware reservation — and carries no tier, capability state, or
+  authority level. The program plan's RAM-tier thresholds (§5 R2) are an open
+  decision: they compare measured-usable MiB against nominal boundaries, so a
+  nominal 16 GB host measuring 16095 MiB usable selects `core` rather than
+  `lite`. That host is the golden fixture, and no contract records the
+  conclusion, so ratifying corrected thresholds later changes no contract.
+  `CORE`/`LITE`/`FULL` are capability states, never authority levels, and
+  effective capability is the intersection of resource, topology, verified
+  assets, and trust/health.
+- An interface role is **confirmed, never inferred**. A selector requires bus
+  path, permanent MAC, and at least one of PCI/USB identity or serial;
+  MAC-only matching is structurally impossible; the composite key excludes the
+  kernel interface name; and resolution fails closed on zero or multiple
+  matches.
+- `ProposedGenerationDescriptor` describes and `ActivationReceipt` observes.
+  Neither authorizes. Command, unit, route, firewall, device-path, executor,
+  boolean-authorization, and trust-decision fields are recursively rejected in
+  any spelling.
+- M.I.O. output is inert: `executable`, `may_request_followup`, and
+  `contains_links` are pinned `False`, a sanitized frame cannot declare raw
+  evidence or carry `sensitive`/`restricted` content off the node, and a merge
+  keeps every claim's provenance and presents contradictions separately.
+- Audit-checkpoint and security-state projections standardize the envelope
+  only: **no chain, no chain verification, no trust decision** — the same
+  boundary `azazel_fabric.audit` has held since `v0.4.0`.
+
+### Documentation
+
+- `docs/provisioning-contracts.md` — new family reference, authority rules, the
+  feature-to-minimum-Fabric-version matrix, and the conformance kit.
+- `docs/contracts.md` §6/§7, `docs/release-compatibility.md`, and `README.md`
+  reconciled against the shipped tags and the re-verified consumer pins
+  (Knowledge and Boot both declare `v0.8.0`; the previous `v0.6.0` / "no lock"
+  entries were stale).
+
+### Still required before a release
+
+A `v0.9.0` tag and matching GitHub Release, cut by the repository owner, with
+the `.dev0` suffix removed from `src/azazel_fabric/version.py`. R1b (signed
+release-candidate digest) and R1c (stable tag after downstream evidence,
+including at least one real producer and two real consumers per cross-product
+contract) are separate program steps and have not happened.
+
 ## [0.8.0] — Canonical Edge-decision transport signature (Fabric#9)
 
 Adds `azazel_fabric.deception_contracts.decision_signing`, the single
@@ -27,7 +140,27 @@ would silently return an all-zero (fully predictable) key. A misconfigured
 numeric key now fails loudly rather than signing/verifying with degenerate key
 material.
 
-## [0.7.0] — MITRE Engage-aligned engagement contracts
+**`v0.8.0` also carries the engagement contracts described under `[0.7.0]`
+below.** No `v0.7.0` tag was ever cut, so `v0.8.0` is the first — and only —
+release a consumer can pin to obtain `azazel_fabric.engagement_contracts`. The
+published `v0.8.0` release notes list both PRs (`Fabric#8` engagement contracts
+and `Fabric#9` decision signing) and compare `v0.6.0...v0.8.0`.
+
+## [0.7.0] — MITRE Engage-aligned engagement contracts — **NEVER RELEASED**
+
+> **There is no `v0.7.0` tag and no `v0.7.0` GitHub Release, and none will be
+> created.** Verified 2026-09-19 from both sides: the repository's tags are
+> `v0.1.0`–`v0.6.0` and `v0.8.0`, the published releases are the same set, and
+> `src/azazel_fabric/engagement_contracts/` is absent at `v0.6.0` and present at
+> `v0.8.0`. **Pin `v0.8.0` to obtain the engagement contracts — pinning
+> `v0.7.0` resolves to nothing.**
+>
+> This section is kept rather than folded into `[0.8.0]` because the changelog
+> is the release-*history* record: the work below was prepared and reviewed as a
+> `0.7.0` increment and then shipped inside `v0.8.0`, and rewriting that history
+> would erase why the version numbers skip. `[0.8.0]` above points here, and
+> `docs/release-compatibility.md` records the same correction. Azazel-Deception
+> logged this as a Fabric-side defect in its `docs/fabric-pin.md`.
 
 Adds one additive, non-breaking contract family, `engagement_contracts`
 (Azazel-Fabric#8): `EngagementObjective`/`Approach`/`Activity`, `AttackerReaction`,

@@ -1,0 +1,20 @@
+{
+  "asset_manifest_ref": "am-golden-model-1",
+  "authority": "descriptive_only",
+  "context_size_tokens": 4096,
+  "dynamic_loader": false,
+  "executable_serialization": false,
+  "manifest_id": "mm-golden-1",
+  "model_format": "gguf",
+  "model_id": "model:local-cognition:1",
+  "model_supplied_code": false,
+  "native_plugins": false,
+  "network_fetch_on_load": false,
+  "parser_version": "1.0.0",
+  "quantization": "Q4_K_M",
+  "required_memory_mib": 3072,
+  "runtime_id": "golden-runtime",
+  "runtime_version": "1.0.0",
+  "schema_version": "model-manifest/v0.1",
+  "tokenizer_format": "tokenizers_json"
+}

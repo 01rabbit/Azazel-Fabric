@@ -6,9 +6,15 @@ advisory-only invariants and the `view.StatusView` model referenced
 alongside them SHIPPED in `v0.2.0` (see `CHANGELOG.md`). §3–§5
 (`api`/`notify`/`paths`) are now **ratified and implemented in `v0.4.0`**
 (Phase 5); each section carries a status line noting deviations from the
-original proposal. Consult the source and `tests/` for exact, current field
-signatures — the tables below are a readable reference, not the authoritative
-schema.
+original proposal. §6 (`outcome_contracts`) and §7 (`provisioning_contracts` /
+`mio_contracts`) are **unreleased** (`0.9.0.dev0`). Consult the source and
+`tests/` for exact, current field signatures — the tables below are a readable
+reference, not the authoritative schema.
+
+The later contract families have their own reference documents:
+[`deception-contracts.md`](deception-contracts.md) for the AZ-06 family and
+[`provisioning-contracts.md`](provisioning-contracts.md) for the R1a
+provisioning / M.I.O. families.
 
 Schemas in §1/§2 are implemented as Pydantic v2 models under
 `azazel_fabric.schema` and `azazel_fabric.cti_contracts`; consult the
@@ -296,3 +302,64 @@ callers that want a single string. (b) The migration helper is **plan-only**:
 there is deliberately **no `execute` function** — stronger than "dry-run-first,"
 since Fabric never performs a move at all; executing the plan is the product's
 choice.
+
+## 6. Outcome-as-Evidence contracts (`azazel_fabric.outcome_contracts`)
+
+**Status: implemented on `main`, UNRELEASED (`0.9.0.dev0`).** Added after
+`v0.8.0`; no tag carries it yet, so no consumer can pin it. Shipped as four
+frozen, `extra="forbid"` models plus validation helpers.
+
+The family exists to keep four different claims apart, because collapsing them
+is how a system starts believing its own actions worked:
+
+| Model | Wire version | What it is |
+|---|---|---|
+| `ExecutionRefV0` | `outcome-execution/v0.1` | a producer's fact that it executed something (`applied`/`partial`/`failed`/`rejected`/`unverified`/`released`) |
+| `MechanismObservationV0` | `outcome-mechanism/v0.1` | the implementation mechanism actually observed, deliberately *below* tactical effect |
+| `OutcomeObservationV0` | `outcome-observation/v0.1` | a bounded before/during/after observation window, with telemetry coverage and confounders — **no success or causality verdict** |
+| `TacticalEffectAssessmentRefV0` | `tactical-effect-assessment/v0.1` | a non-executable assessment (`supported`/`unsupported`/`inconclusive`) naming its evaluator and policy |
+
+Every model carries an `authority_class` pinned to a producer-fact literal, and
+the assessment pins `executable` to `False`. Fabric describes facts and
+assessments produced by product-local authorities; it never authorizes,
+executes, or upgrades an action.
+
+**Invariants** (`azazel_fabric.outcome_contracts.validation`):
+
+- `assert_no_runtime_directives` — recursively rejects execution/authority
+  fields (`command`/`provider_command`/`execute`/`approve`/`override`/
+  `auto_execute`/`select_action`/`attacker_belief`/`success`…) in any spelling.
+- `assert_no_tactical_claim_fields` — a mechanism or outcome fact may not carry
+  `effect_class` / `tactical_effect` / `effectiveness` / `initiative_score`. A
+  stronger claim cannot hide inside a weaker layer.
+- `assert_bounded_fact_payload` — depth, item-count, string-length, and
+  canonical-size bounds on every free-form fact map.
+- `assert_evidence_chain_consistent` — an outcome or assessment that does not
+  share the execution's `(trace_id, decision_ref, execution_ref)`, or that
+  references a mechanism or outcome outside the supplied chain, is rejected.
+- `canonical_fact_json` — canonical bytes (sorted keys, compact separators,
+  `ensure_ascii=False`), byte-identical to the other families' canonical form.
+
+Cross-product golden fixtures live under `tests/fixtures/outcome/`.
+
+## 7. Provisioning and M.I.O. contracts
+
+**Status: R1a draft, UNRELEASED (`0.9.0.dev0`).** `provisioning_contracts`
+(hardware inventory, resource/topology profiles, interface assignment,
+commissioning, product/asset/model/compatibility manifests, proposed generation
+descriptors, observation-only activation receipts, audit-checkpoint and
+security-state projections) and `mio_contracts` (local situation frames,
+sanitized remote frames, advisory results, provenance-preserving merge output).
+
+Full reference, authority rules, feature-to-minimum-version matrix, and
+conformance kit: [`provisioning-contracts.md`](provisioning-contracts.md).
+
+Two boundaries are worth restating here because they are easy to erode:
+
+- A `ResourceProfile` records a measured envelope. It never records a tier, a
+  capability state, or an authority level — effective capability is the
+  intersection of resource, topology, verified assets, and trust/health, and no
+  single record may imply it.
+- An interface role is never inferred from a name, a link state, or a default
+  route. It comes from read-only inventory plus explicit operator confirmation
+  against a composite identity, and zero or multiple matches fail closed.

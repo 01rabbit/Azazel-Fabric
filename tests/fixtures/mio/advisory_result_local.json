@@ -1,0 +1,44 @@
+{
+  "authority": "advisory_only",
+  "claim_set": {
+    "authority": "descriptive_only",
+    "claim_set_id": "claims-local-1",
+    "claims": [
+      {
+        "claim_id": "claim-local-1",
+        "confidence": 0.55,
+        "freshness": "2026-09-01T00:00:00+00:00",
+        "input_refs": [
+          "frame-golden-1"
+        ],
+        "limitations": [
+          "single_window"
+        ],
+        "model_generation": "g4",
+        "model_ref": "model:local-cognition:1",
+        "schema_version": "mio-claim/v0.1",
+        "source": "local_model",
+        "statement": "the observed pattern resembles credential stuffing"
+      }
+    ],
+    "frozen_at": "2026-09-01T00:05:00Z",
+    "schema_version": "mio-claim-set/v0.1",
+    "trace_id": "trace-golden-mio-1"
+  },
+  "contains_links": false,
+  "executable": false,
+  "limitations": [
+    "no_external_context"
+  ],
+  "may_request_followup": false,
+  "model_generation": "g4",
+  "model_ref": "model:local-cognition:1",
+  "narrative_text": "Repeated authentication failures from one subject within five minutes.",
+  "origin": "local",
+  "produced_at": "2026-09-01T00:05:00Z",
+  "rendering": "inert_text",
+  "request_ref": "frame-golden-1",
+  "result_id": "advisory-local-1",
+  "schema_version": "mio-advisory-result/v0.1",
+  "trace_id": "trace-golden-mio-1"
+}

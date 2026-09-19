@@ -1,0 +1,82 @@
+{
+  "authority": "descriptive_only",
+  "capture_support": [
+    {
+      "evidence_refs": [
+        "capture:probe:1"
+      ],
+      "hardware_offload_active": false,
+      "interface_key": "if-a",
+      "monitor_mode_supported": false,
+      "observed_at": "2026-09-01T00:05:00Z",
+      "promiscuous_supported": true,
+      "schema_version": "capture-support/v0.1"
+    }
+  ],
+  "commissioned_assignments": [
+    {
+      "assigned_at": "2026-09-01T00:05:00Z",
+      "assignment_id": "assign-golden-1",
+      "authority": "descriptive_only",
+      "confirmation": {
+        "confirmed_at": "2026-09-01T00:05:00Z",
+        "evidence_refs": [
+          "commissioning:step:role-confirm-1"
+        ],
+        "method": "physical_port_label_confirmed",
+        "operator_ref": "operator:golden-1",
+        "schema_version": "operator-confirmation/v0.1"
+      },
+      "inventory_digest": "sha256:ca7e46bf55b19fd2edfe4ecd7ab8cbadfc65ae38cd8474ec31be8f158b2d4eeb",
+      "node_id": "node-golden-1",
+      "role": "observation",
+      "schema_version": "interface-assignment/v0.1",
+      "selector": {
+        "bus_path": "pci-0000:02:00.0",
+        "driver": "e1000e",
+        "firmware_version": null,
+        "pci_id": "8086:15b8",
+        "permanent_mac": "02:00:00:00:00:0a",
+        "physical_label": "LAN1",
+        "schema_version": "interface-identity-selector/v0.1",
+        "serial": "NIC-A-0001",
+        "usb_vid_pid": null,
+        "wireless_phy": null
+      }
+    }
+  ],
+  "hardware_inventory_digest": "sha256:ca7e46bf55b19fd2edfe4ecd7ab8cbadfc65ae38cd8474ec31be8f158b2d4eeb",
+  "isolation_properties": [
+    {
+      "description": "decoy bridge cannot reach the management zone over IPv4/IPv6",
+      "evidence_refs": [
+        "hil:isolation:1:report"
+      ],
+      "observed_at": "2026-09-01T00:05:00Z",
+      "property_id": "decoy-cannot-reach-management",
+      "schema_version": "isolation-property/v0.1",
+      "status": "demonstrated",
+      "test_ref": "hil:isolation:1"
+    },
+    {
+      "description": "decoy bridge egress to the Internet",
+      "evidence_refs": [],
+      "observed_at": "2026-09-01T00:05:00Z",
+      "property_id": "decoy-cannot-reach-internet",
+      "schema_version": "isolation-property/v0.1",
+      "status": "not_tested",
+      "test_ref": null
+    }
+  ],
+  "limitations": [
+    "single_boot_observation"
+  ],
+  "management_reachability": "independent_path",
+  "node_id": "node-golden-1",
+  "observed_at": "2026-09-01T00:05:00Z",
+  "profile_id": "topo-golden-1",
+  "schema_version": "topology-profile/v0.1",
+  "unassigned_interface_keys": [
+    "if-b"
+  ]
+}

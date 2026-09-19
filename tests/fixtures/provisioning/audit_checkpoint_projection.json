@@ -1,0 +1,19 @@
+{
+  "anchor_refs": [],
+  "assurance_profile": "local_continuity_only",
+  "authority": "descriptive_only",
+  "boot_id": "boot-golden-1",
+  "checkpoint_id": "checkpoint:golden:1",
+  "head_ref": "head:golden:1041",
+  "inventory_generation": 1,
+  "log_epoch": 2,
+  "monotonic_sequence": 1041,
+  "monotonic_time_ns": 600000000000,
+  "node_id": "node-golden-1",
+  "policy_generation": 7,
+  "previous_checkpoint_ref": "checkpoint:golden:0",
+  "product": "azazel-nexus",
+  "schema_version": "audit-checkpoint-projection/v0.1",
+  "security_epoch": 3,
+  "wall_time": "2026-09-01T00:10:00Z"
+}

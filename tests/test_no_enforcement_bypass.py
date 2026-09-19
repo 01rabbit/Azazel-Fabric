@@ -28,19 +28,46 @@ from pydantic import BaseModel, ValidationError
 
 import azazel_fabric.deception_contracts as dc
 import azazel_fabric.engagement_contracts as ec
+import azazel_fabric.mio_contracts as mc
+import azazel_fabric.outcome_contracts as oc
+import azazel_fabric.provisioning_contracts as pc
 from azazel_fabric.deception_contracts.validation import BANNED_RUNTIME_DIRECTIVE_FIELDS
 from azazel_fabric.engagement_contracts.validation import (
     BANNED_ENGAGEMENT_AUTHORITY_FIELDS,
 )
+from azazel_fabric.mio_contracts.validation import BANNED_MIO_DIRECTIVE_FIELDS
+from azazel_fabric.provisioning_contracts.validation import BANNED_PROVISIONING_FIELDS
 
 _BANNED_FIELD_NAMES = set(BANNED_RUNTIME_DIRECTIVE_FIELDS) | set(
     BANNED_ENGAGEMENT_AUTHORITY_FIELDS
 )
 
+# Every contract family on the surface. A new family added here is covered by
+# every gate below automatically.
+_CONTRACT_MODULES = (dc, ec, oc, pc, mc)
+
+# The provisioning/M.I.O. families ban more field *names* than the older
+# families do (command / unit / route / firewall / device-path / executor /
+# boolean-authorization / trust-decision, and tool-call / link / follow-up).
+# That stricter ban applies only to them: `deception_contracts.ImageManifest`
+# legitimately carries `verified`, which the provisioning ban forbids, because
+# a provisioning record must not record a trust verdict at all.
+_R1_MODULES = (pc, mc)
+
+# Known gap, recorded rather than hidden. `cti_contracts` is a contract family
+# but is NOT on this gated surface: `CtiEventBatch`, `CtiFlowBatch`,
+# `CtiReactionBatch`, and `CtiContextRequest` predate the `extra="forbid"`
+# convention (they shipped in v0.1.0), and tightening them is a breaking change
+# to a published contract that needs its own decision and migration note, not a
+# quiet test-side fix. The family's advisory-only invariants are covered by
+# `tests/test_cti_contracts.py` in the meantime.
+_UNGATED_FAMILIES = frozenset({"cti_contracts"})
+_R1_BANNED_FIELD_NAMES = set(BANNED_PROVISIONING_FIELDS) | set(BANNED_MIO_DIRECTIVE_FIELDS)
+
 
 def _contract_models() -> list[type[BaseModel]]:
     seen: dict[str, type[BaseModel]] = {}
-    for module in (dc, ec):
+    for module in _CONTRACT_MODULES:
         for name in getattr(module, "__all__", []):
             obj = getattr(module, name, None)
             if inspect.isclass(obj) and issubclass(obj, BaseModel) and obj is not BaseModel:
@@ -49,6 +76,19 @@ def _contract_models() -> list[type[BaseModel]]:
 
 
 MODELS = _contract_models()
+
+
+def _r1_models() -> list[type[BaseModel]]:
+    seen: dict[str, type[BaseModel]] = {}
+    for module in _R1_MODULES:
+        for name in getattr(module, "__all__", []):
+            obj = getattr(module, name, None)
+            if inspect.isclass(obj) and issubclass(obj, BaseModel) and obj is not BaseModel:
+                seen[obj.__qualname__] = obj
+    return [seen[k] for k in sorted(seen)]
+
+
+R1_MODELS = _r1_models()
 
 # Fields the doctrine PINS to one safe value (a Literal), keyed by model name.
 # Verified against the wire shape; a pin means the field cannot be escalated by
@@ -78,6 +118,46 @@ _PINNED_LITERALS: dict[tuple[str, str], object] = {
     ("EffectivenessAdvisory", "authority"): "advisory_only",
     ("EffectivenessAdvisory", "executable"): False,
     ("InteractionObservation", "authority"): "descriptive_only",
+    # Outcome-as-Evidence facts (v0.9.0.dev0): a producer states a fact or a
+    # non-executable assessment; neither carries action authority.
+    ("ExecutionRefV0", "authority_class"): "producer_execution_fact",
+    ("MechanismObservationV0", "authority_class"): "producer_mechanism_fact",
+    ("OutcomeObservationV0", "authority_class"): "producer_outcome_fact",
+    ("TacticalEffectAssessmentRefV0", "authority_class"): "producer_assessment_fact",
+    ("TacticalEffectAssessmentRefV0", "executable"): False,
+    # R1a provisioning family: every record describes, and the receipt only
+    # observes. Nothing in the family can be escalated to an authorization.
+    ("ActivationReceipt", "authority"): "observation_only",
+    ("AssetManifest", "authority"): "descriptive_only",
+    ("AssetManifest", "declared_regular_files_only"): True,
+    ("AuditCheckpointProjection", "authority"): "descriptive_only",
+    ("CommissioningRecord", "authority"): "descriptive_only",
+    ("CompatibilityManifest", "authority"): "descriptive_only",
+    ("HardwareInventory", "authority"): "descriptive_only",
+    ("InterfaceAssignment", "authority"): "descriptive_only",
+    ("ModelManifest", "authority"): "descriptive_only",
+    ("ModelManifest", "model_supplied_code"): False,
+    ("ModelManifest", "dynamic_loader"): False,
+    ("ModelManifest", "native_plugins"): False,
+    ("ModelManifest", "executable_serialization"): False,
+    ("ModelManifest", "network_fetch_on_load"): False,
+    ("ProductManifest", "authority"): "descriptive_only",
+    ("ProposedGenerationDescriptor", "authority"): "descriptive_only",
+    ("ResourceProfile", "authority"): "descriptive_only",
+    ("SecurityStateProjection", "authority"): "descriptive_only",
+    ("TopologyProfile", "authority"): "descriptive_only",
+    # R1a M.I.O. family: model output is advisory and inert, and a sanitized
+    # frame structurally cannot carry raw evidence off the node.
+    ("AdvisoryResult", "authority"): "advisory_only",
+    ("AdvisoryResult", "executable"): False,
+    ("AdvisoryResult", "may_request_followup"): False,
+    ("AdvisoryResult", "contains_links"): False,
+    ("ClaimSet", "authority"): "descriptive_only",
+    ("MergedAdvisory", "authority"): "advisory_only",
+    ("MergedAdvisory", "executable"): False,
+    ("SanitizedRemoteFrame", "authority"): "descriptive_only",
+    ("SanitizedRemoteFrame", "contains_raw_evidence"): False,
+    ("SituationFrame", "authority"): "descriptive_only",
 }
 
 # Safety toggles that default to the safe value but are intentionally NOT
@@ -97,6 +177,50 @@ def test_enumeration_is_non_empty():
     # Guard: if the __all__-walk silently returned nothing, the parametrized
     # tests below would vacuously pass -- fail loudly instead.
     assert len(MODELS) >= 25, f"only found {len(MODELS)} contract models"
+    assert len(R1_MODELS) >= 20, f"only found {len(R1_MODELS)} R1a contract models"
+
+
+def test_every_contract_family_is_on_the_gated_surface():
+    # Self-extending guard, discovered from the package rather than from the
+    # list under test: every `*_contracts` subpackage must be enumerated in
+    # _CONTRACT_MODULES, so a new family cannot ship ungated -- and dropping one
+    # from the list fails here rather than quietly shrinking the surface.
+    from pathlib import Path
+
+    import azazel_fabric
+
+    families = {
+        path.parent.name
+        for path in Path(azazel_fabric.__file__).parent.glob("*_contracts/__init__.py")
+    }
+    assert families, "no contract family found in the package"
+    enumerated = {module.__name__.rsplit(".", 1)[-1] for module in _CONTRACT_MODULES}
+    missing = sorted(families - enumerated - _UNGATED_FAMILIES)
+    assert not missing, (
+        f"contract famil(ies) {missing} are not on the gated surface; add them to "
+        "_CONTRACT_MODULES, or record why not in _UNGATED_FAMILIES"
+    )
+
+    for module in _CONTRACT_MODULES:
+        contributed = [
+            name
+            for name in getattr(module, "__all__", [])
+            if any(m.__name__ == name for m in MODELS)
+        ]
+        assert contributed, f"{module.__name__} contributed no model to the gate"
+
+
+@pytest.mark.parametrize("model", R1_MODELS, ids=lambda m: m.__name__)
+def test_r1_model_declares_no_provisioning_or_cognition_directive_field(model):
+    # The stricter R1a ban: no command, unit, route, firewall rule, device path,
+    # executor, boolean authorization, trust decision, tool call, link, or
+    # follow-up request may appear as a FIELD NAME on a provisioning/M.I.O.
+    # record, not merely be rejected inside a payload.
+    offending = set(model.model_fields) & _R1_BANNED_FIELD_NAMES
+    assert not offending, (
+        f"{model.__name__} declares directive/authorization/trust-decision field(s): "
+        f"{sorted(offending)}"
+    )
 
 
 @pytest.mark.parametrize("model", MODELS, ids=lambda m: m.__name__)

@@ -21,18 +21,21 @@ across every phase, before touching `cti_contracts`, `audit`, or `view`.
 `<type>(<scope>): <summary>`
 
 scope: `schema` / `cti-contracts` / `view` / `paths` / `audit` / `api` /
-`notify` / `testing` / `docs`
+`notify` / `testing` / `docs` / `deception-contracts` / `engagement-contracts` /
+`outcome-contracts` / `provisioning-contracts` / `mio-contracts`
 
 ## Pull request rules
 
 - 1 PR = 1 purpose. Do not mix unrelated changes.
 - Every PR must include:
-  - [ ] `pip install -e ".[test]" && pytest -q` passes (78 baseline —
-        never reduce the test count)
+  - [ ] `pip install -e ".[test]" && pytest -q` passes (678 baseline on
+        `0.9.0.dev0` — never reduce the test count)
   - [ ] Contract changes shipped in the PR are **additive only**;
         breaking changes require a version bump, a `BREAKING` entry in
         `CHANGELOG.md`, and a migration note
-  - [ ] `docs/contracts.md` updated in the same PR when any model changes
+  - [ ] `docs/contracts.md` (or the relevant family document —
+        `deception-contracts.md`, `provisioning-contracts.md`) updated in the
+        same PR when any model changes
   - [ ] `CHANGELOG.md` updated
 
 ## What not to do
