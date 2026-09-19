@@ -1,0 +1,33 @@
+{
+  "authority": "descriptive_only",
+  "cpu_architecture": "amd64",
+  "cpu_logical_cores": 8,
+  "cpu_physical_cores": 4,
+  "firmware_reserved_memory_mib": 289,
+  "hardware_inventory_digest": "sha256:ca7e46bf55b19fd2edfe4ecd7ab8cbadfc65ae38cd8474ec31be8f158b2d4eeb",
+  "installed_memory_mib": 16384,
+  "limitations": [
+    "measured_on_one_boot"
+  ],
+  "measured_at": "2026-09-01T00:00:00Z",
+  "measured_core_reserve_mib": 1024,
+  "measurement_method": "measured_usable_after_firmware_reservation",
+  "node_id": "node-golden-1",
+  "power_budget": {
+    "battery_capacity_wh": null,
+    "schema_version": "power-budget/v0.1",
+    "supply": "mains",
+    "sustained_draw_watts": 24.0
+  },
+  "profile_id": "res-golden-1",
+  "resource_tier": "core",
+  "schema_version": "resource-profile/v0.1",
+  "thermal_budget": {
+    "cooling_class": "passive_rugged",
+    "schema_version": "thermal-budget/v0.1",
+    "sustained_power_watts": 28.0,
+    "throttle_temperature_celsius": 95.0
+  },
+  "usable_memory_mib": 16095,
+  "usable_storage_mib": 488386
+}

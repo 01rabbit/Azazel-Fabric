@@ -1,0 +1,44 @@
+{
+  "authority": "advisory_only",
+  "claim_set": {
+    "authority": "descriptive_only",
+    "claim_set_id": "claims-remote-1",
+    "claims": [
+      {
+        "claim_id": "claim-remote-1",
+        "confidence": 0.4,
+        "freshness": null,
+        "input_refs": [
+          "sframe-golden-1"
+        ],
+        "limitations": [
+          "sanitized_input_only"
+        ],
+        "model_generation": "r9",
+        "model_ref": "model:remote-cognition:1",
+        "schema_version": "mio-claim/v0.1",
+        "source": "remote_model",
+        "statement": "the observed pattern resembles a misconfigured client retry loop"
+      }
+    ],
+    "frozen_at": "2026-09-01T00:10:00Z",
+    "schema_version": "mio-claim-set/v0.1",
+    "trace_id": "trace-golden-mio-1"
+  },
+  "contains_links": false,
+  "executable": false,
+  "limitations": [
+    "sanitized_input_only"
+  ],
+  "may_request_followup": false,
+  "model_generation": "r9",
+  "model_ref": "model:remote-cognition:1",
+  "narrative_text": "The bucketed retry pattern is also consistent with a client misconfiguration.",
+  "origin": "remote",
+  "produced_at": "2026-09-01T00:10:00Z",
+  "rendering": "inert_text",
+  "request_ref": "sframe-golden-1",
+  "result_id": "advisory-remote-1",
+  "schema_version": "mio-advisory-result/v0.1",
+  "trace_id": "trace-golden-mio-1"
+}

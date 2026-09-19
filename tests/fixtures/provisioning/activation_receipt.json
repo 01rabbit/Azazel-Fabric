@@ -1,0 +1,21 @@
+{
+  "audit_checkpoint_ref": "checkpoint:golden:1",
+  "authority": "observation_only",
+  "evidence_refs": [
+    "activation:verify:1"
+  ],
+  "generation_counter": 7,
+  "generation_descriptor_digest": "sha256:4586a4ee90f46a333808e62bcb79cc2dbeb2a99093b830dcb2820a4ca13e737c",
+  "irreversible_effects_observed": [
+    "packets already forwarded cannot be recalled"
+  ],
+  "limitations": [
+    "observation_window_60s"
+  ],
+  "node_id": "node-golden-1",
+  "observed_at": "2026-09-08T00:00:00Z",
+  "observed_state": "activated",
+  "product": "azazel-nexus",
+  "receipt_id": "receipt-golden-1",
+  "schema_version": "activation-receipt/v0.1"
+}

@@ -1,0 +1,23 @@
+{
+  "asset_id": "asset:edge-package:1",
+  "asset_kind": "edge_package",
+  "authority": "descriptive_only",
+  "base_digest": null,
+  "compressed_size_bytes": 12582912,
+  "content_digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+  "declared_regular_files_only": true,
+  "expanded_size_bytes": 41943040,
+  "file_count": 1843,
+  "final_tree_digest": null,
+  "inode_count": 1902,
+  "manifest_id": "am-golden-1",
+  "max_file_size_bytes": 8388608,
+  "max_path_depth": 9,
+  "observed_at": "2026-09-01T00:00:00Z",
+  "provenance_ref": "provenance:edge:1",
+  "sbom_ref": "sbom:edge:1",
+  "schema_version": "asset-manifest/v0.1",
+  "signature_refs": [
+    "signature:edge:1"
+  ]
+}

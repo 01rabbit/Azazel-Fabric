@@ -1,0 +1,22 @@
+{
+  "_reference_as_of": "2026-09-02T00:00:00+00:00",
+  "asset_manifest_digests": [],
+  "authority": "descriptive_only",
+  "commissioning_record_digest": "sha256:59eed2a15505b342e21ad6ff2c27e0a6649603b36c08ebb5b1fa1ce41967182d",
+  "declared_irreversible_effects": [],
+  "descriptor_digest": "sha256:f28ebd29349d2828bb1f7ea1111f2d6f1ecb1b954e2ddb0c6657107ba6ab4cdc",
+  "descriptor_id": "gen-golden-expired",
+  "expires_at": "2026-01-01T00:00:00Z",
+  "generation_counter": 5,
+  "limitations": [],
+  "node_id": "node-golden-1",
+  "overlay_digest": null,
+  "policy_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+  "previous_generation_counter": 4,
+  "product": "azazel-nexus",
+  "product_manifest_digests": [],
+  "proposed_at": "2025-12-01T00:00:00Z",
+  "renderer_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+  "schema_version": "proposed-generation-descriptor/v0.1",
+  "security_epoch": 2
+}

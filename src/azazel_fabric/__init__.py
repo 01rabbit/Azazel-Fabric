@@ -20,6 +20,17 @@ hints), :mod:`azazel_fabric.audit` (AuditEvent projection + JSONL formatters;
 is import-light (no heavy imports at module scope) to stay Pi-friendly, and no
 web framework is imported in any core module.
 
+Later releases add contract families the same way, each additive and each
+imported on demand: ``v0.5.0``-``v0.8.0`` added
+:mod:`azazel_fabric.deception_contracts` and
+:mod:`azazel_fabric.engagement_contracts`, and the unreleased ``0.9.0.dev0``
+adds :mod:`azazel_fabric.outcome_contracts` (Outcome-as-Evidence shared facts),
+:mod:`azazel_fabric.provisioning_contracts` (hardware inventory, resource and
+topology profiles, commissioning, released-artifact and compatibility manifests,
+proposed generations, observation-only activation receipts), and
+:mod:`azazel_fabric.mio_contracts` (local situation frames, sanitized remote
+frames, advisory results, provenance-preserving merge output).
+
 Submodules are imported on demand (``import azazel_fabric.api``), not eagerly
 from this package root, so a consumer only pays for what it uses.
 """

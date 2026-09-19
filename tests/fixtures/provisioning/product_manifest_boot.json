@@ -1,0 +1,20 @@
+{
+  "architecture": "amd64",
+  "artifact_digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+  "authority": "descriptive_only",
+  "deployment_profile": "boot-emergency-lite",
+  "manifest_id": "pm-golden-boot",
+  "product": "azazel-boot",
+  "product_version": "0.1.0",
+  "provenance_ref": "provenance:boot:1",
+  "released_at": "2026-09-01T00:00:00Z",
+  "sbom_ref": "sbom:boot:1",
+  "schema_features": [
+    "provisioning-contracts/v0.1"
+  ],
+  "schema_version": "product-manifest/v0.1",
+  "signature_refs": [
+    "signature:boot:1"
+  ],
+  "source_revision": "0000000000000000000000000000000000000002"
+}

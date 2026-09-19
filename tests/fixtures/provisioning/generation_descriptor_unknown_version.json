@@ -1,0 +1,30 @@
+{
+  "asset_manifest_digests": [
+    "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+  ],
+  "authority": "descriptive_only",
+  "commissioning_record_digest": "sha256:59eed2a15505b342e21ad6ff2c27e0a6649603b36c08ebb5b1fa1ce41967182d",
+  "declared_irreversible_effects": [
+    "packets already forwarded cannot be recalled",
+    "external observations of the decoy surface cannot be withdrawn"
+  ],
+  "descriptor_digest": "sha256:4586a4ee90f46a333808e62bcb79cc2dbeb2a99093b830dcb2820a4ca13e737c",
+  "descriptor_id": "gen-golden-1",
+  "expires_at": "2026-09-08T00:00:00Z",
+  "generation_counter": 7,
+  "limitations": [
+    "rollback_restores_only_owned_resources"
+  ],
+  "node_id": "node-golden-1",
+  "overlay_digest": "sha256:5555555555555555555555555555555555555555555555555555555555555555",
+  "policy_digest": "sha256:7777777777777777777777777777777777777777777777777777777777777777",
+  "previous_generation_counter": 6,
+  "product": "azazel-nexus",
+  "product_manifest_digests": [
+    "sha256:1111111111111111111111111111111111111111111111111111111111111111"
+  ],
+  "proposed_at": "2026-09-01T00:10:00Z",
+  "renderer_digest": "sha256:6666666666666666666666666666666666666666666666666666666666666666",
+  "schema_version": "proposed-generation-descriptor/v9.9",
+  "security_epoch": 3
+}

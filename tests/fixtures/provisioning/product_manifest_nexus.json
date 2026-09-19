@@ -1,0 +1,21 @@
+{
+  "architecture": "amd64",
+  "artifact_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+  "authority": "descriptive_only",
+  "deployment_profile": "nexus-embedded-lite",
+  "manifest_id": "pm-golden-nexus",
+  "product": "azazel-nexus",
+  "product_version": "0.1.0",
+  "provenance_ref": "provenance:nexus:1",
+  "released_at": "2026-09-01T00:00:00Z",
+  "sbom_ref": "sbom:nexus:1",
+  "schema_features": [
+    "provisioning-contracts/v0.1",
+    "mio-contracts/v0.1"
+  ],
+  "schema_version": "product-manifest/v0.1",
+  "signature_refs": [
+    "signature:nexus:1"
+  ],
+  "source_revision": "0000000000000000000000000000000000000001"
+}

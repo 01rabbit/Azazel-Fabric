@@ -1,0 +1,70 @@
+{
+  "authority": "advisory_only",
+  "claim_set": {
+    "authority": "descriptive_only",
+    "claim_set_id": "claims-merged-1",
+    "claims": [
+      {
+        "claim_id": "claim-local-1",
+        "confidence": 0.55,
+        "freshness": "2026-09-01T00:00:00+00:00",
+        "input_refs": [
+          "frame-golden-1"
+        ],
+        "limitations": [
+          "single_window"
+        ],
+        "model_generation": "g4",
+        "model_ref": "model:local-cognition:1",
+        "schema_version": "mio-claim/v0.1",
+        "source": "local_model",
+        "statement": "the observed pattern resembles credential stuffing"
+      },
+      {
+        "claim_id": "claim-remote-1",
+        "confidence": 0.4,
+        "freshness": null,
+        "input_refs": [
+          "sframe-golden-1"
+        ],
+        "limitations": [
+          "sanitized_input_only"
+        ],
+        "model_generation": "r9",
+        "model_ref": "model:remote-cognition:1",
+        "schema_version": "mio-claim/v0.1",
+        "source": "remote_model",
+        "statement": "the observed pattern resembles a misconfigured client retry loop"
+      }
+    ],
+    "frozen_at": "2026-09-01T00:10:00Z",
+    "schema_version": "mio-claim-set/v0.1",
+    "trace_id": "trace-golden-mio-1"
+  },
+  "cognition_state": "hybrid",
+  "disagreements": [
+    {
+      "claim_refs": [
+        "claim-local-1",
+        "claim-remote-1"
+      ],
+      "resolution": "presented_separately",
+      "schema_version": "mio-disagreement/v0.1",
+      "topic": "cause of the repeated authentication failures"
+    }
+  ],
+  "executable": false,
+  "input_result_refs": [
+    "advisory-local-1",
+    "advisory-remote-1"
+  ],
+  "limitations": [
+    "no_decision_implied"
+  ],
+  "merge_id": "merge-golden-1",
+  "merged_at": "2026-09-01T00:10:00Z",
+  "narrative_text": "Two cognition paths disagree; both readings are shown with their sources.",
+  "rendering": "inert_text",
+  "schema_version": "mio-merged-advisory/v0.1",
+  "trace_id": "trace-golden-mio-1"
+}

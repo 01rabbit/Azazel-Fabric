@@ -1,0 +1,65 @@
+{
+  "authority": "descriptive_only",
+  "collected_at": "2026-09-01T00:00:00Z",
+  "collection_method": "read_only_inventory",
+  "interfaces": [
+    {
+      "bus_path": "pci-0000:02:00.0",
+      "driver": "e1000e",
+      "driver_version": "3.2.6-k",
+      "firmware_version": "0.8-4",
+      "interface_key": "if-a",
+      "kernel_name_observed": "enp2s0",
+      "pci_id": "8086:15b8",
+      "permanent_mac": "02:00:00:00:00:0a",
+      "physical_label": "LAN1",
+      "schema_version": "interface-identity/v0.1",
+      "serial": "NIC-A-0001",
+      "usb_vid_pid": null,
+      "wireless_phy": null
+    },
+    {
+      "bus_path": "pci-0000:03:00.0",
+      "driver": "e1000e",
+      "driver_version": "3.2.6-k",
+      "firmware_version": "0.8-4",
+      "interface_key": "if-b",
+      "kernel_name_observed": "enp3s0",
+      "pci_id": "8086:15b8",
+      "permanent_mac": "02:00:00:00:00:0b",
+      "physical_label": "LAN2",
+      "schema_version": "interface-identity/v0.1",
+      "serial": "NIC-B-0002",
+      "usb_vid_pid": null,
+      "wireless_phy": null
+    }
+  ],
+  "inventory_digest": "sha256:ca7e46bf55b19fd2edfe4ecd7ab8cbadfc65ae38cd8474ec31be8f158b2d4eeb",
+  "inventory_id": "inv-golden-1",
+  "limitations": [
+    "wireless_phy_not_present"
+  ],
+  "node_id": "node-golden-1",
+  "platform": {
+    "board_serial": "BOARD-0001",
+    "firmware_vendor": "GoldenFirmware",
+    "firmware_version": "1.2.3",
+    "product_name": "rugged-reference-1",
+    "schema_version": "platform-identity/v0.1",
+    "vendor": "GoldenFixture"
+  },
+  "product": "azazel-nexus",
+  "schema_version": "hardware-inventory/v0.1",
+  "storage_devices": [
+    {
+      "bus_path": "pci-0000:00:17.0-ata-1",
+      "device_key": "disk-a",
+      "model_name": "GOLDEN-SSD",
+      "removable": false,
+      "rotational": false,
+      "schema_version": "storage-device-identity/v0.1",
+      "serial": "SSD-0001",
+      "size_bytes": 512110190592
+    }
+  ]
+}

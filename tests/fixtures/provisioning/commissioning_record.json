@@ -1,0 +1,57 @@
+{
+  "assignments": [
+    {
+      "assigned_at": "2026-09-01T00:05:00Z",
+      "assignment_id": "assign-golden-1",
+      "authority": "descriptive_only",
+      "confirmation": {
+        "confirmed_at": "2026-09-01T00:05:00Z",
+        "evidence_refs": [
+          "commissioning:step:role-confirm-1"
+        ],
+        "method": "physical_port_label_confirmed",
+        "operator_ref": "operator:golden-1",
+        "schema_version": "operator-confirmation/v0.1"
+      },
+      "inventory_digest": "sha256:ca7e46bf55b19fd2edfe4ecd7ab8cbadfc65ae38cd8474ec31be8f158b2d4eeb",
+      "node_id": "node-golden-1",
+      "role": "observation",
+      "schema_version": "interface-assignment/v0.1",
+      "selector": {
+        "bus_path": "pci-0000:02:00.0",
+        "driver": "e1000e",
+        "firmware_version": null,
+        "pci_id": "8086:15b8",
+        "permanent_mac": "02:00:00:00:00:0a",
+        "physical_label": "LAN1",
+        "schema_version": "interface-identity-selector/v0.1",
+        "serial": "NIC-A-0001",
+        "usb_vid_pid": null,
+        "wireless_phy": null
+      }
+    }
+  ],
+  "authority": "descriptive_only",
+  "created_at": "2026-09-01T00:10:00Z",
+  "hardware_inventory_digest": "sha256:ca7e46bf55b19fd2edfe4ecd7ab8cbadfc65ae38cd8474ec31be8f158b2d4eeb",
+  "limitations": [
+    "deception_bridge_not_commissioned"
+  ],
+  "node_id": "node-golden-1",
+  "operator_confirmation": {
+    "confirmed_at": "2026-09-01T00:10:00Z",
+    "evidence_refs": [
+      "commissioning:session:1"
+    ],
+    "method": "operator_console_confirmed",
+    "operator_ref": "operator:golden-1",
+    "schema_version": "operator-confirmation/v0.1"
+  },
+  "product": "azazel-nexus",
+  "record_digest": "sha256:59eed2a15505b342e21ad6ff2c27e0a6649603b36c08ebb5b1fa1ce41967182d",
+  "record_id": "comm-golden-1",
+  "resource_profile_digest": "sha256:bb51f63d724bec46d355b8fe9704decd50525f9ceb725c907bb4e6be045cae45",
+  "schema_version": "commissioning-record/v0.1",
+  "site_ref": "site:golden-lab",
+  "topology_profile_digest": "sha256:a8dd9e2c023c77ef74f97a06db3e77a9e64d1fdd9f44c769a022a1d3f44c31c0"
+}

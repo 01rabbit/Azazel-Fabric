@@ -1,0 +1,51 @@
+{
+  "authority": "descriptive_only",
+  "claim_scope": "descriptive_claim_only",
+  "feature_minimums": [
+    {
+      "feature_id": "provisioning-contracts/v0.1",
+      "minimum_fabric_version": "0.9.0",
+      "notes": "HardwareInventory / ResourceProfile / TopologyProfile / CommissioningRecord",
+      "schema_version": "feature-minimum/v0.1"
+    },
+    {
+      "feature_id": "mio-contracts/v0.1",
+      "minimum_fabric_version": "0.9.0",
+      "notes": "situation frames, sanitized remote frames, advisory results, merge output",
+      "schema_version": "feature-minimum/v0.1"
+    },
+    {
+      "feature_id": "deception-contracts/v0.1",
+      "minimum_fabric_version": "0.5.0",
+      "notes": "canonical AZ-06 contract family",
+      "schema_version": "feature-minimum/v0.1"
+    }
+  ],
+  "generated_at": "2026-09-01T00:00:00Z",
+  "manifest_id": "cm-golden-1",
+  "schema_version": "compatibility-manifest/v0.1",
+  "tested_tuples": [
+    {
+      "adapter_digest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "architecture": "amd64",
+      "artifact_digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "cpu_features": [
+        "sse4_2",
+        "avx2"
+      ],
+      "deployment_profile": "nexus-embedded-lite",
+      "evidence_ref": "ci:conformance:1",
+      "fabric_version": "0.9.0",
+      "os_abi": "linux-gnu-x86_64",
+      "overlay_schema_version": "0.1",
+      "product": "azazel-nexus",
+      "product_version": "0.1.0",
+      "schema_features": [
+        "provisioning-contracts/v0.1",
+        "mio-contracts/v0.1"
+      ],
+      "schema_version": "tested-compatibility-tuple/v0.1",
+      "tuple_id": "tt-golden-1"
+    }
+  ]
+}

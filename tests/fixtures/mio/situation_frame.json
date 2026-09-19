@@ -1,0 +1,24 @@
+{
+  "authority": "descriptive_only",
+  "content": {
+    "observed_event_class": "repeated_auth_failure",
+    "observed_event_count": 14,
+    "window_seconds": 300
+  },
+  "created_at": "2026-09-01T00:00:00Z",
+  "deadline_budget_ms": 1500,
+  "evidence_refs": [
+    "edge:evidence:1",
+    "edge:decision:1"
+  ],
+  "frame_id": "frame-golden-1",
+  "limitations": [
+    "single_source_window"
+  ],
+  "memory_budget_mib": 512,
+  "node_id": "node-golden-1",
+  "privacy_class": "internal",
+  "product": "azazel-nexus",
+  "schema_version": "mio-situation-frame/v0.1",
+  "trace_id": "trace-golden-mio-1"
+}

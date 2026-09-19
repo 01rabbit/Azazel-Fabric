@@ -34,6 +34,12 @@ from azazel_fabric.testing.golden import (
     golden_decision_names,
     load_golden_decision,
 )
+from azazel_fabric.testing.provisioning import (
+    GOLDEN_PROVISIONING_NEGATIVE,
+    GOLDEN_REFERENCE_AS_OF,
+    golden_provisioning_names,
+    load_golden_provisioning,
+)
 from azazel_fabric.testing.invariants import (
     assert_advisory_only,
     assert_behavioral_absent_not_null,
@@ -43,6 +49,10 @@ __all__ = [
     "GOLDEN_DECISION_SIGNATURE_KEY",
     "golden_decision_names",
     "load_golden_decision",
+    "GOLDEN_PROVISIONING_NEGATIVE",
+    "GOLDEN_REFERENCE_AS_OF",
+    "golden_provisioning_names",
+    "load_golden_provisioning",
     "FIXED_TS",
     "make_mode_state",
     "make_state_snapshot",
