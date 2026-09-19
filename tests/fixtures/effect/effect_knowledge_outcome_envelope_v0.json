@@ -1,0 +1,61 @@
+{
+  "actor_session_ref": "session:golden-actor-1",
+  "authority_class": "observed_fact",
+  "confounders": [
+    "concurrent_maintenance_window"
+  ],
+  "coverage_complete": false,
+  "decision_ref": "decision-golden-effect-1",
+  "directive": false,
+  "effect_ref": "effect:golden-effect-1",
+  "envelope_id": "envelope:golden-effect-1",
+  "environment_ref": "environment:env-golden-1",
+  "evidence_refs": [
+    "evidence:deception-runtime-golden-1",
+    "evidence:gadget-capture-golden-1"
+  ],
+  "impact_observations": {
+    "business": {
+      "user_visible_disruption": "none_observed"
+    },
+    "noc": {
+      "tickets_opened": 0
+    },
+    "resource": {
+      "peak_memory_mb": 412
+    }
+  },
+  "observation_class": "presented_terrain_engagement",
+  "observed_at": "2026-08-20T00:30:00+00:00",
+  "outcome_observation_refs": [
+    "deception-outcome-99ee2bf20a9b563e245f44f0",
+    "gadget-outcome-golden-1"
+  ],
+  "presentation_ref": "presentation:golden-effect-1",
+  "producer_node": "knowledge-golden-1",
+  "producer_product": "knowledge",
+  "producer_version": "golden-1",
+  "provenance": {
+    "as_of": "2026-08-20T00:00:00+00:00",
+    "capture_generation": 7,
+    "confers_authority": false,
+    "fixture_scenario_id": "fixture:golden-effect-1",
+    "model_ref": "model:golden-advisor-v1",
+    "playbook_ref": "playbook:golden-redirect-v1",
+    "policy_config_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "runtime_profile": "pi4-2gb",
+    "schema_version": "replay-provenance/v0.1",
+    "software_revision": "azazel-fabric-golden-effect-1"
+  },
+  "schema_version": "outcome-observation-envelope/v0.1",
+  "telemetry_coverage": {
+    "deception_runtime": "full",
+    "gadget_span": "partial"
+  },
+  "telemetry_gaps": [
+    "gadget_span_saw_one_direction_only"
+  ],
+  "trace_id": "trace-golden-effect-1",
+  "window_end": "2026-08-20T00:30:00+00:00",
+  "window_start": "2026-08-20T00:00:00+00:00"
+}

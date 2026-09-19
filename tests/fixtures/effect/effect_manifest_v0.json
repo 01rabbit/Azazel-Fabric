@@ -1,0 +1,11 @@
+{
+  "canonical_sha256": {
+    "effect_deception_observation_v0.json": "c07356c931eabee0e2810c4fcf162df585a0704bcb2ed565dc1a3994e688b336",
+    "effect_deception_presented_terrain_v0.json": "d6d874ee14257110c56b6c1c068b88cb925c71ad6244aaf9cf1c0fdec175227b",
+    "effect_edge_defensive_effect_ref_v0.json": "b0db837dc7c97a279cd185ff00906d549f39a27bb361e528d481f37178dada1e",
+    "effect_gadget_observation_v0.json": "f192d03038e0430c7205997189e1a51e99568da6b50709c25996c1cac0f1eafb",
+    "effect_knowledge_advisory_ref_v0.json": "46e8c407c29182ae1fccee7b6bae1edb536b54debf924aaf559a89cfbaa5ca7e",
+    "effect_knowledge_outcome_envelope_v0.json": "668848f5f7e52d3f2492b82b95dbbb5ed120bbbab2488429a62ad40debd8f289"
+  },
+  "schema_version": "effect-golden-manifest/v0.1"
+}

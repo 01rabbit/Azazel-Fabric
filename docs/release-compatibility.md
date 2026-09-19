@@ -29,6 +29,7 @@ available. A `.devN` version is never a release.
 | `v0.7.0` | **Never released.** No tag, no GitHub Release. The advisory-only engagement contracts it describes shipped inside `v0.8.0` | Not pinnable — a consumer that pins `v0.7.0` resolves to nothing |
 | `v0.8.0` | Canonical HMAC-SHA256 Edge-decision transport signature helpers **and** the advisory-only engagement contracts | Additive; signatures prove integrity/origin, not authority |
 | `v0.9.0rc1` (candidate) | Outcome-as-Evidence shared facts (`outcome_contracts`); R1a provisioning and M.I.O. contract families (`provisioning_contracts`, `mio_contracts`) | Additive; pinnable, **not stable** — adopt to produce R1c evidence, expect to re-pin to `v0.9.0` |
+| *(unreleased)* | Canonical `DefensiveState` vocabulary (`schema.defensive_state`, Fabric#14); cross-series effect / outcome / terrain family (`effect_contracts`, Fabric#15) | Additive, **not pinnable** — no tag carries these yet. A consumer cannot adopt them by pinning `v0.9.0rc1` |
 
 All consumer deployments MUST pin an exact compatible Fabric tag or immutable
 image lock. They MUST NOT pin a branch. A product chooses when to adopt a newer

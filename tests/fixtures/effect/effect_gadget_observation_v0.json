@@ -1,0 +1,19 @@
+{
+  "authority_class": "observed_fact",
+  "directive": false,
+  "effect_ref": "effect:golden-effect-1",
+  "evidence_refs": [
+    "evidence:gadget-capture-golden-1"
+  ],
+  "execution_ref": "execution-golden-effect-1",
+  "limitations": [
+    "span_port_saw_one_direction_only"
+  ],
+  "materialization_producer": "gadget",
+  "observation_id": "effect_observation:golden-gadget-1",
+  "observed_at": "2026-08-20T00:30:00+00:00",
+  "schema_version": "effect-observation/v0.1",
+  "status": "completed",
+  "termination_reason": null,
+  "trace_id": "trace-golden-effect-1"
+}

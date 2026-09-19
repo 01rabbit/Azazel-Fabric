@@ -1,0 +1,25 @@
+{
+  "activation_decision_ref": "decision-golden-effect-1",
+  "active_surface_refs": [
+    "surface:http-8080",
+    "surface:smb-445"
+  ],
+  "authority_class": "active_materialized",
+  "created_at": "2026-08-20T00:00:00+00:00",
+  "describes": "defender_presented_surface",
+  "directive": false,
+  "evidence_refs": [
+    "evidence:deception-runtime-golden-1"
+  ],
+  "expires_at": "2026-08-22T00:00:00+00:00",
+  "isolation_assertion_ref": "evidence:isolation-assert-golden-1",
+  "isolation_result_ref": "evidence:isolation-result-golden-1",
+  "lifecycle_state_ref": "lifecycle:env-golden-1.active",
+  "presentation_id": "presentation:golden-effect-1",
+  "presentation_version": 1,
+  "producer_product": "deception",
+  "schema_version": "presented-terrain-ref/v0.1",
+  "synthetic_artifact_refs": [
+    "artifact:golden-invoice-pdf"
+  ]
+}

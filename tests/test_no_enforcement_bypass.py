@@ -27,12 +27,19 @@ import pytest
 from pydantic import BaseModel, ValidationError
 
 import azazel_fabric.deception_contracts as dc
+import azazel_fabric.effect_contracts as fc
 import azazel_fabric.engagement_contracts as ec
 import azazel_fabric.mio_contracts as mc
 import azazel_fabric.outcome_contracts as oc
 import azazel_fabric.provisioning_contracts as pc
 import azazel_fabric.schema.defensive_state as ds
 from azazel_fabric.deception_contracts.validation import BANNED_RUNTIME_DIRECTIVE_FIELDS
+from azazel_fabric.effect_contracts import (
+    WEAKEST_AUTHORITY,
+    AuthorityClass,
+    coerce_authority_class,
+    is_authoritative_decision_reference,
+)
 from azazel_fabric.engagement_contracts.validation import (
     BANNED_ENGAGEMENT_AUTHORITY_FIELDS,
 )
@@ -50,7 +57,7 @@ _BANNED_FIELD_NAMES = set(BANNED_RUNTIME_DIRECTIVE_FIELDS) | set(
 # cross-cutting gate sees is exactly the drift these tests exist to catch: the
 # rest of `schema` predates `extra="forbid"` and stays off the surface, but a
 # model added today has no excuse to.
-_CONTRACT_MODULES = (dc, ec, oc, pc, mc, ds)
+_CONTRACT_MODULES = (dc, ec, fc, oc, pc, mc, ds)
 
 # The provisioning/M.I.O. families ban more field *names* than the older
 # families do (command / unit / route / firewall / device-path / executor /
@@ -133,6 +140,17 @@ _PINNED_LITERALS: dict[tuple[str, str], object] = {
     ("MechanismObservationV0", "authority_class"): "producer_mechanism_fact",
     ("OutcomeObservationV0", "authority_class"): "producer_outcome_fact",
     ("TacticalEffectAssessmentRefV0", "authority_class"): "producer_assessment_fact",
+    # Cross-series effect family (Fabric#15). `directive` is pinned False on
+    # every shared record so that carrying an effect name can never make one an
+    # execution token; `describes` keeps presented terrain on the defender's
+    # side of the surface; `confers_authority` keeps provenance from reading as
+    # authorization.
+    ("DefensiveEffectRef", "directive"): False,
+    ("EffectObservation", "directive"): False,
+    ("PresentedTerrainRef", "directive"): False,
+    ("PresentedTerrainRef", "describes"): "defender_presented_surface",
+    ("OutcomeObservationEnvelope", "directive"): False,
+    ("ReplayProvenance", "confers_authority"): False,
     ("TacticalEffectAssessmentRefV0", "executable"): False,
     # R1a provisioning family: every record describes, and the receipt only
     # observes. Nothing in the family can be escalated to an authorization.
@@ -180,6 +198,57 @@ _SAFE_DEFAULTS: dict[tuple[str, str], object] = {
     ("EngagementConstraint", "outbound_allowed"): False,
     ("EngagementConstraint", "production_access"): False,
 }
+
+# A third, narrower classification, for a safety-sensitive field that is a
+# *distinction* rather than a toggle.
+#
+# The cross-series effect family (Fabric#15) requires every shared record to
+# make six readings distinguishable -- observed fact, producer decision,
+# advisory inference, planned/shadow, active/materialized, stale/unknown. A
+# field whose whole job is to tell those apart cannot be pinned to one value
+# without destroying what it is for.
+#
+# So the safety property is different in kind, and is verified rather than
+# asserted: the enum must declare where an *unrecognized* value lands, and that
+# landing place must be the member that claims least. Membership in this dict
+# is not an exemption -- `test_a_classified_authority_enum_fails_safe` below
+# runs that check against every entry, and a field listed here without a
+# fail-safe fallback fails just as loudly as an unclassified one would.
+_CLASSIFIED_AUTHORITY_ENUMS: dict[tuple[str, str], tuple[object, object]] = {
+    ("DefensiveEffectRef", "authority_class"): (AuthorityClass, WEAKEST_AUTHORITY),
+    ("EffectObservation", "authority_class"): (AuthorityClass, WEAKEST_AUTHORITY),
+    ("PresentedTerrainRef", "authority_class"): (AuthorityClass, WEAKEST_AUTHORITY),
+    ("OutcomeObservationEnvelope", "authority_class"): (AuthorityClass, WEAKEST_AUTHORITY),
+}
+
+
+@pytest.mark.parametrize(
+    "key,spec",
+    sorted(_CLASSIFIED_AUTHORITY_ENUMS.items()),
+    ids=lambda x: x if isinstance(x, str) else None,
+)
+def test_a_classified_authority_enum_fails_safe(key, spec):
+    model_name, field = key
+    enum_type, weakest = spec
+
+    model = next((m for m in MODELS if m.__name__ == model_name), None)
+    assert model is not None, f"{model_name} is not on the gated surface"
+    assert field in model.model_fields, f"{model_name}.{field} no longer exists"
+    assert model.model_fields[field].annotation is enum_type, (
+        f"{model_name}.{field} is no longer a {enum_type.__name__}; "
+        "re-classify it rather than leaving it here"
+    )
+
+    # The point of the classification: an unreadable value claims the least.
+    for hostile in ("", "ACTIVE_MATERIALIZED", "producer_decision_ref ", None, 0, []):
+        coerced, recognized = coerce_authority_class(hostile)
+        assert recognized is False
+        assert coerced is weakest
+
+    # And "the least" must really be the least -- a future reordering that made
+    # the fallback a stronger member must fail here, not in production.
+    assert weakest is AuthorityClass.STALE_OR_UNKNOWN
+    assert is_authoritative_decision_reference(weakest) is False
 
 
 def test_enumeration_is_non_empty():
@@ -302,10 +371,16 @@ def test_safety_sensitive_fields_are_classified(model: type[BaseModel]):
         low = field.lower()
         if any(hint in low for hint in _SAFETY_NAME_HINTS):
             key = (model.__name__, field)
-            assert key in _PINNED_LITERALS or key in _SAFE_DEFAULTS, (
+            assert (
+                key in _PINNED_LITERALS
+                or key in _SAFE_DEFAULTS
+                or key in _CLASSIFIED_AUTHORITY_ENUMS
+            ), (
                 f"{model.__name__}.{field} looks safety-sensitive but is unclassified; "
                 "add it to _PINNED_LITERALS (if it gates egress/authority/execution -- "
-                "and pin it Literal) or _SAFE_DEFAULTS, so it cannot silently ship escalatable"
+                "and pin it Literal), _SAFE_DEFAULTS, or _CLASSIFIED_AUTHORITY_ENUMS "
+                "(only for a distinction with a verified weakest fallback), so it "
+                "cannot silently ship escalatable"
             )
 
 

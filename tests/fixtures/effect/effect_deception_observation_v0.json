@@ -1,0 +1,17 @@
+{
+  "authority_class": "active_materialized",
+  "directive": false,
+  "effect_ref": "effect:golden-effect-1",
+  "evidence_refs": [
+    "evidence:deception-runtime-golden-1"
+  ],
+  "execution_ref": "execution-golden-effect-1",
+  "limitations": [],
+  "materialization_producer": "deception",
+  "observation_id": "effect_observation:golden-deception-1",
+  "observed_at": "2026-08-20T00:05:00+00:00",
+  "schema_version": "effect-observation/v0.1",
+  "status": "active",
+  "termination_reason": null,
+  "trace_id": "trace-golden-effect-1"
+}
