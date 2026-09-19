@@ -1,0 +1,18 @@
+{
+  "advisory_ref": "advisory:golden-effect-1",
+  "authority_class": "advisory_inference",
+  "config_digest": null,
+  "created_at": "2026-08-20T00:00:00+00:00",
+  "decision_ref": null,
+  "directive": false,
+  "effect_class": "rate_limit",
+  "effect_id": "effect:golden-effect-advisory-1",
+  "expires_at": "2026-08-22T00:00:00+00:00",
+  "policy_ref": "policy-golden-advice-v1",
+  "producer_node": "knowledge-golden-1",
+  "producer_product": "knowledge",
+  "profile_ref": null,
+  "schema_version": "defensive-effect-ref/v0.1",
+  "target_scope_ref": "scope:session-golden-1",
+  "trace_id": "trace-golden-effect-1"
+}

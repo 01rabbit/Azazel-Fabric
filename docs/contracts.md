@@ -8,7 +8,8 @@ alongside them SHIPPED in `v0.2.0` (see `CHANGELOG.md`). §3–§5
 (Phase 5); each section carries a status line noting deviations from the
 original proposal. §6 (`outcome_contracts`) and §7 (`provisioning_contracts` /
 `mio_contracts`) ship in the **release candidate** `v0.9.0rc1`, not in a stable
-release. Consult the source and
+release. §8 (`effect_contracts`) is **unreleased** — it is not in any tag.
+Consult the source and
 `tests/` for exact, current field signatures — the tables below are a readable
 reference, not the authoritative schema.
 
@@ -366,3 +367,36 @@ Two boundaries are worth restating here because they are easy to erode:
 - An interface role is never inferred from a name, a link state, or a default
   route. It comes from read-only inventory plus explicit operator confirmation
   against a composite identity, and zero or multiple matches fail closed.
+
+## 8. Cross-series effect / outcome / terrain contracts (`azazel_fabric.effect_contracts`)
+
+**Status: unreleased.** Introduced for Fabric#15 on top of the `v0.9.0rc1`
+candidate; not present in any tag. Additive — the released `outcome_contracts`
+family (§6) is untouched, and a product that never imports this one is
+unaffected.
+
+The minimum shared language for correlating
+
+```text
+authoritative decision/effect -> materialization -> reaction/outcome -> replay
+```
+
+across Edge, Gadget, AZ-06 and Knowledge: `DefensiveEffectRef`,
+`EffectObservation`, `PresentedTerrainRef`, `OutcomeObservationEnvelope`, and
+`ReplayProvenance`, over typed opaque references and a six-way authority
+classification whose unknown value coerces to the weakest reading.
+
+Full reference, ownership table, terminology matrix, adoption steps, and the
+deliberate limits of the reference guard:
+[`effect-contracts.md`](effect-contracts.md).
+
+Three boundaries are worth restating here:
+
+- `DefensiveState` (§1, Fabric#14), `EffectClass` (this family), and the AZ-06
+  environment lifecycle are **distinct vocabularies**, and Fabric publishes no
+  function from any one to another. A mapping would let a value from one be
+  read as authority in another.
+- There is no universal `success` field. An envelope states **coverage**
+  instead, and one reporting incomplete coverage must name its telemetry gaps.
+- `ReplayProvenance.confers_authority` is pinned `False`. Provenance says who
+  vouches for the bytes; it never says anything is authorized.

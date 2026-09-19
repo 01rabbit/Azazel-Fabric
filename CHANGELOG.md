@@ -6,6 +6,37 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 `01rabbit/Azazel-Fabric`; consumers pin an exact tag (see
 `docs/migration-plan.md`).
 
+## [Unreleased]
+
+Not in any tag. A consumer cannot adopt the items below by pinning
+`v0.9.0rc1`; see `docs/release-compatibility.md`.
+
+### Added
+
+- **Canonical `DefensiveState` vocabulary** (`azazel_fabric.schema.defensive_state`,
+  Fabric#14) — the five-value posture vocabulary shared across Edge, Knowledge
+  and Deception, plus fail-safe coercion and `DefensiveStateProjection`. Fabric
+  defines no mapping from a product's legacy mode names to it: inventing what a
+  product-local word means would make that word canonical by the back door.
+- **Cross-series effect / outcome / terrain contracts**
+  (`azazel_fabric.effect_contracts`, Fabric#15) — `DefensiveEffectRef`,
+  `EffectObservation`, `PresentedTerrainRef`, `OutcomeObservationEnvelope`, and
+  `ReplayProvenance`, over typed opaque references (`RefKind`) and a six-way
+  `AuthorityClass` whose unrecognized values coerce to the weakest reading.
+  Additive: the released `outcome_contracts` family is untouched and the
+  envelope correlates its records by reference rather than replacing them.
+  Reference: `docs/effect-contracts.md`.
+- **Published golden vectors** for the effect family
+  (`azazel_fabric.testing.effect`, fixtures under `tests/fixtures/effect/`) —
+  one chain across Edge, Gadget, Knowledge and AZ-06, including a competing
+  advisory vector so a consumer that cannot distinguish advice from a decision
+  fails against Fabric's own bytes.
+
+### Changed
+
+- `src/azazel_fabric/version.py` is `0.9.0rc2.dev0`. A `.devN` version is never
+  a release, and the release-digest gate skips by design while it is set.
+
 ## [0.9.0rc1] — R1b release candidate (Fabric#23)
 
 A **release candidate**, not the stable release. The tag `v0.9.0rc1` and its
