@@ -7,7 +7,8 @@ alongside them SHIPPED in `v0.2.0` (see `CHANGELOG.md`). §3–§5
 (`api`/`notify`/`paths`) are now **ratified and implemented in `v0.4.0`**
 (Phase 5); each section carries a status line noting deviations from the
 original proposal. §6 (`outcome_contracts`) and §7 (`provisioning_contracts` /
-`mio_contracts`) are **unreleased** (`0.9.0.dev0`). Consult the source and
+`mio_contracts`) ship in the **release candidate** `v0.9.0rc1`, not in a stable
+release. Consult the source and
 `tests/` for exact, current field signatures — the tables below are a readable
 reference, not the authoritative schema.
 
@@ -305,7 +306,8 @@ choice.
 
 ## 6. Outcome-as-Evidence contracts (`azazel_fabric.outcome_contracts`)
 
-**Status: implemented on `main`, UNRELEASED (`0.9.0.dev0`).** Added after
+**Status: implemented on `main`, shipped in the candidate `v0.9.0rc1` —
+not yet stable.** Added after
 `v0.8.0`; no tag carries it yet, so no consumer can pin it. Shipped as four
 frozen, `extra="forbid"` models plus validation helpers.
 
@@ -344,7 +346,8 @@ Cross-product golden fixtures live under `tests/fixtures/outcome/`.
 
 ## 7. Provisioning and M.I.O. contracts
 
-**Status: R1a draft, UNRELEASED (`0.9.0.dev0`).** `provisioning_contracts`
+**Status: R1a draft, shipped in the candidate `v0.9.0rc1` — not yet stable.**
+`provisioning_contracts`
 (hardware inventory, resource/topology profiles, interface assignment,
 commissioning, product/asset/model/compatibility manifests, proposed generation
 descriptors, observation-only activation receipts, audit-checkpoint and

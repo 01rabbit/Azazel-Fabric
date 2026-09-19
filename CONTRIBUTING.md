@@ -28,8 +28,8 @@ scope: `schema` / `cti-contracts` / `view` / `paths` / `audit` / `api` /
 
 - 1 PR = 1 purpose. Do not mix unrelated changes.
 - Every PR must include:
-  - [ ] `pip install -e ".[test]" && pytest -q` passes (678 baseline on
-        `0.9.0.dev0` — never reduce the test count)
+  - [ ] `pip install -e ".[test]" && pytest -q` passes (687 baseline on
+        `0.9.0rc1` — never reduce the test count)
   - [ ] Contract changes shipped in the PR are **additive only**;
         breaking changes require a version bump, a `BREAKING` entry in
         `CHANGELOG.md`, and a migration note

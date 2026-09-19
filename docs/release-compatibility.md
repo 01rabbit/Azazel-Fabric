@@ -7,14 +7,20 @@ itself, an interoperability certification.
 
 ## Current Fabric release
 
-The latest **published** release is `v0.8.0`. The source package version on
-`main` is `0.9.0.dev0`: an explicitly unreleased development version carrying
-additive contract work (`outcome_contracts`, and the R1a `provisioning_contracts`
-/ `mio_contracts` families) on top of `v0.8.0`.
+The latest **stable** release is `v0.8.0`. The latest **published** tag is the
+release candidate `v0.9.0rc1`, which carries additive contract work
+(`outcome_contracts`, and the R1a `provisioning_contracts` / `mio_contracts`
+families) on top of `v0.8.0`.
+
+A candidate is pinnable but makes no stability promise. It exists so a consumer
+can pin an exact tag — never a branch — while producing the downstream evidence
+`v0.9.0` requires. A consumer that needs stability stays on `v0.8.0`; a consumer
+adopting the new contract families pins `v0.9.0rc1` and expects to re-pin to
+`v0.9.0`.
 
 The package version in `src/azazel_fabric/version.py`, release tag, and GitHub
-release must agree before a release is described as stable. A `.devN` version is
-never a release: consumers pin `v0.8.0` until `v0.9.0` is tagged and published.
+release must agree before any release — candidate or stable — is described as
+available. A `.devN` version is never a release.
 
 | Release | Contract addition | Compatibility effect |
 |---|---|---|
@@ -22,7 +28,7 @@ never a release: consumers pin `v0.8.0` until `v0.9.0` is tagged and published.
 | `v0.6.0` | Effectiveness-observation and finite-state transition catalog contracts | Additive |
 | `v0.7.0` | **Never released.** No tag, no GitHub Release. The advisory-only engagement contracts it describes shipped inside `v0.8.0` | Not pinnable — a consumer that pins `v0.7.0` resolves to nothing |
 | `v0.8.0` | Canonical HMAC-SHA256 Edge-decision transport signature helpers **and** the advisory-only engagement contracts | Additive; signatures prove integrity/origin, not authority |
-| `0.9.0.dev0` (unreleased) | Outcome-as-Evidence shared facts (`outcome_contracts`); R1a provisioning and M.I.O. contract families (`provisioning_contracts`, `mio_contracts`) | Additive; **not a release** — no tag, no GitHub Release, no supported pin |
+| `v0.9.0rc1` (candidate) | Outcome-as-Evidence shared facts (`outcome_contracts`); R1a provisioning and M.I.O. contract families (`provisioning_contracts`, `mio_contracts`) | Additive; pinnable, **not stable** — adopt to produce R1c evidence, expect to re-pin to `v0.9.0` |
 
 All consumer deployments MUST pin an exact compatible Fabric tag or immutable
 image lock. They MUST NOT pin a branch. A product chooses when to adopt a newer
