@@ -1,11 +1,15 @@
 # Provisioning and M.I.O. Contracts (R1a)
 
-Status: **R1a draft schema and conformance kit, unreleased (`0.9.0.dev0`).**
+Status: **R1a draft schema and conformance kit, offered as the release
+candidate `v0.9.0rc1` (R1b).**
 These are the contract families the Nexus/Boot program plan
 (`Azazel/docs/roadmaps/nexus-boot-program-plan.md` §5 R1) assigns to Fabric.
-R1a is the draft schema plus conformance kit; **R1b** (signed release-candidate
-digest) and **R1c** (stable tag after downstream evidence) are separate steps
-and have not happened. No consumer has adopted these contracts yet.
+R1a is the draft schema plus conformance kit. **R1b** is the release-candidate
+digest: `release/v0.9.0rc1.digest.json` covers the packaged surface and is
+verified by `tests/test_release_candidate_digest.py`; the detached signature
+over it needs the release owner's key and is not in the candidate. **R1c** —
+the stable `v0.9.0` — waits on downstream evidence. No consumer has adopted
+these contracts yet, so a candidate pin is how that evidence starts.
 
 Tracking: `Azazel` program plan §5 R1, §6.2, findings SR-02, SR-04, SR-09,
 AR-01, AR-12, AR-14.
@@ -203,9 +207,9 @@ simultaneous untested pin change.
 | `deception-observation/v0.1` | `0.6.0` | effectiveness observation + transition catalog |
 | `engagement-contracts/v0.1` | `0.8.0` | MITRE Engage-aligned engagement contracts (see `CHANGELOG.md` — there is no `v0.7.0` tag) |
 | `decision-signing/v0.1` | `0.8.0` | canonical Edge-decision transport signature |
-| `outcome-contracts/v0.1` | `0.9.0` | Outcome-as-Evidence shared facts (unreleased) |
-| `provisioning-contracts/v0.1` | `0.9.0` | this family (unreleased) |
-| `mio-contracts/v0.1` | `0.9.0` | M.I.O. cognition family (unreleased) |
+| `outcome-contracts/v0.1` | `0.9.0rc1` | Outcome-as-Evidence shared facts (candidate) |
+| `provisioning-contracts/v0.1` | `0.9.0rc1` | this family (candidate) |
+| `mio-contracts/v0.1` | `0.9.0rc1` | M.I.O. cognition family (candidate) |
 
 A minimum version is a compatibility claim, not an admission decision. Until
 `v0.9.0` is tagged, the `0.9.0` rows name a version no consumer can pin.
@@ -257,8 +261,9 @@ under `tests/fixtures/provisioning/` and `tests/fixtures/mio/`. Vectors in
 
 ## What R1a does not include
 
-- **R1b / R1c.** No signed release-candidate digest, no stable tag, no
-  downstream evidence.
+- **The R1b signature and R1c.** The candidate digest exists; the detached
+  signature over it does not, because it needs the release owner's key. There
+  is no stable tag and no downstream evidence.
 - **Consumer adoption.** Edge, Knowledge, Deception, Nexus, and Boot adapters
   are out of scope here; the plan's "at least one real producer and two real
   consumers" gate is an R1c requirement.

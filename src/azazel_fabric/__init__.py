@@ -23,7 +23,7 @@ web framework is imported in any core module.
 Later releases add contract families the same way, each additive and each
 imported on demand: ``v0.5.0``-``v0.8.0`` added
 :mod:`azazel_fabric.deception_contracts` and
-:mod:`azazel_fabric.engagement_contracts`, and the unreleased ``0.9.0.dev0``
+:mod:`azazel_fabric.engagement_contracts`, and the candidate ``v0.9.0rc1``
 adds :mod:`azazel_fabric.outcome_contracts` (Outcome-as-Evidence shared facts),
 :mod:`azazel_fabric.provisioning_contracts` (hardware inventory, resource and
 topology profiles, commissioning, released-artifact and compatibility manifests,

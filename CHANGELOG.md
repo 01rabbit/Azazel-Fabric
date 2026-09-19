@@ -6,12 +6,18 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 `01rabbit/Azazel-Fabric`; consumers pin an exact tag (see
 `docs/migration-plan.md`).
 
-## [Unreleased] — `0.9.0.dev0`
+## [0.9.0rc1] — R1b release candidate (Fabric#23)
 
-Not a release. There is no `v0.9.0` tag and no GitHub Release; the packaged
-version carries a `.dev0` suffix precisely so nothing here is mistaken for
-something a consumer can pin. Consumers stay on `v0.8.0`. Everything below is
-additive and non-breaking.
+A **release candidate**, not the stable release. The tag `v0.9.0rc1` and its
+GitHub Release exist so consumers can pin an exact tag instead of `main`, which
+is what the plan's "pin an exact release tag" discipline requires and what the
+downstream evidence for R1c depends on. Everything below is additive over
+`v0.8.0` and non-breaking.
+
+A candidate makes no stability promise. `v0.9.0` is cut only after the plan's
+"at least one real producer and two real consumers per non-experimental
+contract" gate has linked evidence; until then a consumer that needs stability
+stays on `v0.8.0`.
 
 ### Added
 
@@ -111,13 +117,34 @@ integrate without creating another decision authority.*
   (Knowledge and Boot both declare `v0.8.0`; the previous `v0.6.0` / "no lock"
   entries were stale).
 
-### Still required before a release
+### Release-candidate digest (the R1b deliverable)
 
-A `v0.9.0` tag and matching GitHub Release, cut by the repository owner, with
-the `.dev0` suffix removed from `src/azazel_fabric/version.py`. R1b (signed
-release-candidate digest) and R1c (stable tag after downstream evidence,
-including at least one real producer and two real consumers per cross-product
-contract) are separate program steps and have not happened.
+`release/v0.9.0rc1.digest.json` records a sha256 over every file a consumer
+receives by pinning this tag — the packaged surface under `src/` plus
+`pyproject.toml` — and a roll-up `content_digest` over that record. The file
+list comes from `git ls-files`, so the manifest is reproducible from the commit
+rather than from whatever happens to be on someone's disk. Regenerate or verify
+it with `tools/rc_digest.py`, and `tests/test_release_candidate_digest.py`
+fails closed when the manifest goes stale against the tree, when a releasable
+(non-`.dev`) version carries no manifest, or when an entry in the file map is
+altered or dropped.
+
+**The detached signature over that digest is not in this release.** It requires
+the release owner's key, which no automation here holds. `signature_ref` is
+excluded from the digest for exactly that reason: a locator assigned after
+signing cannot be covered by the bytes that were signed. R1b is therefore
+complete as to the digest and open as to the signature.
+
+### Still required before the stable `v0.9.0`
+
+R1c: downstream evidence, meaning at least one real producer and two real
+consumers per non-experimental cross-product contract, with the runs linked.
+As of this candidate, no consumer imports `azazel_fabric.outcome_contracts`,
+`provisioning_contracts`, or `mio_contracts` — that adoption is
+[Edge#413](https://github.com/01rabbit/Azazel-Edge/issues/413),
+[Nexus#15](https://github.com/01rabbit/Azazel-Nexus/issues/15), and
+[Boot#16](https://github.com/01rabbit/Azazel-Boot/issues/16). The program-side
+attestation aggregator that R1c also needs is Azazel-owned and does not exist.
 
 ## [0.8.0] — Canonical Edge-decision transport signature (Fabric#9)
 
@@ -421,7 +448,9 @@ execution logic, no product integration.
 - `pyproject.toml` (Pydantic-only runtime dependency; `flask`/`fastapi`/`test`
   optional extras) and GitHub Actions CI running the test suite.
 
-[Unreleased]: https://github.com/01rabbit/Azazel-Fabric/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/01rabbit/Azazel-Fabric/compare/v0.9.0rc1...HEAD
+[0.9.0rc1]: https://github.com/01rabbit/Azazel-Fabric/compare/v0.8.0...v0.9.0rc1
+[0.8.0]: https://github.com/01rabbit/Azazel-Fabric/compare/v0.6.0...v0.8.0
 [0.4.0]: https://github.com/01rabbit/Azazel-Fabric/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/01rabbit/Azazel-Fabric/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/01rabbit/Azazel-Fabric/releases/tag/v0.2.0

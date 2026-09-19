@@ -1,10 +1,14 @@
 name: Release
 
 # Tag-driven version management. Pushing a `vX.Y.Z` tag validates that the tag
-# matches the packaged version, runs the test suite, and cuts a GitHub Release.
-# This keeps the source of truth (src/azazel_fabric/version.py) and the GitHub
-# Release in lockstep — see docs/migration-plan.md "Versioning and consumption
-# policy".
+# matches the packaged version, verifies the release digest manifest against the
+# tree, runs the test suite, and cuts a GitHub Release. This keeps the source of
+# truth (src/azazel_fabric/version.py) and the GitHub Release in lockstep — see
+# docs/migration-plan.md "Versioning and consumption policy".
+#
+# A `vX.Y.ZrcN` tag publishes as a GitHub *prerelease*. A candidate is pinnable
+# but promises no stability, so it must not appear in the place a consumer looks
+# for the latest stable release.
 
 on:
   push:
@@ -36,9 +40,23 @@ jobs:
             echo "::error::Tag v$tag does not match package version $pkg"
             exit 1
           fi
+      - name: Verify the release digest manifest matches the tree
+        run: python tools/rc_digest.py --check "release/${GITHUB_REF_NAME}.digest.json"
       - name: Run tests
         run: pytest -q
+      - name: Classify the tag
+        id: classify
+        run: |
+          # Stable is exactly vMAJOR.MINOR.PATCH. Anything else — rc, a, b,
+          # post, dev — is a prerelease. Allowlisting stable rather than
+          # enumerating suffixes means an unforeseen suffix fails safe.
+          if printf '%s' "${GITHUB_REF_NAME}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          prerelease: ${{ steps.classify.outputs.prerelease }}

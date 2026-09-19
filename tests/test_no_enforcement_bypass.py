@@ -118,7 +118,7 @@ _PINNED_LITERALS: dict[tuple[str, str], object] = {
     ("EffectivenessAdvisory", "authority"): "advisory_only",
     ("EffectivenessAdvisory", "executable"): False,
     ("InteractionObservation", "authority"): "descriptive_only",
-    # Outcome-as-Evidence facts (v0.9.0.dev0): a producer states a fact or a
+    # Outcome-as-Evidence facts (v0.9.0rc1): a producer states a fact or a
     # non-executable assessment; neither carries action authority.
     ("ExecutionRefV0", "authority_class"): "producer_execution_fact",
     ("MechanismObservationV0", "authority_class"): "producer_mechanism_fact",
