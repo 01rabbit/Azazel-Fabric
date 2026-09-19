@@ -3,17 +3,17 @@
 Version management is tag-driven on GitHub. This version must match the
 release tag being cut; a ``.devN`` suffix is only present between releases.
 
-``main`` carries additive contract work on top of the published ``v0.8.0``
-tag — ``outcome_contracts`` (Outcome-as-Evidence shared facts) and the R1a
-provisioning / M.I.O. contract families. That work is now offered as the
-**release candidate** ``0.9.0rc1``: the Nexus/Boot program plan's R1b step,
-which exists so consumers can pin an exact tag and produce the downstream
-evidence R1c requires, rather than pinning ``main``.
+``v0.9.0rc1`` is published. ``main`` has moved past it, so it carries
+``0.9.0rc2.dev0``: development toward the next candidate or the stable
+``0.9.0``, whichever the downstream evidence calls for.
 
-A release candidate is a real, pinnable tag. It is not the stable release:
-cutting ``v0.9.0`` means dropping the ``rc1`` suffix once the plan's "at least
-one real producer and two real consumers per non-experimental contract" gate
-has evidence (see ``docs/release-compatibility.md``).
+The ``.dev0`` suffix also switches off the release-digest gate in
+``tests/test_release_candidate_digest.py``, which is what that gate is designed
+to do between releases. ``release/v0.9.0rc1.digest.json`` stays in the tree as
+the record of what that tag contains — it describes the tag, not ``main``, and
+is verified by checking out ``v0.9.0rc1`` and running ``tools/rc_digest.py
+--check``. Regenerating it against a moved ``main`` would make it claim to be a
+digest of a tag it no longer matches, which is worse than not checking it here.
 """
 
-__version__ = "0.9.0rc1"
+__version__ = "0.9.0rc2.dev0"

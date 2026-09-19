@@ -18,6 +18,16 @@ from azazel_fabric.schema.action import (
     ThrottlePlan,
 )
 from azazel_fabric.schema.audit import AuditEvent
+from azazel_fabric.schema.defensive_state import (
+    ESCALATION_ORDER,
+    KNOWN_LEGACY_MODE_NAMES,
+    UNKNOWN_FALLBACK,
+    DefensiveState,
+    DefensiveStateProjection,
+    coerce_defensive_state,
+    defensive_state_of_action,
+    rank,
+)
 from azazel_fabric.schema.decision import DecisionExplanation
 from azazel_fabric.schema.evidence import EvidenceRef
 from azazel_fabric.schema.mode import KNOWN_MODE_NAMES, ModeState
@@ -26,6 +36,14 @@ from azazel_fabric.schema.trust import TrustCapsule
 
 __all__ = [
     "ActionIntent",
+    "DefensiveState",
+    "DefensiveStateProjection",
+    "ESCALATION_ORDER",
+    "KNOWN_LEGACY_MODE_NAMES",
+    "UNKNOWN_FALLBACK",
+    "coerce_defensive_state",
+    "defensive_state_of_action",
+    "rank",
     "ActionKind",
     "ActionPlan",
     "ObservePlan",

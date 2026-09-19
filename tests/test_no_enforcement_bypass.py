@@ -31,6 +31,7 @@ import azazel_fabric.engagement_contracts as ec
 import azazel_fabric.mio_contracts as mc
 import azazel_fabric.outcome_contracts as oc
 import azazel_fabric.provisioning_contracts as pc
+import azazel_fabric.schema.defensive_state as ds
 from azazel_fabric.deception_contracts.validation import BANNED_RUNTIME_DIRECTIVE_FIELDS
 from azazel_fabric.engagement_contracts.validation import (
     BANNED_ENGAGEMENT_AUTHORITY_FIELDS,
@@ -44,7 +45,12 @@ _BANNED_FIELD_NAMES = set(BANNED_RUNTIME_DIRECTIVE_FIELDS) | set(
 
 # Every contract family on the surface. A new family added here is covered by
 # every gate below automatically.
-_CONTRACT_MODULES = (dc, ec, oc, pc, mc)
+# `schema.defensive_state` is not a `*_contracts` package, so the family sweep
+# below cannot find it. It is enumerated explicitly because a model that no
+# cross-cutting gate sees is exactly the drift these tests exist to catch: the
+# rest of `schema` predates `extra="forbid"` and stays off the surface, but a
+# model added today has no excuse to.
+_CONTRACT_MODULES = (dc, ec, oc, pc, mc, ds)
 
 # The provisioning/M.I.O. families ban more field *names* than the older
 # families do (command / unit / route / firewall / device-path / executor /
@@ -109,6 +115,9 @@ _PINNED_LITERALS: dict[tuple[str, str], object] = {
     ("EnvironmentActivationDecision", "decision_authority"): "azazel-edge",
     ("EnvironmentTransitionDecision", "decision_authority"): "azazel-edge",
     ("EnvironmentTerminationDecision", "decision_authority"): "azazel-edge",
+    # A defensive-state projection reports a posture a product-local authority
+    # already selected. Pinned so the word itself can never carry a warrant.
+    ("DefensiveStateProjection", "authority"): "descriptive_only",
     ("HostCapabilities", "authority"): "descriptive_only",
     ("PlacementPlan", "authority"): "descriptive_only",
     ("TransitionCatalog", "authority"): "descriptive_only",
