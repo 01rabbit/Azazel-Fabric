@@ -202,13 +202,45 @@ The commands for this route are given inline with each step.
 Steps 1–3 happen on the release owner's machine, with a key that must never
 enter this repository. Steps 4–6 are ordinary repository work.
 
-**Never run `git stash -u` or `git stash -a` in a directory holding the key.**
+## Where the key lives
+
+**Outside this working tree, always.** The commands below use
+`$AZAZEL_SIGNING_KEY`, an absolute path to a directory git has no reason to
+look at:
+
+```bash
+mkdir -p ~/.azazel-signing && chmod 700 ~/.azazel-signing
+export AZAZEL_SIGNING_KEY=~/.azazel-signing/fabric-release.key
+```
+
+This is the layer that matters, and the reason is mechanical. `.gitignore`
+stops `git stash -u`; it does **not** stop `git stash -a`, `git clean -x`, an
+editor's project-wide backup, or an archive of the working directory. A key
+that is not in the working tree is out of reach of all of them, including the
+ones nobody has thought of yet.
+
+`tests/test_release_signature.py::test_the_procedure_keeps_the_key_outside_the_working_tree`
+checks that this document's own commands read the key through that variable
+rather than from a bare filename in the current directory. A procedure that
+tells a signer to create the key where they are working is the procedure that
+produced the incident below, and prose asking them not to is not a control.
+
+**Never run `git stash -u` or `git stash -a` in this repository at all.**
 
 `-u` takes untracked files. `-a` takes ignored ones too. Preparing
 `v0.9.0rc4`, a `git stash -u` here — run to move a version bump out of the way
-so a checkout could proceed — pulled `fabric-release.key` into a stash entry,
-which put a private key inside `.git`. It was recovered and the objects were
-pruned, and it should not have been possible in the first place.
+so a checkout could proceed — pulled the signing key into a stash entry, which
+put a private key inside `.git`.
+
+The objects were dropped and pruned. **That is removal from git's object
+store, not a guarantee the key is unrecoverable**: backups, shell history,
+swap, unallocated blocks and any copy of the directory made during the window
+are all outside what `gc` touches. The key is treated as possibly exposed,
+which is what #61 records and why signing with it is paused.
+
+Use `git -c stash.showIncludeUntracked=false` habits aside — the working
+instruction is simpler: move the change to a branch, or commit it. There is no
+version of this procedure that needs a stash.
 
 It is not possible now: `.gitignore` covers the key and the scratch files this
 procedure creates, and `git stash -u` skips ignored files.
@@ -229,10 +261,12 @@ Route A (PyNaCl):
 ./.venv-signing/bin/python - <<'PY'
 from nacl.signing import SigningKey
 key = SigningKey.generate()
-open("fabric-release.key", "wb").write(bytes(key))   # PRIVATE — never commit
+import os
+key_path = os.environ["AZAZEL_SIGNING_KEY"]   # PRIVATE — outside the repo
+open(key_path, "wb").write(bytes(key))
 print("public key:", key.verify_key.encode().hex())
 PY
-chmod 600 fabric-release.key
+chmod 600 "$AZAZEL_SIGNING_KEY"
 ```
 
 Route B (OpenSSL 3.x) — the key is a PEM here rather than 32 raw bytes, which
@@ -240,9 +274,9 @@ changes nothing for this repository: only the public key is ever published, and
 it comes out as the same 64 hex characters either way.
 
 ```bash
-openssl genpkey -algorithm ed25519 -out fabric-release.key   # PRIVATE
-chmod 600 fabric-release.key
-openssl pkey -in fabric-release.key -pubout -outform DER \
+openssl genpkey -algorithm ed25519 -out "$AZAZEL_SIGNING_KEY"   # PRIVATE, outside the repo
+chmod 600 "$AZAZEL_SIGNING_KEY"
+openssl pkey -in "$AZAZEL_SIGNING_KEY" -pubout -outform DER \
   | tail -c 32 | od -An -tx1 -v | tr -d ' \n'; echo
 ```
 
@@ -297,7 +331,8 @@ Route A (PyNaCl):
 ```bash
 ./.venv-signing/bin/python - <<'PY'
 from nacl.signing import SigningKey
-key = SigningKey(open("fabric-release.key", "rb").read())
+import os
+key = SigningKey(open(os.environ["AZAZEL_SIGNING_KEY"], "rb").read())
 sig = key.sign(open("candidate.bin", "rb").read()).signature
 print("release-owner:" + sig.hex())
 PY
@@ -306,7 +341,7 @@ PY
 Route B (OpenSSL 3.x):
 
 ```bash
-openssl pkeyutl -sign -inkey fabric-release.key -rawin \
+openssl pkeyutl -sign -inkey "$AZAZEL_SIGNING_KEY" -rawin \
   -in candidate.bin -out candidate.sig
 printf 'release-owner:%s\n' "$(od -An -tx1 -v candidate.sig | tr -d ' \n')"
 ```
