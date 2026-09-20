@@ -5,8 +5,10 @@ R1b is "a signed release-candidate digest" (`Azazel/docs/roadmaps/nexus-boot-pro
 
 | Half | Who | State |
 |---|---|---|
-| The digest — what bytes the candidate is made of | anyone, reproducibly | **done** for `v0.9.0rc1` and `v0.9.0rc2` |
-| The detached signature — who stands behind them | the release owner, with a private key | **done for `v0.9.0rc1` and `v0.9.0rc2`** |
+| The digest — what bytes the candidate is made of | anyone, reproducibly | **done** for `v0.9.0rc1` … `v0.9.0rc4` |
+| The detached signature — who stands behind them | the release owner, with a private key | **done** for `v0.9.0rc1` … `v0.9.0rc4` |
+
+Neither half signs the git tag; see *What the signature covers* below.
 
 `release/v0.9.0rc2.digest.json.sig` carries the release owner's signature and
 `release/signing-keys.json` trusts the key that made it:
@@ -16,17 +18,18 @@ python3 tools/rc_signature.py release/v0.9.0rc2.digest.json --check
 # v0.9.0rc2.digest.json signed by: release-owner
 ```
 
-`v0.9.0rc1` was signed afterwards with the same key, for the same reason it
-could not simply be ignored: Azazel-Boot pins it, and a consumer pinning a
-candidate nobody had stood behind is the gap R1b exists to close.
+`v0.9.0rc1`'s digest was signed afterwards with the same key, for the same
+reason it could not simply be ignored: Azazel-Boot pins that tag, and a
+consumer pinning a candidate whose bytes nobody had stood behind is the gap
+R1b exists to close.
 
 ```bash
 python3 tools/rc_signature.py release/v0.9.0rc1.digest.json --check
 # v0.9.0rc1.digest.json signed by: release-owner
 ```
 
-`v0.9.0rc3` and `v0.9.0rc4` were signed the same way, each before its tag
-existed.
+The digests for `v0.9.0rc3` and `v0.9.0rc4` were signed the same way, each
+before its tag existed.
 
 ```bash
 python3 tools/rc_signature.py release/v0.9.0rc4.digest.json --check
@@ -87,6 +90,31 @@ the tag. The manifest covers `src/` and `pyproject.toml` only, so any further
 documentation change before the tag leaves it valid, and `--check` at the tag
 afterwards must still pass. If it does not, the tag was cut from a different
 tree than the one that was signed, and the signature belongs to neither.
+
+## What the signature covers, and what it does not
+
+**The signed thing is the release digest, never the git tag.** Say "the digest
+is signed", not "the tag is signed": every published tag in this repository is
+an unsigned annotated tag, which `git cat-file -p v0.9.0rc4` and GitHub's own
+tag view both report as `unsigned`.
+
+| Object | Signed? | What it establishes |
+|---|---|---|
+| `release/<tag>.digest.json` | **yes**, Ed25519 detached | the release owner stands behind these bytes of `src/` and `pyproject.toml` |
+| the git tag `<tag>` | **no** | which commit the name resolves to, and nothing about who chose it |
+| the commit the tag points at | **no** | — |
+
+The distinction is not pedantry. It decides what a consumer may conclude from
+`pip install ...@v0.9.0rc4` succeeding: that they fetched whatever that tag
+currently names. Whether those bytes are the ones the release owner signed is a
+**separate check** -- check out the tag and run `tools/rc_digest.py --check`
+followed by the signature verification below. Both halves were needed to catch
+`v0.9.0rc4` being cut at the wrong commit twice: the tag resolved fine, the
+code was right, and the digest check is what said no.
+
+Making the tag itself a trust boundary would need signed annotated tags from
+the next candidate onward, which is [Fabric#56](https://github.com/01rabbit/Azazel-Fabric/issues/56)
+and not something this document claims today.
 
 ## Algorithm
 
