@@ -6,10 +6,49 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 `01rabbit/Azazel-Fabric`; consumers pin an exact tag (see
 `docs/migration-plan.md`).
 
-## [0.9.0rc2] — R1c contract candidate
+## [Unreleased]
 
-A **release candidate**, not the stable release. Everything below is additive
-over `v0.9.0rc1` and non-breaking: no released symbol changed, and a consumer
+### Changed
+
+- **The R1c adoption gate is recorded per contract family, and the record is
+  enforced** (`docs/release-compatibility.md`,
+  `tests/test_adoption_matrix.py`). R1c — the stable `v0.9.0` — waits on "at
+  least one real producer and two real consumers", and that is a per-family
+  condition: a release carrying five families does not clear it because one of
+  them is well adopted. The new matrix states, per family, who produces and who
+  consumes, citing `Repo:`path`` so a reader can check rather than take the
+  word for it.
+
+  Two findings it surfaces: `engagement_contracts` has **two producers and no
+  consumer** (a contract that has only ever been serialized is not known to
+  interoperate — the first read is where a disagreement shows), and
+  `provisioning_contracts` / `mio_contracts` have **neither**. Azazel-Boot
+  names the latter two in `PLANNED_FABRIC_MODULES` and probes whether they
+  import; counting that probe as adoption would clear the gate with nothing
+  exchanged.
+
+  Fabric's CI cannot see the consumer repositories, so the test enforces only
+  what is checkable here: every shipped `*_contracts` family has a row, no row
+  names a family the package lacks, a verdict matches its own citation count in
+  **both** directions, and every citation is shaped as a locator. Whether a
+  cited file really produces what the row says is verified by reading it, and
+  the test does not pretend otherwise.
+
+- **Documentation corrected against the tree.** The consumer table said every
+  product was pinned to `v0.8.0`; four had moved and they do not agree on which
+  candidate. `effect_contracts` was described as "unreleased … not in any tag"
+  after shipping in `v0.9.0rc2`, and `provisioning-contracts.md` still named
+  `v0.9.0rc1` as the current candidate — both left behind by the `v0.9.0rc2`
+  release (#29). Azazel-Nexus was listed as a documentation-only repository; it
+  now carries code with deliberately zero dependencies, which is why it appears
+  in no pin table.
+
+## [0.9.0rc2] — R1b candidate toward R1c
+
+A **release candidate**, not the stable release. In the program plan's terms
+this is **R1b** — the release-candidate digest (`release/v0.9.0rc2.digest.json`)
+— cut so consumers can produce the evidence **R1c**, the stable `v0.9.0`,
+requires. Everything below is additive over `v0.9.0rc1` and non-breaking: no released symbol changed, and a consumer
 pinned to `v0.9.0rc1` keeps working unchanged.
 
 It exists so the consumers waiting on this vocabulary can pin an exact tag

@@ -1,7 +1,10 @@
 # Cross-series effect, outcome, and presented-terrain contracts
 
-Status: **unreleased** (`azazel_fabric.effect_contracts`). Introduced for
-Fabric#15 on top of the `v0.9.0rc1` candidate; it has not shipped in any tag.
+Status: **shipped in the candidate `v0.9.0rc2`, not stable**
+(`azazel_fabric.effect_contracts`). Introduced for Fabric#15 on top of
+`v0.9.0rc1`. **No product produces or consumes it yet** — a contract that has
+never been exchanged is not known to interoperate, and the R1c gate counts it
+as unmet; see [release compatibility](release-compatibility.md).
 Additive: a product that never imports this family is unaffected, and the
 released `outcome_contracts` family is untouched.
 
@@ -174,7 +177,8 @@ shape.
 
 ## 9. Adopting this family
 
-1. Pin the tag that ships it. It is not in `v0.9.0rc1`; see
+1. Pin the tag that ships it: `v0.9.0rc2` or later. It is not in `v0.9.0rc1`.
+   A candidate promises no stability, so expect to re-pin to `v0.9.0`; see
    [release compatibility](release-compatibility.md).
 2. Keep producing your existing `outcome_contracts` records. The envelope
    references them by id; it does not replace or re-interpret them.
