@@ -34,6 +34,20 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
   cited file really produces what the row says is verified by reading it, and
   the test does not pretend otherwise.
 
+- **`engagement_contracts` has its first reader** (adoption matrix in
+  `docs/release-compatibility.md`). Until Azazel-Edge#418 the family had two
+  producers and no consumer — Edge and Knowledge both wrote the Engage-aligned
+  types and neither read what the other wrote. Edge now reads Knowledge's
+  `EngagementAdvisory`, verified fail-closed against the canonical model and
+  degrading fail-open so Edge's deterministic arbiter decides identically
+  whether Knowledge answered or is absent.
+
+  The row stays **not met**: the gate asks for two consumers and this is one.
+  Recorded with what the citation does and does not mean — the reader has no
+  runtime caller yet (when Edge consults Knowledge is a product decision left
+  with the product), and the second consumer is an open doctrine question
+  rather than a queued task.
+
 - **No contract encodes a RAM-to-tier threshold** (`tests/test_no_ram_tier_encoding.py`,
   Fabric#23, plan §15 OF-01). The design was already right — this found no
   defect — but nothing held it. The line, stated precisely: a contract **may**
