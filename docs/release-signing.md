@@ -6,11 +6,22 @@ R1b is "a signed release-candidate digest" (`Azazel/docs/roadmaps/nexus-boot-pro
 | Half | Who | State |
 |---|---|---|
 | The digest — what bytes the candidate is made of | anyone, reproducibly | **done** for `v0.9.0rc1` and `v0.9.0rc2` |
-| The detached signature — who stands behind them | the release owner, with a private key | **not done for any release** |
+| The detached signature — who stands behind them | the release owner, with a private key | **done for `v0.9.0rc2`** |
 
-`release/signing-keys.json` lists no key, so `tools/rc_signature.py --check`
-reports every published candidate as unsigned. That is the accurate state, not
-a gap in the tooling.
+`release/v0.9.0rc2.digest.json.sig` carries the release owner's signature and
+`release/signing-keys.json` trusts the key that made it:
+
+```bash
+python3 tools/rc_signature.py release/v0.9.0rc2.digest.json --check
+# v0.9.0rc2.digest.json signed by: release-owner
+```
+
+`v0.9.0rc1` predates this procedure and stays unsigned. It is superseded by
+`rc2`, though Azazel-Boot still pins it; whether to sign it as well is a
+release-owner decision, not something to infer.
+
+The steps below remain the procedure for the next candidate and for the
+stable tag.
 
 ## Algorithm
 

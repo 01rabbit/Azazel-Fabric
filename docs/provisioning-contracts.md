@@ -1,17 +1,17 @@
 # Provisioning and M.I.O. Contracts (R1a)
 
-Status: **R1a draft schema and conformance kit, offered in the release
-candidate `v0.9.0rc2` (R1b).**
+Status: **R1a draft schema and conformance kit, offered in the signed release
+candidate `v0.9.0rc2` (R1b complete).**
 These are the contract families the Nexus/Boot program plan
 (`Azazel/docs/roadmaps/nexus-boot-program-plan.md` §5 R1) assigns to Fabric.
-R1a is the draft schema plus conformance kit. **R1b** is the release-candidate
-digest: `release/v0.9.0rc2.digest.json` covers the packaged surface and is
-verified by `tests/test_release_candidate_digest.py`; the detached signature
-over it needs the release owner's key and is not in the candidate. The
-procedure for producing and verifying it is
-[release signing](release-signing.md) — Ed25519, detached, with
-`tools/rc_signature.py --check` reporting every published candidate as
-unsigned until a key is trusted. **R1c** —
+R1a is the draft schema plus conformance kit. **R1b is complete for
+`v0.9.0rc2`**: `release/v0.9.0rc2.digest.json` covers the packaged surface and
+is verified by `tests/test_release_candidate_digest.py`, and
+`release/v0.9.0rc2.digest.json.sig` carries the release owner's detached
+Ed25519 signature over the bytes that digest covers — see
+[release signing](release-signing.md), and check it with
+`python3 tools/rc_signature.py release/v0.9.0rc2.digest.json --check`.
+`v0.9.0rc1` predates the procedure and stays unsigned. **R1c** —
 the stable `v0.9.0` — waits on downstream evidence.
 
 **No product produces or consumes these two families yet**, so R1c is unmet for
@@ -285,10 +285,9 @@ under `tests/fixtures/provisioning/` and `tests/fixtures/mio/`. Vectors in
 
 ## What R1a does not include
 
-- **The R1b signature and R1c.** The candidate digest exists; the detached
-  signature over it does not, because it needs the release owner's key —
-  see [release signing](release-signing.md) for the procedure that is waiting
-  on it. There
+- **R1c.** R1b is done — the candidate digest exists and `v0.9.0rc2` carries
+  the release owner's detached signature over it ([release
+  signing](release-signing.md)). There
   is no stable tag, and no downstream evidence *for these two families* —
   other families have some, which is why the gate is tracked per family.
 - **Consumer adoption.** Edge, Knowledge, Deception, Nexus, and Boot adapters
