@@ -6,7 +6,7 @@ R1b is "a signed release-candidate digest" (`Azazel/docs/roadmaps/nexus-boot-pro
 | Half | Who | State |
 |---|---|---|
 | The digest — what bytes the candidate is made of | anyone, reproducibly | **done** for `v0.9.0rc1` and `v0.9.0rc2` |
-| The detached signature — who stands behind them | the release owner, with a private key | **done for `v0.9.0rc2`** |
+| The detached signature — who stands behind them | the release owner, with a private key | **done for `v0.9.0rc1` and `v0.9.0rc2`** |
 
 `release/v0.9.0rc2.digest.json.sig` carries the release owner's signature and
 `release/signing-keys.json` trusts the key that made it:
@@ -16,12 +16,19 @@ python3 tools/rc_signature.py release/v0.9.0rc2.digest.json --check
 # v0.9.0rc2.digest.json signed by: release-owner
 ```
 
-`v0.9.0rc1` predates this procedure and stays unsigned. It is superseded by
-`rc2`, though Azazel-Boot still pins it; whether to sign it as well is a
-release-owner decision, not something to infer.
+`v0.9.0rc1` was signed afterwards with the same key, for the same reason it
+could not simply be ignored: Azazel-Boot pins it, and a consumer pinning a
+candidate nobody had stood behind is the gap R1b exists to close.
+
+```bash
+python3 tools/rc_signature.py release/v0.9.0rc1.digest.json --check
+# v0.9.0rc1.digest.json signed by: release-owner
+```
 
 The steps below remain the procedure for the next candidate and for the
-stable tag.
+stable tag. Note that each candidate's payload differs — `rc1` is 7071 bytes
+(`sha256:cdfb735c...06fe`), `rc2` is 7915 (`sha256:3876b6d1...961ae`) — so the
+checksum you verify before signing is per candidate, never carried over.
 
 ## Algorithm
 

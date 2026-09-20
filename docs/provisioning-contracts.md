@@ -11,7 +11,8 @@ is verified by `tests/test_release_candidate_digest.py`, and
 Ed25519 signature over the bytes that digest covers — see
 [release signing](release-signing.md), and check it with
 `python3 tools/rc_signature.py release/v0.9.0rc2.digest.json --check`.
-`v0.9.0rc1` predates the procedure and stays unsigned. **R1c** —
+`v0.9.0rc1` predates the procedure but was signed afterwards with the same
+key, because Azazel-Boot pins it. **R1c** —
 the stable `v0.9.0` — waits on downstream evidence.
 
 **No product produces or consumes these two families yet**, so R1c is unmet for
