@@ -8,18 +8,27 @@ itself, an interoperability certification.
 ## Current Fabric release
 
 The latest **stable** release is `v0.8.0`. The latest **published** tag is the
-release candidate `v0.9.0rc2`, which carries the canonical `DefensiveState`
-vocabulary and the cross-series `effect_contracts` family on top of
-`v0.9.0rc1` — itself additive contract work (`outcome_contracts`, and the R1a
+release candidate `v0.9.0rc3`, which widens the `effect_contracts` reference
+grammar on top of `v0.9.0rc2` — the canonical `DefensiveState` vocabulary and
+the cross-series `effect_contracts` family — which in turn sits on `v0.9.0rc1`,
+itself additive contract work (`outcome_contracts`, and the R1a
 `provisioning_contracts` / `mio_contracts` families) over `v0.8.0`.
 
 A candidate is pinnable but makes no stability promise. It exists so a consumer
 can pin an exact tag — never a branch — while producing the downstream evidence
 `v0.9.0` requires. A consumer that needs stability stays on `v0.8.0`; a consumer
-adopting the new contract families pins the newest candidate, `v0.9.0rc2`, and
-expects to re-pin to `v0.9.0`. A consumer already on `v0.9.0rc1` needs no
-urgent move: `v0.9.0rc2` changed no released symbol, so the only reason to
-re-pin is to use what it adds.
+adopting the new contract families pins the newest candidate, `v0.9.0rc3`, and
+expects to re-pin to `v0.9.0`.
+
+**A consumer adopting `effect_contracts` should move to `v0.9.0rc3`, and this
+is the first candidate move in this series that is not optional for its
+adopter.** Under the `rc2` grammar a typed reference's body could not contain a
+colon, so every hierarchical reference the series mints — `surface:http:8080`
+and `artifact:honey:invoice-2026` from Azazel-Deception, `edge:nft:1` from
+Azazel-Edge — was refused by every slot requiring a typed ref. That family had
+no possible producer at `rc2`. A consumer on `rc1` or `rc2` that does not use
+`effect_contracts` is unaffected: no released symbol changed, and the grammar
+only ever accepts more in the slots that require a typed ref.
 
 The package version in `src/azazel_fabric/version.py`, release tag, and GitHub
 release must agree before any release — candidate or stable — is described as
@@ -33,6 +42,7 @@ available. A `.devN` version is never a release.
 | `v0.8.0` | Canonical HMAC-SHA256 Edge-decision transport signature helpers **and** the advisory-only engagement contracts | Additive; signatures prove integrity/origin, not authority |
 | `v0.9.0rc1` (candidate) | Outcome-as-Evidence shared facts (`outcome_contracts`); R1a provisioning and M.I.O. contract families (`provisioning_contracts`, `mio_contracts`) | Additive; pinnable, **not stable** — adopt to produce R1c evidence, expect to re-pin to `v0.9.0` |
 | `v0.9.0rc2` (candidate) | Canonical `DefensiveState` vocabulary (`schema.defensive_state`, Fabric#14); cross-series effect / outcome / terrain family (`effect_contracts`, Fabric#15) | Additive; pinnable, **not stable**. No released symbol changed, so a consumer on `v0.9.0rc1` may stay there |
+| `v0.9.0rc3` (candidate) | A typed cross-series reference may carry further colons in its body (`effect_contracts/refs.py`) | Additive for every consumer; **required for an `effect_contracts` adopter** — at `rc2` the grammar refused every hierarchical reference in the series, so the family had no possible producer |
 
 All consumer deployments MUST pin an exact compatible Fabric tag or immutable
 image lock. They MUST NOT pin a branch. A product chooses when to adopt a newer

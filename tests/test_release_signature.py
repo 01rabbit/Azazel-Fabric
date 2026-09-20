@@ -46,11 +46,19 @@ nacl_signing = pytest.importorskip(
 )
 
 
+def _published(candidate: str) -> dict:
+    """Read one published manifest by name."""
+
+    return json.loads(
+        (RELEASE_DIR / f"{candidate}.digest.json").read_text(encoding="utf-8")
+    )
+
+
 @pytest.fixture
 def manifest() -> dict:
     """A real published manifest, so the shapes under test are the real ones."""
 
-    return json.loads((RELEASE_DIR / "v0.9.0rc2.digest.json").read_text(encoding="utf-8"))
+    return _published("v0.9.0rc2")
 
 
 @pytest.fixture
@@ -144,9 +152,19 @@ def test_the_trusted_key_set_is_exactly_what_it_should_be():
     assert load_trusted_keys(RELEASE_DIR / KEYS_FILENAME) == EXPECTED_TRUSTED_KEYS
 
 
-#: Every published candidate, written out rather than globbed. A candidate
-#: that lost its signature, or one added without one, has to be visible here.
-SIGNED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2")
+#: Every candidate whose manifest is in the tree, written out rather than
+#: globbed. A candidate added without a signature has to be visible here.
+PUBLISHED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3")
+
+#: Those of them a release owner has signed.
+#:
+#: Split from the list above rather than being the same tuple, because the two
+#: say different things and one of them is the point of R1b. "Listed" is a
+#: bookkeeping fact; "signed" is the claim that somebody stood behind the
+#: bytes. Collapsing them would mean a candidate could be recorded as covered
+#: by being written down, which is exactly the gap `v0.9.0rc1` sat in while
+#: Azazel-Boot pinned it.
+SIGNED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3")
 
 
 def test_this_file_covers_every_published_candidate():
@@ -155,7 +173,23 @@ def test_this_file_covers_every_published_candidate():
     adding a candidate means deciding, in this file, whether it is signed."""
 
     published = {p.name[: -len(".digest.json")] for p in RELEASE_DIR.glob("*.digest.json")}
-    assert published == set(SIGNED_CANDIDATES)
+    assert published == set(PUBLISHED_CANDIDATES)
+
+
+def test_every_published_candidate_is_signed():
+    """R1b stated as an invariant rather than as a list that happens to match.
+
+    A candidate can be in the tree for a moment before its signature is: the
+    manifest is generated, the release owner signs it elsewhere, and both land
+    together. This is what refuses to let that moment become permanent -- and
+    it is the check that was red while `v0.9.0rc3` waited for its signature.
+    """
+
+    unsigned = sorted(set(PUBLISHED_CANDIDATES) - set(SIGNED_CANDIDATES))
+    assert unsigned == [], (
+        f"{unsigned} have a digest manifest and no signature. A consumer "
+        "pinning a candidate nobody stood behind is the gap R1b closes."
+    )
 
 
 @pytest.mark.parametrize("candidate", SIGNED_CANDIDATES)
@@ -350,18 +384,32 @@ def test_the_documented_checksum_is_the_one_a_signer_would_see(manifest):
 
     import re
 
-    expected = hashlib.sha256(signable_bytes(manifest)).hexdigest()
+    real = {
+        candidate: hashlib.sha256(signable_bytes(_published(candidate))).hexdigest()
+        for candidate in PUBLISHED_CANDIDATES
+    }
     text = DOC.read_text(encoding="utf-8")
 
-    # Every full checksum in the document, not just one of them. The number
-    # appears in several places, and `expected in text` passes while the
-    # others say something else -- a partial update is exactly how a document
-    # ends up disagreeing with itself.
+    # Every full checksum in the document, and every candidate's, in both
+    # directions. `expected in text` passes while the others say something
+    # else -- a partial update is exactly how a document ends up disagreeing
+    # with itself. A single-value comparison stopped working once the document
+    # had to describe more than one candidate, which it must: `rc2` and `rc3`
+    # have the same payload length and only these digests tell them apart.
     shown = set(re.findall(r"\b[0-9a-f]{64}\b", text))
     assert shown, "docs/release-signing.md shows no checksum at all"
-    assert shown == {expected}, (
-        f"docs/release-signing.md shows {sorted(shown - {expected})}; "
-        f"`--signable` now produces {expected} for release/v0.9.0rc2.digest.json"
+
+    stale = sorted(shown - set(real.values()))
+    assert stale == [], (
+        f"docs/release-signing.md shows {stale}, which is no candidate's payload "
+        "digest. A signer checking `candidate.bin` against it would be checking "
+        "against nothing."
+    )
+    absent = sorted(c for c, digest in real.items() if digest not in shown)
+    assert absent == [], (
+        f"docs/release-signing.md documents no payload checksum for {absent}. "
+        "That number is the last thing between the release owner and a "
+        "signature over the wrong bytes."
     )
 
 
