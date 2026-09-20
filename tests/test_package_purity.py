@@ -26,7 +26,13 @@ from pathlib import Path
 import pytest
 
 import azazel_fabric
-from tests.test_provisioning_no_side_effects import BANNED_MODULES
+# Bare module name, not `tests.…`: `tests/` has no `__init__.py`, so pytest's
+# rootdir insertion puts *that directory* on sys.path, not the repo root. A
+# `tests.` prefix resolves only under `python -m pytest`, which also inserts the
+# cwd -- and CI runs bare `pytest`. The constant is imported rather than copied
+# because two definitions of what Fabric may not import would drift, and the
+# drift would show as a gate that stopped covering something.
+from test_provisioning_no_side_effects import BANNED_MODULES
 
 PACKAGE_ROOT = Path(azazel_fabric.__file__).parent
 
