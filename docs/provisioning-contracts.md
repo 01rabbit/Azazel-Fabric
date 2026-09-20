@@ -1,15 +1,22 @@
 # Provisioning and M.I.O. Contracts (R1a)
 
-Status: **R1a draft schema and conformance kit, offered as the release
-candidate `v0.9.0rc1` (R1b).**
+Status: **R1a draft schema and conformance kit, offered in the release
+candidate `v0.9.0rc2` (R1b).**
 These are the contract families the Nexus/Boot program plan
 (`Azazel/docs/roadmaps/nexus-boot-program-plan.md` §5 R1) assigns to Fabric.
 R1a is the draft schema plus conformance kit. **R1b** is the release-candidate
-digest: `release/v0.9.0rc1.digest.json` covers the packaged surface and is
+digest: `release/v0.9.0rc2.digest.json` covers the packaged surface and is
 verified by `tests/test_release_candidate_digest.py`; the detached signature
 over it needs the release owner's key and is not in the candidate. **R1c** —
-the stable `v0.9.0` — waits on downstream evidence. No consumer has adopted
-these contracts yet, so a candidate pin is how that evidence starts.
+the stable `v0.9.0` — waits on downstream evidence.
+
+**No product produces or consumes these two families yet**, so R1c is unmet for
+them. Azazel-Boot names them in `PLANNED_FABRIC_MODULES` and checks whether
+they import, which is a presence probe rather than adoption — its own module
+says as much ("a module Boot would consume and cannot is reported, never
+assumed"). Counting that probe would clear the gate with nothing exchanged. The
+per-family record is in
+[release compatibility](release-compatibility.md#contract-family-adoption-and-the-r1c-gate).
 
 Tracking: `Azazel` program plan §5 R1, §6.2, findings SR-02, SR-04, SR-09,
 AR-01, AR-12, AR-14.
@@ -263,7 +270,8 @@ under `tests/fixtures/provisioning/` and `tests/fixtures/mio/`. Vectors in
 
 - **The R1b signature and R1c.** The candidate digest exists; the detached
   signature over it does not, because it needs the release owner's key. There
-  is no stable tag and no downstream evidence.
+  is no stable tag, and no downstream evidence *for these two families* —
+  other families have some, which is why the gate is tracked per family.
 - **Consumer adoption.** Edge, Knowledge, Deception, Nexus, and Boot adapters
   are out of scope here; the plan's "at least one real producer and two real
   consumers" gate is an R1c requirement.

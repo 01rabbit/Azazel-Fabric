@@ -7,8 +7,10 @@ alongside them SHIPPED in `v0.2.0` (see `CHANGELOG.md`). §3–§5
 (`api`/`notify`/`paths`) are now **ratified and implemented in `v0.4.0`**
 (Phase 5); each section carries a status line noting deviations from the
 original proposal. §6 (`outcome_contracts`) and §7 (`provisioning_contracts` /
-`mio_contracts`) ship in the **release candidate** `v0.9.0rc1`, not in a stable
-release. §8 (`effect_contracts`) is **unreleased** — it is not in any tag.
+`mio_contracts`) first shipped in the **release candidate** `v0.9.0rc1`, and §8
+(`effect_contracts`) in `v0.9.0rc2`. None of the three is in a stable release,
+and each section records its own adoption — shipping a family and a product
+exchanging it are different facts.
 Consult the source and
 `tests/` for exact, current field signatures — the tables below are a readable
 reference, not the authoritative schema.
@@ -370,10 +372,12 @@ Two boundaries are worth restating here because they are easy to erode:
 
 ## 8. Cross-series effect / outcome / terrain contracts (`azazel_fabric.effect_contracts`)
 
-**Status: unreleased.** Introduced for Fabric#15 on top of the `v0.9.0rc1`
-candidate; not present in any tag. Additive — the released `outcome_contracts`
-family (§6) is untouched, and a product that never imports this one is
-unaffected.
+**Status: shipped in the candidate `v0.9.0rc2` — not yet stable.** Introduced
+for Fabric#15 on top of `v0.9.0rc1`. **No product has adopted it yet**, so it
+carries no R1c evidence; see
+[release compatibility](release-compatibility.md). Additive — the released
+`outcome_contracts` family (§6) is untouched, and a product that never imports
+this one is unaffected.
 
 The minimum shared language for correlating
 
