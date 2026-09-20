@@ -44,17 +44,18 @@ support.
 | Consumer | Observed declaration | Interpretation |
 |---|---|---|
 | Azazel-Edge | `v0.9.0rc2` in `requirements/fabric.txt` | Current reference authority consumer. An **optional** extra: Edge's arbiter runs with no Fabric installed |
-| Azazel-Gadget | `v0.4.0` in `requirements.txt` | Earlier consumer baseline; no automatic upgrade implied |
+| Azazel-Gadget | `v0.8.0` in `requirements.txt` | The only consumer on the latest **stable** tag. It uses `view` + `schema.mode` and none of the candidate families, so it has no reason to carry a candidate (Azazel-Gadget#22) |
 | Azazel-Knowledge | `v0.9.0rc2` in the `api` optional dependency (`pyproject.toml`) | Advisory API boundary only; core stays dependency-minimal |
 | Azazel-Deception | `v0.9.0rc2` in `pyproject.toml` | Current AZ-06 runtime declaration |
 | Azazel-Nexus | **no declaration** | No longer documentation-only — it carries code with deliberately zero dependencies. Its absence from this table is a design choice, not an omission |
 | Azazel-Boot | `v0.9.0rc1` in the `fabric` optional extra (`pyproject.toml`, ADR-0004) | Exact-tag source pin, one release behind. An image lock is still required before a Boot implementation release |
 
-Verification note (2026-09-20): the Edge, Knowledge, Deception, Boot, and Nexus
-rows were read directly from each repository's dependency declaration at the
-commits named in the adoption matrix below. The Gadget row is carried forward
-from an earlier audit and has **not** been re-verified from the Gadget
-repository in this pass.
+Verification note (2026-09-20): every row was read directly from that
+repository's dependency declaration. The Gadget row had been carried forward
+from an earlier audit and was stale by four releases; it is now read from
+`requirements.txt:19` at Azazel-Gadget `main` `7aeb923`, and that repository's
+CI installs the manifest, so the tag it names is exercised rather than only
+declared.
 
 `v0.8.0` is no longer the point the consumers agree on: four of them declare a
 `v0.9.0` candidate and they do not agree on which one. That is the expected
@@ -206,9 +207,9 @@ products can legally produce here, and neither does:
   envelope and `integrations/taxii_push.py` pushes STIX 2.1 bundles — but
   neither is a Fabric contract, and Edge's own plan names them as templates a
   builder would grow *from*.
-- **Azazel-Gadget does not use this family.** It pins Fabric at `v0.4.0` and
-  imports `schema.mode` and `view` only. `cti_contracts` has shipped since
-  `v0.1.0`, so the module is present in its pin and simply unused.
+- **Azazel-Gadget does not use this family.** It imports `schema.mode` and
+  `view` only. `cti_contracts` has shipped since `v0.1.0`, so the module is
+  present in its pin and simply unused.
 
 Outside this package and its own tests, nothing in the series constructs a
 `CtiEventBatch`, `CtiFlowBatch`, `CtiReactionBatch` or `CtiContextRequest`.

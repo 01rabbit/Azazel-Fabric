@@ -69,7 +69,7 @@ See [`docs/deception-contracts.md`](docs/deception-contracts.md).
 | Product | Current status |
 |---|---|
 | Azazel-Edge (AZ-01) | Observed dependency pin: `v0.8.0`. Fabric remains optional for baseline Edge runtime. |
-| Azazel-Gadget (AZ-02) | Shipping Fabric integration; current Gadget documentation reports `azazel-fabric` v0.4.0 for StatusView. AZ-06 compatibility remains a constrained future `gadget-lite` subset. |
+| Azazel-Gadget (AZ-02) | Shipping Fabric integration; observed dependency pin: `v0.8.0` for StatusView. AZ-06 compatibility remains a constrained future `gadget-lite` subset. |
 | Azazel-Knowledge (AZ-04) | Observed API optional-dependency pin: `v0.8.0`; core remains dependency-minimal and advisory-only. |
 | Azazel-Deception (AZ-06) | Observed dependency pin: `v0.8.0`; live exposure remains disabled by default. |
 | Azazel-Boot (AZ-03) | Observed `fabric` optional-extra pin: `v0.8.0`; an image lock is still required before a Boot implementation release. |

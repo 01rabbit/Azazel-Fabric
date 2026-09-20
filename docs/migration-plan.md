@@ -1,13 +1,13 @@
 # Azazel-Fabric (formerly Azazel-Common): Migration Plan
 
 Status: **In progress, out of the originally planned order.** Phases 0 and
-1 are done and tagged. Phase 4 (Gadget) is effectively done — ahead of
+1 are done and tagged. Phase 4 (Gadget) is done — ahead of
 Phases 2/3 — because Gadget adopted the shared `view` module in `v0.2.0`
 before either Edge or Knowledge integrated the package at all. `v0.3.0`
 renamed the package itself (repository, distribution, and import
 namespace) from `Azazel-Common`/`azazel_common` to
-`Azazel-Fabric`/`azazel_fabric`; see the note under Phase 4 for what
-that means for Gadget's existing pin. See the status table below; the
+`Azazel-Fabric`/`azazel_fabric`; Gadget completed that rename and now pins
+`v0.8.0`. See the status table below; the
 phase write-ups further down are kept as originally written for their
 scope/non-goals, with a status line added to each.
 
@@ -19,7 +19,7 @@ scope/non-goals, with a status line added to each.
 | 1 | Bootstrap package, schema-only | **Done** — `v0.1.0` tagged (`schema` + `cti_contracts`) |
 | 2 | Introduce into Azazel-Knowledge | **Not started** — gated on a dependency-policy exception; Azazel-Knowledge's core dependency set (stdlib + PyYAML + idna + PyNaCl) excludes `pydantic` today, so adoption needs a `pyproject.toml` change plus an ADR and owner decision on the Knowledge side before any code lands |
 | 3 | Introduce into Azazel-Edge | **Implemented & merged (2026-07-10, Azazel-Edge#309)** — Edge pins `azazel-fabric` (commit-pinned until the `v0.3.0` tag is published) and ships emit-alongside projections for `DecisionExplanation` / `TrustCapsule` / `AuditEvent` per its adapter plan §3, plus a `StatusView` emit + `/api/state` read-back beyond the original scope — making Edge the series' largest Fabric consumer. Edge↔Knowledge integration (real `cti_contracts` use) remains FY2027+ |
-| 4 | Introduce into Azazel-Gadget | **Effectively done, ahead of order, migration to `v0.3.0` pending** — Azazel-Gadget currently pins `azazel-common @ git+...@v0.2.0` (the old distribution name) in `requirements.txt`, emits `StatusView` alongside its own snapshot (`py/azazel_gadget/common_view.py`), reads it back (`control_plane.py`), and surfaces it via its web API (`/api/state`, `status_view` key) using the `product_view={"gadget_snapshot": ...}` superset pattern. Note this happened via the `view` module (`v0.2.0`), which was not part of this phase's original scope (`StateSnapshot`/`ModeState`/`ActionIntent`/`AuditEvent`/notify) — the phase's *intent* (Gadget as a real Fabric consumer) is satisfied, but not via the exact schema list originally planned, and it landed before Phases 2/3. Gadget's migration to the `v0.3.0` `azazel-fabric`/`azazel_fabric` names is a follow-up, not yet done |
+| 4 | Introduce into Azazel-Gadget | **Done, ahead of order** — Azazel-Gadget pins `azazel-fabric @ git+...@v0.8.0` in `requirements.txt`, emits `StatusView` alongside its own snapshot (`py/azazel_gadget/common_view.py`), reads it back (`control_plane.py`), and surfaces it via its web API (`/api/state`, `status_view` key) using the `product_view={"gadget_snapshot": ...}` superset pattern. Note this happened via the `view` module (`v0.2.0`), which was not part of this phase's original scope (`StateSnapshot`/`ModeState`/`ActionIntent`/`AuditEvent`/notify) — the phase's *intent* (Gadget as a real Fabric consumer) is satisfied, but not via the exact schema list originally planned, and it landed before Phases 2/3. Gadget's migration to the `azazel-fabric`/`azazel_fabric` names is **done**: it pins `v0.8.0` in `requirements.txt` and its CI installs the manifest, so the tag is exercised rather than only declared (Azazel-Gadget#22) |
 | 5 | path / auth / notify helper consolidation | **Implemented (`v0.4.0`)** — `paths`/`api`/`notify`/`audit` helper modules shipped in Fabric per `contracts.md` §3–§5 (ratified as implemented). Consumer adoption (removing real duplication in Edge/Gadget/Knowledge) follows as separate PRs on each product's own schedule |
 | 6 | Future tools | **Complete (per owner definition, `v0.4.0`)** — defined as a day-1 adoption guide for future series products (`docs/adoption-guide.md`) plus the `azazel_fabric.testing` module; both shipped. Remains a standing policy for each new repository going forward |
 
@@ -131,16 +131,16 @@ checks before merge.
 
 ## Phase 4 — Introduce into Azazel-Gadget
 
-**Status: Effectively done, ahead of order (`v0.2.0`); pin migration to
-`v0.3.0` pending.** Gadget shipped a real integration via the shared
-`StatusView` view-model (emit-alongside its snapshot, plus readback and
+**Status: Done, ahead of order.** Gadget shipped a real integration via the
+shared `StatusView` view-model (emit-alongside its snapshot, plus readback and
 web-API surfacing) before Phases 2/3 started — see the status table above.
 That satisfies this phase's intent (a real Gadget consumer) but via `view`,
 not the exact schema list below, which was the original, not-yet-realized
-plan for this phase. Gadget currently pins `v0.2.0` under the old
-`azazel-common` name; migrating that pin to `v0.3.0`
-(`azazel-fabric`/`azazel_fabric`) is a small follow-up in the Gadget
-repository, not yet done.
+plan for this phase. The rename follow-up this line used to be waiting on is
+finished: Gadget pins `azazel-fabric @ v0.8.0` under the current name, and
+its CI installs the manifest so the adapter tests actually run against it
+(Azazel-Gadget#22). Until that change they were skipped on every commit, so
+the pin had been declared rather than exercised.
 
 Gadget adopts Fabric schemas for `StateSnapshot`, `ModeState`,
 `ActionIntent`, `AuditEvent`, and notification payloads.
