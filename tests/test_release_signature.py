@@ -492,3 +492,119 @@ def test_the_unreleased_heading_is_not_itself_a_published_candidate():
         "CHANGELOG.md lost its [Unreleased] heading; the next change has "
         "nowhere to be recorded before it is tagged"
     )
+
+
+#: Documents a consumer reads to decide what a published tag proves.
+_TRUST_DOCUMENTS = (
+    "docs/release-signing.md",
+    "docs/release-compatibility.md",
+    "src/azazel_fabric/version.py",
+    "README.md",
+    "CHANGELOG.md",
+)
+
+
+#: A tag literal as the subject of being signed.
+#:
+#: Narrow on purpose. The first version of this flagged any sentence with a
+#: tag and the letters "sign" in it, and produced six false positives in one
+#: run: the filename `tools/rc_signature.py`, a changelog line about
+#: `decision signing`, and a compatibility row about "HMAC-SHA256 transport
+#: signature helpers" -- a different concept entirely. A guard that cries wolf
+#: is a guard somebody deletes, so this matches the claim rather than the
+#: vocabulary.
+#:
+#: Both backtick styles: markdown uses one, the `version.py` docstring is RST
+#: and uses two.
+_TAG_IS_SIGNED = re.compile(
+    r"`+v\d+\.\d+\.\d+[\w.]*`+[^.\n]{0,40}?\b(?:is|are|was|were)\s+signed"
+    r"|\bsigned\s+tags?\b"
+    r"|\bsigned\s+`+v\d+\.\d+\.\d+",
+    re.I,
+)
+
+
+def _sentences(text: str):
+    """Split on sentence ends and on line breaks in tables and lists.
+
+    A markdown table row is one claim per cell, and a bullet is one claim per
+    line; neither ends in a period. Splitting only on `.` would join a row
+    that says "the tag: no" to the next row that says "the digest: yes" and
+    read the pair as a single sentence mentioning both.
+    """
+
+    return re.split(r"(?<=[.!?])\s+|\n", text)
+
+
+def test_no_document_says_a_tag_is_signed_without_naming_the_digest():
+    """The signed object is the digest. The tag is not, and never was.
+
+    Every published tag in this repository is an unsigned annotated tag --
+    `git cat-file -p v0.9.0rc4` and GitHub's tag view both say `unsigned`.
+    Writing "v0.9.0rc4 is signed" is therefore false as stated, and the reader
+    it misleads is the one deciding what `pip install ...@v0.9.0rc4` proves:
+    that they fetched whatever the tag names, and nothing about who chose it.
+
+    Checked per sentence rather than per document, because these documents
+    legitimately discuss both objects; what must not happen is the two being
+    joined in one claim. A sentence that says "signed" next to a tag literal
+    has to say which thing carries the signature.
+    """
+
+    offenders: list[str] = []
+    for relative in _TRUST_DOCUMENTS:
+        text = (REPO_ROOT / relative).read_text(encoding="utf-8")
+        for sentence in _sentences(text):
+            if not _TAG_IS_SIGNED.search(sentence):
+                continue
+            lowered = sentence.lower()
+            # Naming the signed object is what makes the claim true.
+            if re.search(r"digest|manifest|\.sig\b|signing-keys", lowered):
+                continue
+            # A sentence saying the tag is *not* signed is the correction, not
+            # the defect, and it has to be allowed to exist.
+            if re.search(r"not signed|unsigned|never .{0,20}sign", lowered):
+                continue
+            offenders.append(f"{relative}: {sentence.strip()[:120]}")
+
+    assert offenders == [], (
+        "these attach a signature to a tag without naming what carries it:\n  "
+        + "\n  ".join(offenders)
+        + "\nEvery tag here is unsigned; the signed object is "
+        "release/<tag>.digest.json. Say so, or say nothing about signing."
+    )
+
+
+def test_the_trust_boundary_is_stated_somewhere_a_reader_will_find_it():
+    """A rule enforced only by a scan is a rule nobody is told.
+
+    The test above refuses the wrong sentence. This one requires the right one
+    to exist, so the distinction reaches a reader rather than only a reviewer.
+    """
+
+    text = (REPO_ROOT / "docs" / "release-signing.md").read_text(encoding="utf-8")
+    assert "What the signature covers" in text, (
+        "docs/release-signing.md lost the section stating what is signed and "
+        "what is not; the wording scan then enforces a distinction the "
+        "document no longer explains"
+    )
+    # The heading, not the first mention: the section is cross-referenced
+    # above itself, and splitting on the mention lands in the intro.
+    section = text.split("## What the signature covers", 1)[1].split("\n## ", 1)[0]
+    assert "unsigned" in section.lower(), (
+        "the trust-boundary section no longer says the tag is unsigned"
+    )
+
+    # `version.py` too, and this was added because a mutation survived without
+    # it: deleting the distinction there left every test green. No false claim
+    # is introduced by the deletion -- the scan above still refuses one -- but
+    # this is the file a maintainer opens at the moment of cutting a release,
+    # which is exactly when the wrong belief would be acted on.
+    version_doc = (REPO_ROOT / "src" / "azazel_fabric" / "version.py").read_text(
+        encoding="utf-8"
+    )
+    assert re.search(r"tag .{0,40}(?:is not signed|unsigned)", version_doc, re.I), (
+        "src/azazel_fabric/version.py no longer says the git tag is unsigned. "
+        "It is the file read when a release is cut, and the reader there is "
+        "the one who would otherwise believe the tag carries the signature."
+    )

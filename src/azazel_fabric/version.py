@@ -3,19 +3,27 @@
 Version management is tag-driven on GitHub. This version must match the
 release tag being cut; a ``.devN`` suffix is only present between releases.
 
-``v0.9.0rc1``, ``v0.9.0rc2`` and ``v0.9.0rc3`` are published, and each is
-signed (``release/*.digest.json.sig``). This is ``0.9.0rc4.dev0``: ``main``
-has moved past ``v0.9.0rc3`` and is not itself any tag. The release-digest
-gate in ``tests/test_release_candidate_digest.py`` is what forced this bump,
-and it switches off for a ``.devN`` version precisely so that ``main`` cannot
-keep claiming to be the tree a signed tag records.
+``v0.9.0rc1`` through ``v0.9.0rc4`` are published, and each ships a **signed
+release digest** (``release/*.digest.json.sig``).
+
+**The git tag itself is not signed and is not a trust boundary.** Every
+published tag here is an unsigned annotated tag; what carries a signature is
+``release/<tag>.digest.json``. Say "the digest is signed", never "the tag is
+signed" — the difference decides what a consumer may conclude from an install
+succeeding, and it is what caught ``v0.9.0rc4`` being cut at the wrong commit
+twice. See ``docs/release-signing.md`` and Fabric#56.
+
+This is ``0.9.0rc5.dev0``: ``main`` has moved past ``v0.9.0rc4`` and is not
+itself any tag. The release-digest gate in
+``tests/test_release_candidate_digest.py`` is what forced this bump, and it
+switches off for a ``.devN`` version precisely so that ``main`` cannot keep
+claiming to be the tree a published tag records.
 
 ``v0.9.0rc4`` carries one **non-additive** change: an ``EffectObservation``
 may claim only ``observed_fact`` or ``active_materialized`` (Fabric#52). The
 four other authority classes were accepted, which let a report of an effect
 assert authority over it. Input that was valid under ``rc3`` is refused under
-``rc4``; this is deliberate, and it is why the change lands before ``v0.9.0``
-stable rather than after. See ``CHANGELOG.md``.
+``rc4``.
 
 ``v0.9.0rc3`` exists for one change: a typed cross-series reference may carry
 further colons in its body. Under the ``rc2`` grammar every hierarchical
@@ -29,4 +37,4 @@ one against a moved ``main`` would make it claim to be a digest of a tag it no
 longer matches, and would strand the signature that covers its current bytes.
 """
 
-__version__ = "0.9.0rc4"
+__version__ = "0.9.0rc5.dev0"
