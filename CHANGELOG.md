@@ -34,6 +34,29 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
   cited file really produces what the row says is verified by reading it, and
   the test does not pretend otherwise.
 
+- **Round-trip coverage reaches every family, and the projections are pinned
+  descriptive** (`tests/test_contract_roundtrip.py`, Fabric#23). The
+  completeness guard — the one that fails when a contract ships with no
+  round-trip or determinism check — enumerated two families. The package has
+  six: 42 of its 73 contract models were outside it, including all three
+  projections (`AuditCheckpointProjection`, `SecurityStateProjection`,
+  `ClaimSet`). A self-extending guard that extends over part of the package is
+  the shape this release keeps finding.
+
+  Samples for the newly covered families come from the published vectors
+  (`golden_provisioning_names`, `GOLDEN_EFFECT_VECTORS`) mapped to models by
+  their `schema_version`, so the fixture and the model are checked together: a
+  vector that no longer validates is as much a break as a model that no longer
+  round-trips.
+
+  The R1 gate also asks that a projection have "neither trust-decision nor
+  chain-enforcement behaviour". That is now asserted: `authority` admits only
+  `descriptive_only`, no field name reads as a verdict, and no method walks the
+  checkpoint chain. `*_ref` and `*_refs` are deliberately not verdict markers —
+  an opaque reference to a revocation list or a chain head is exactly the
+  material a product needs to reach its own conclusion, and handing it over is
+  not deciding for them.
+
 - **Every banned field, in every family, at depth and inside collections**
   (`tests/test_directive_rejection_depth.py`, Fabric#23). The R1 exit gate asks
   for adversarial fixtures proving recursive directive rejection "at any
