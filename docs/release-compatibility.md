@@ -102,17 +102,72 @@ read. A **consumer** parses or validates one it received. A module that only
 imports a constant or a guard function is neither: it is using Fabric as a
 library, not exchanging a contract through it.
 
+**Which families are experimental, stated rather than implied.** The sentence
+above has said "non-experimental" since the gate was written and named none,
+which left a reader to work out for themselves whether an unmet row was a gap
+or a family that was never gated. Two are experimental:
+
+| Family | Why it is experimental | What that means for `v0.9.0` |
+| --- | --- | --- |
+| `cti_contracts` | The producing side is Azazel-Edge's threat-intelligence export, which is not built and is not on a near-term roadmap (Edge FY2027+). A family whose producer does not exist cannot be gated on adoption | **Does not block the stable tag.** Its shape may change without a candidate bump |
+| `mio_contracts` | Neither side exists. Azazel-Nexus and Azazel-Boot name the module in their design documents as a *target*, and neither imports it | **Does not block the stable tag.** Same |
+
+Experimental is not "unadopted". `provisioning_contracts` has no producer and
+no consumer either, and it **is** gated: Azazel-Nexus consumes
+`InterfaceIdentity` from it today through `fabric_boundary.py`, so the family
+has a real user and the missing half is a gap rather than a design position.
+
 | Family | Producers | Consumers | R1c gate |
 |---|---|---|---|
-| `cti_contracts` | — | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | not met |
+| `cti_contracts` | — | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | **experimental** |
 | `deception_contracts` | Azazel-Edge:`py/azazel_edge/deception_transition.py`, Azazel-Deception:`src/azazel_deception/runtime/observation_export.py` | Azazel-Deception:`src/azazel_deception/runtime/transitions.py`, Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | **met** |
-| `effect_contracts` | Azazel-Deception:`src/azazel_deception/runtime/effect_projection.py` | — | not met |
+| `effect_contracts` | Azazel-Edge:`py/azazel_edge/outcome/effect_export.py`, Azazel-Deception:`src/azazel_deception/runtime/effect_projection.py` | Azazel-Deception:`src/azazel_deception/runtime/effect_projection.py`, Azazel-Edge:`py/azazel_edge/outcome/effect_observation_reader.py` | **met** |
 | `engagement_contracts` | Azazel-Edge:`py/azazel_edge/engagement/candidate.py`, Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py`, Azazel-Edge:`py/azazel_edge/engagement_advisory_client.py` | **met** |
-| `mio_contracts` | — | — | not met |
+| `mio_contracts` | — | — | **experimental** |
 | `outcome_contracts` | Azazel-Edge:`py/azazel_edge/outcome/shared_export.py`, Azazel-Deception:`src/azazel_deception/runtime/outcome_export.py` | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py`, Azazel-Deception:`src/azazel_deception/runtime/producer_evidence.py` | **met** |
 | `provisioning_contracts` | — | — | not met |
 
-Three families clear the gate, and each does so on a real round trip rather
+### What each product actually pins
+
+An **observation**, not a verified fact. This repository cannot read another
+repository, so each row records the revision it was read at and is stale the
+moment that revision moves. Azazel-Nexus#23 records why this is written as an
+observation rather than as a table: the previous version of this document
+restated four products' pins as fact, and four of the five had moved by the
+time anyone read it.
+
+Observed 2026-09-20, each at that repository's `origin/main`:
+
+| Product | Pin | Observed at | Uses `effect_contracts` |
+| --- | --- | --- | --- |
+| Azazel-Edge | `v0.9.0rc4` | `873f760` | yes — 4 files |
+| Azazel-Deception | `v0.9.0rc4` | `5ef49c9` | yes — 2 files |
+| Azazel-Nexus | `v0.9.0rc2` | `40f8984` | no |
+| Azazel-Knowledge | `v0.9.0rc2` | `f29c29d` | no |
+| Azazel-Boot | `v0.9.0rc1` | `1bd3e74` | no |
+| Azazel-Gadget | **unknown** | — | **unknown** |
+
+Azazel-Gadget is **not observed**. It was outside the access scope of the
+session that produced this table, and an entry stating otherwise would be
+exactly the kind of claim the row above exists to avoid. It is `unknown`
+rather than absent, so that a reader counting products notices the gap.
+
+**No product pins `v0.9.0rc5`, and none needs to.** `rc5` is additive over
+`rc4` (Fabric#51), so a consumer gains the presented-terrain provenance slots
+only when it has something to put in them. Azazel-Deception is the first that
+will: its own guards already report that `trace_id`,
+`synthetic_identity_refs` and `synthetic_credential_refs` now exist on
+`PresentedTerrainRef` and that its projection declares them unmapped.
+
+### `effect_contracts` across `rc4` and `rc5`
+
+| Candidate | Change | Effect on an adopter |
+| --- | --- | --- |
+| `v0.9.0rc3` | A typed reference's body may carry further colons | **Required** for any adopter. Under `rc2` every hierarchical reference the series mints was refused, so the family had no possible producer |
+| `v0.9.0rc4` | An `EffectObservation` may claim only `observed_fact` or `active_materialized` | **Non-additive.** A producer that emitted any other authority class must correct it. Edge and Deception both moved; neither had to change code, because both already derived the class from the observation's status |
+| `v0.9.0rc5` | A terrain may bind to an effect that has no decision (`source_effect_ref` + `trace_id`); `synthetic_identity_refs` and `synthetic_credential_refs` added | **Additive.** Every `rc4` payload still validates and still chains. It makes reachable a path that `rc4` made structurally impossible: a `planned_shadow` effect could not be chained to a terrain at all |
+
+Four families clear the gate, and each does so on a real round trip rather
 than a count. `deception_contracts`: Edge constructs and signs an
 `EnvironmentTransitionDecision` that Deception verifies, and Deception emits
 `InteractionObservation` records that Knowledge validates at its API boundary.
