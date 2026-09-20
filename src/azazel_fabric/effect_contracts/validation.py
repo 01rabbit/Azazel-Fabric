@@ -189,15 +189,85 @@ def assert_effect_chain_consistent(
             raise ValueError("outcome envelope belongs to a different effect")
 
     if terrain is not None:
-        if terrain.activation_decision_ref != effect_ref.decision_ref:
-            raise ValueError(
-                "presented terrain was activated by a different decision than the effect"
-            )
+        _assert_terrain_binds_to_effect(effect_ref, terrain)
         if envelope is not None and envelope.presentation_ref not in (
             None,
             terrain.presentation_id,
         ):
             raise ValueError("outcome envelope references a different presented terrain")
+
+
+def _assert_terrain_binds_to_effect(effect_ref: Any, terrain: Any) -> None:
+    """How a presented terrain is tied to the effect it was presented for.
+
+    Two cases, and keeping them apart is the point (Fabric#51).
+
+    **The effect names a decision.** The terrain names the same one. This is
+    the rule that has always been here.
+
+    **The effect names no decision** -- a shadow run, an observation, a record
+    that claims nothing. Until `v0.9.0rc5` this compared the terrain's
+    `activation_decision_ref` against the effect's `None` and therefore
+    *always* raised: a `planned_shadow` effect, which is AZ-06's ordinary
+    mode, could not be chained to a terrain at all. The fix is not to skip the
+    comparison, which would leave the terrain attached to nothing. It is a
+    binding of its own: the terrain names the effect and the incident, and
+    both must match.
+
+    What is still refused in that case is a terrain naming a decision. The
+    effect has none, so whatever the terrain names is not the decision that
+    activated it, and a chain that accepted it would be asserting an authority
+    nobody exercised.
+
+    The three failures raise three different messages on purpose. "A different
+    decision", "a decision that does not exist", and "the binding is missing"
+    lead to three different corrections, and a caller told only that the chain
+    is inconsistent has to work out which.
+    """
+
+    if effect_ref.decision_ref is not None:
+        if terrain.activation_decision_ref is None:
+            raise ValueError(
+                "the effect names a decision and the presented terrain names "
+                "none; a terrain activated by a decision must say which"
+            )
+        if terrain.activation_decision_ref != effect_ref.decision_ref:
+            raise ValueError(
+                "presented terrain was activated by a different decision than the effect"
+            )
+    else:
+        if terrain.activation_decision_ref is not None:
+            raise ValueError(
+                "presented terrain names an activation decision but the effect "
+                "has none; the effect claims "
+                f"{effect_ref.authority_class.value!r}, so the named decision "
+                "did not activate this terrain"
+            )
+        if terrain.source_effect_ref is None:
+            raise ValueError(
+                "the effect names no decision, so the presented terrain must "
+                "bind to it through source_effect_ref and trace_id; it carries "
+                "neither, and a terrain bound to nothing is not a chain"
+            )
+
+    # Checked whenever the terrain supplies it, in both cases. Optional on a
+    # decision-activated terrain so that a producer pinned to `v0.9.0rc4`
+    # keeps working; when it is there it is checked, because a trace that is
+    # carried and not compared is a field that reads as a guarantee.
+    if terrain.trace_id is not None and terrain.trace_id != effect_ref.trace_id:
+        raise ValueError("presented terrain belongs to a different trace")
+    # Likewise `source_effect_ref`, and in one place rather than two. It was
+    # written twice -- once in the decision-less branch and once here -- and a
+    # mutation removing the branch copy changed nothing, because this one
+    # still caught it. A check duplicated is a check whose removal is
+    # invisible, so only the general one is kept: it covers the
+    # decision-bearing case too, where a terrain may name the effect and must
+    # then name the right one.
+    if (
+        terrain.source_effect_ref is not None
+        and terrain.source_effect_ref != effect_ref.effect_id
+    ):
+        raise ValueError("presented terrain was presented for a different effect")
 
 
 def assert_observation_within_effect_window(effect_ref: Any, observation: Any) -> None:

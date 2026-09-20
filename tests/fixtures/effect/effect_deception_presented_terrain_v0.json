@@ -19,7 +19,15 @@
   "presentation_version": 1,
   "producer_product": "deception",
   "schema_version": "presented-terrain-ref/v0.1",
+  "source_effect_ref": null,
   "synthetic_artifact_refs": [
     "artifact:golden-invoice-pdf"
-  ]
+  ],
+  "synthetic_credential_refs": [
+    "credential:golden-smb-session"
+  ],
+  "synthetic_identity_refs": [
+    "identity:golden-finance-clerk"
+  ],
+  "trace_id": null
 }

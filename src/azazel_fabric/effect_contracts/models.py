@@ -320,10 +320,32 @@ class PresentedTerrainRef(_StrictFrozenModel):
     presentation_id: str = Field(min_length=1, max_length=256)
     presentation_version: int = Field(ge=0)
     producer_product: str = Field(min_length=1, max_length=64)
-    activation_decision_ref: str = Field(min_length=1, max_length=256)
+    #: Optional since `v0.9.0rc5` (Fabric#51). A terrain activated by a
+    #: producer decision names it here. One that was not -- a shadow run, an
+    #: observation, a stale record -- has no decision to name, and filling
+    #: this with something that is not one is the failure the change exists to
+    #: stop. Such a terrain binds through `source_effect_ref` + `trace_id`
+    #: instead, and a terrain carrying *neither* binding is refused.
+    activation_decision_ref: str | None = Field(default=None, min_length=1, max_length=256)
+    #: The effect this terrain was presented for. Typed `effect:`.
+    #:
+    #: This is the binding a decision-less effect has, and it is a reference
+    #: to the effect itself rather than to a decision that does not exist.
+    source_effect_ref: str | None = Field(default=None, min_length=1, max_length=256)
+    #: The incident this terrain belongs to. Additive and optional, so that a
+    #: producer pinned to `v0.9.0rc4` keeps working; required alongside
+    #: `source_effect_ref` when that is the binding in use, because an effect
+    #: reference on its own can still be a cross-trace collision.
+    trace_id: str | None = Field(default=None, min_length=1, max_length=256)
     lifecycle_state_ref: str = Field(min_length=1, max_length=256)
     active_surface_refs: tuple[str, ...] = Field(default_factory=tuple, max_length=128)
     synthetic_artifact_refs: tuple[str, ...] = Field(default_factory=tuple, max_length=128)
+    #: Synthetic identities and credentials the terrain exposes, as typed
+    #: references. The same rules as artifacts: opaque, no secret material,
+    #: and never the thing itself. A credential that travelled in a contract
+    #: would be a real credential wherever the contract went.
+    synthetic_identity_refs: tuple[str, ...] = Field(default_factory=tuple, max_length=128)
+    synthetic_credential_refs: tuple[str, ...] = Field(default_factory=tuple, max_length=128)
     isolation_assertion_ref: str = Field(min_length=1, max_length=256)
     isolation_result_ref: str | None = Field(default=None, max_length=256)
     created_at: str = Field(min_length=1, max_length=64)
@@ -351,17 +373,41 @@ class PresentedTerrainRef(_StrictFrozenModel):
             _NOT_A_DECISION,
             field="activation_decision_ref",
         )
-        for field_name, values in (
-            ("active_surface_refs", self.active_surface_refs),
-            ("synthetic_artifact_refs", self.synthetic_artifact_refs),
+        reject_ref_kinds(self.trace_id, _NOT_A_DECISION, field="trace_id")
+        if self.source_effect_ref is not None:
+            require_ref_kind(
+                self.source_effect_ref, RefKind.EFFECT, field="source_effect_ref"
+            )
+
+        # A terrain names what put it there, one way or the other. Neither is
+        # not a weaker record; it is an unattributable one, and Fabric#51's
+        # non-goal is exactly "treat a missing reference as a valid chain".
+        if self.activation_decision_ref is None and self.source_effect_ref is None:
+            raise ValueError(
+                "a presented terrain must name either the decision that "
+                "activated it or the effect it was presented for; a terrain "
+                "that names neither cannot be attributed to anything"
+            )
+        if self.source_effect_ref is not None and self.trace_id is None:
+            raise ValueError(
+                "source_effect_ref requires trace_id; an effect reference on "
+                "its own is still satisfied by a cross-trace collision, which "
+                "is the failure typed references exist to prevent"
+            )
+
+        for field_name, values, expected in (
+            ("active_surface_refs", self.active_surface_refs, RefKind.SURFACE),
+            ("synthetic_artifact_refs", self.synthetic_artifact_refs, RefKind.ARTIFACT),
+            ("synthetic_identity_refs", self.synthetic_identity_refs, RefKind.IDENTITY),
+            (
+                "synthetic_credential_refs",
+                self.synthetic_credential_refs,
+                RefKind.CREDENTIAL,
+            ),
         ):
-            expected = RefKind.SURFACE if field_name == "active_surface_refs" else RefKind.ARTIFACT
             for value in values:
                 require_ref_kind(value, expected, field=field_name)
-        assert_no_secret_material(
-            self.synthetic_artifact_refs, field="synthetic_artifact_refs"
-        )
-        assert_no_secret_material(self.active_surface_refs, field="active_surface_refs")
+            assert_no_secret_material(values, field=field_name)
 
         created = parse_timestamp(self.created_at, field="created_at")
         expires = parse_timestamp(self.expires_at, field="expires_at")

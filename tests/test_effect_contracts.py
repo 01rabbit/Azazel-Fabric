@@ -693,3 +693,282 @@ def test_canonical_serialization_is_stable_and_round_trips(build):
     restored = type(record).model_validate(json.loads(first))
     assert restored == record
     assert canonical_fact_json(restored) == first
+
+
+# ---------------------------------------------------------------------------
+# Presented terrain provenance (Fabric#51)
+# ---------------------------------------------------------------------------
+
+
+def shadow_effect(**overrides):
+    """An effect with no decision behind it. AZ-06's ordinary mode."""
+
+    fields = dict(
+        effect_id="effect:e-shadow",
+        effect_class="redirect_to_presented_terrain",
+        producer_product="deception",
+        producer_node="az06-1",
+        trace_id="trace-1",
+        target_scope_ref="scope:s1",
+        policy_ref="policy-1",
+        created_at=T0,
+        expires_at=T3,
+        authority_class=AuthorityClass.PLANNED_SHADOW,
+    )
+    fields.update(overrides)
+    return DefensiveEffectRef(**fields)
+
+
+def bound_terrain(**overrides):
+    """A terrain bound to an effect rather than to a decision."""
+
+    fields = dict(
+        presentation_id="presentation:p-shadow",
+        presentation_version=1,
+        producer_product="deception",
+        source_effect_ref="effect:e-shadow",
+        trace_id="trace-1",
+        lifecycle_state_ref="lifecycle:env-1.shadow",
+        isolation_assertion_ref="evidence:iso-1",
+        created_at=T0,
+        expires_at=T3,
+        authority_class=AuthorityClass.PLANNED_SHADOW,
+    )
+    fields.update(overrides)
+    return PresentedTerrainRef(**fields)
+
+
+# -- success ----------------------------------------------------------------
+
+
+def test_a_decision_less_effect_can_now_be_chained_to_a_terrain():
+    """The case that was structurally impossible until this change.
+
+    `assert_effect_chain_consistent` compared the terrain's
+    `activation_decision_ref` against the effect's `decision_ref`. For a
+    `planned_shadow` effect that is `None`, and the terrain's was required and
+    non-empty, so the comparison could only ever fail. AZ-06 runs in this mode
+    by default, which means the family's own default producer could not
+    produce a valid chain.
+    """
+
+    assert_effect_chain_consistent(shadow_effect(), terrain=bound_terrain())
+
+
+def test_the_decision_bearing_chain_is_unchanged():
+    """The rule that was already here still holds, and still passes."""
+
+    assert_effect_chain_consistent(effect_ref(), terrain=terrain())
+
+
+# -- mix-up -----------------------------------------------------------------
+
+
+def test_a_terrain_bound_to_a_different_effect_is_refused():
+    with pytest.raises(ValueError, match="different effect"):
+        assert_effect_chain_consistent(
+            shadow_effect(), terrain=bound_terrain(source_effect_ref="effect:other")
+        )
+
+
+def test_a_terrain_carrying_a_different_trace_is_refused():
+    """The reason `source_effect_ref` is not enough on its own.
+
+    An effect id is an identifier somebody else minted. Two incidents whose
+    producers chose the same one would chain cleanly on the effect reference
+    alone, which is the collision typed references exist to make visible.
+    """
+
+    with pytest.raises(ValueError, match="different trace"):
+        assert_effect_chain_consistent(
+            shadow_effect(), terrain=bound_terrain(trace_id="trace-other")
+        )
+
+
+def test_a_decision_bearing_chain_also_checks_the_trace_when_it_is_there():
+    """Optional to carry; not optional to be right.
+
+    `trace_id` stays optional on a decision-activated terrain so a producer
+    pinned to `v0.9.0rc4` keeps working. A field that is carried and never
+    compared reads as a guarantee it is not, so when it is present it is
+    checked.
+    """
+
+    assert_effect_chain_consistent(effect_ref(), terrain=terrain(trace_id="trace-1"))
+    with pytest.raises(ValueError, match="different trace"):
+        assert_effect_chain_consistent(
+            effect_ref(), terrain=terrain(trace_id="trace-other")
+        )
+
+
+def test_a_terrain_naming_a_decision_the_effect_does_not_have_is_refused():
+    """Filling the slot with something that is not a decision is the defect.
+
+    The obvious way to make a shadow chain validate was to put *anything* in
+    `activation_decision_ref`. A chain that accepted it would assert an
+    authority nobody exercised, which is the one thing this family exists to
+    keep straight.
+    """
+
+    with pytest.raises(ValueError, match="the effect has none"):
+        assert_effect_chain_consistent(
+            shadow_effect(),
+            terrain=bound_terrain(activation_decision_ref="decision-invented"),
+        )
+
+
+# -- missing ----------------------------------------------------------------
+
+
+def test_a_terrain_that_names_nothing_is_refused_at_construction():
+    """Refused by the model, not by the chain check.
+
+    A record that reaches a consumer and only fails when something happens to
+    chain it is a record that gets logged, rendered and believed in between.
+    """
+
+    with pytest.raises(ValidationError, match="names neither"):
+        bound_terrain(source_effect_ref=None, trace_id=None)
+
+
+def test_an_effect_reference_without_a_trace_is_refused_at_construction():
+    with pytest.raises(ValidationError, match="requires trace_id"):
+        bound_terrain(trace_id=None)
+
+
+class _UnboundTerrain:
+    """A terrain-shaped object carrying neither binding.
+
+    `PresentedTerrainRef` refuses this at construction, so the chain check's
+    branch for it cannot be reached with a validated model -- which would make
+    that branch dead code, and this file has spent the day removing those.
+
+    It is reachable, and this is how. `assert_effect_chain_consistent` is
+    typed `Any`: it correlates whatever it is handed, including a record a
+    caller rebuilt from JSON without going through the model. The branch is
+    the backstop for exactly that caller, and this is the measurement showing
+    it is one rather than an assumption.
+    """
+
+    activation_decision_ref = None
+    source_effect_ref = None
+    trace_id = None
+    presentation_id = "presentation:unbound"
+
+
+def test_a_decision_less_effect_with_an_unbound_terrain_is_refused():
+    """The chain-level half, reachable only for an unvalidated record."""
+
+    with pytest.raises(ValueError, match="bind to it through source_effect_ref"):
+        assert_effect_chain_consistent(shadow_effect(), terrain=_UnboundTerrain())
+
+
+def test_a_decision_bearing_effect_with_an_unbound_terrain_is_refused():
+    with pytest.raises(ValueError, match="names none"):
+        assert_effect_chain_consistent(effect_ref(), terrain=bound_terrain())
+
+
+def test_the_three_refusals_say_three_different_things():
+    """Each one leads to a different correction (Fabric#51 §5).
+
+    "A different decision" means fix the reference. "A decision the effect
+    does not have" means remove it. "The binding is missing" means add one.
+    A caller told only that the chain is inconsistent has to work out which,
+    and the three are not interchangeable.
+    """
+
+    messages = []
+    for effect, built in (
+        (effect_ref(), terrain(activation_decision_ref="decision-other")),
+        (shadow_effect(), bound_terrain(activation_decision_ref="decision-x")),
+        (shadow_effect(), _UnboundTerrain()),
+    ):
+        with pytest.raises(ValueError) as caught:
+            assert_effect_chain_consistent(effect, terrain=built)
+        messages.append(str(caught.value))
+
+    assert len(set(messages)) == 3, messages
+
+
+# -- old payloads -----------------------------------------------------------
+
+
+def test_an_rc4_terrain_payload_still_validates():
+    """The compatibility claim, checked rather than asserted.
+
+    This is the exact field set `v0.9.0rc4` required, with none of the slots
+    added here. If this ever fails, the change stopped being additive and the
+    compatibility table is wrong.
+    """
+
+    rc4_payload = {
+        "presentation_id": "presentation:p1",
+        "presentation_version": 1,
+        "producer_product": "deception",
+        "activation_decision_ref": "decision-1",
+        "lifecycle_state_ref": "lifecycle:env-1.active",
+        "isolation_assertion_ref": "evidence:iso-1",
+        "created_at": T0,
+        "expires_at": T3,
+        "authority_class": "active_materialized",
+    }
+    built = PresentedTerrainRef(**rc4_payload)
+
+    assert built.source_effect_ref is None
+    assert built.trace_id is None
+    assert built.synthetic_identity_refs == ()
+    assert built.synthetic_credential_refs == ()
+    assert_effect_chain_consistent(effect_ref(), terrain=built)
+
+
+def test_an_rc4_consumer_reading_a_new_payload_sees_the_slots_it_knows():
+    """The other direction: a producer on rc5, a consumer still on rc4.
+
+    A consumer that reads only the rc4 field set gets the same answer it
+    always did. The new slots are additions to the record, not a rearrangement
+    of it -- which is what makes the rollout orderable in either direction.
+    """
+
+    payload = bound_terrain(
+        activation_decision_ref="decision-1",
+        synthetic_identity_refs=("identity:i1",),
+    ).model_dump(mode="json")
+
+    rc4_known = {
+        "presentation_id", "presentation_version", "producer_product",
+        "activation_decision_ref", "lifecycle_state_ref", "active_surface_refs",
+        "synthetic_artifact_refs", "isolation_assertion_ref",
+        "isolation_result_ref", "created_at", "expires_at", "evidence_refs",
+        "authority_class", "describes", "directive", "schema_version",
+    }
+    assert rc4_known <= set(payload), sorted(rc4_known - set(payload))
+    assert payload["activation_decision_ref"] == "decision-1"
+
+
+# -- identity and credential slots ------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "field,kind",
+    [("synthetic_identity_refs", "identity"), ("synthetic_credential_refs", "credential")],
+)
+def test_the_new_reference_slots_require_their_own_kind(field, kind):
+    assert bound_terrain(**{field: (f"{kind}:x1",)})
+    with pytest.raises(ValidationError):
+        bound_terrain(**{field: ("artifact:x1",)})
+
+
+@pytest.mark.parametrize(
+    "field", ["synthetic_identity_refs", "synthetic_credential_refs"]
+)
+def test_the_new_slots_refuse_secret_material(field):
+    """A credential reference is a reference. The credential never travels.
+
+    The slot exists because a presented terrain exposes synthetic credentials
+    and a consumer needs to correlate them; it does not exist to carry one. A
+    credential that travelled in a contract would be a real credential
+    everywhere the contract went.
+    """
+
+    with pytest.raises(ValidationError):
+        bound_terrain(**{field: ("credential:ghp_0123456789abcdef",)})

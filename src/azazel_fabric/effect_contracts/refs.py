@@ -59,6 +59,12 @@ class RefKind(str, Enum):
     SESSION = "session"
     SURFACE = "surface"
     ARTIFACT = "artifact"
+    #: A synthetic identity a presented terrain exposes. Never the identity's
+    #: own material -- a reference to the record of one (Fabric#51).
+    IDENTITY = "identity"
+    #: A synthetic credential a presented terrain exposes. The reference is
+    #: what travels; the credential never does.
+    CREDENTIAL = "credential"
     POLICY = "policy"
     PROFILE = "profile"
     SCOPE = "scope"

@@ -146,6 +146,37 @@ than after `v0.9.0`. The partition is total and disjoint, and a test enumerates
 it from `AuthorityClass` itself so that a class added later has to be placed by
 someone rather than by omission.
 
+**A presented terrain names what put it there** (`v0.9.0rc5`, Fabric#51).
+Two bindings, and which one applies is decided by the *effect*, not by the
+terrain:
+
+| The effect… | The terrain binds by | And must not |
+| --- | --- | --- |
+| names a decision (`producer_decision_ref`) | `activation_decision_ref`, equal to the effect's | — |
+| names none (shadow, observation, stale) | `source_effect_ref` **and** `trace_id`, both equal to the effect's | name an activation decision — the effect has none, so whatever it named did not activate this terrain |
+
+A terrain carrying *neither* binding is refused at construction. "No reference"
+is not a weaker record; it is an unattributable one.
+
+Until `v0.9.0rc5` the chain compared the terrain's `activation_decision_ref`
+against the effect's `decision_ref`, which is `None` for a decision-less
+effect — so the comparison could only ever fail and that whole mode was
+unchainable. It is AZ-06's ordinary mode. The fix is not to skip the
+comparison, which would leave the terrain attached to nothing; it is a binding
+of its own, and `trace_id` is part of it because an effect id on its own is
+still satisfied by a cross-trace collision.
+
+The three refusals say three different things on purpose: *a different
+decision* means fix the reference, *a decision the effect does not have* means
+remove it, *the binding is missing* means add one.
+
+**Synthetic identities and credentials are references, never the things.**
+`synthetic_identity_refs` and `synthetic_credential_refs` carry typed
+`identity:` and `credential:` references under the same rules as artifacts:
+opaque, and refused if they carry recognizable secret material. A credential
+that travelled inside a contract would be a real credential everywhere the
+contract went.
+
 **Provenance is not authorization.** `ReplayProvenance.confers_authority` is
 pinned to `False`. Carrying a model reference makes a run reproducible; it does
 not give the model's output authority.

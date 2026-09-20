@@ -8,7 +8,43 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ## [Unreleased]
 
-Nothing yet. The entries below moved into the tags that shipped them.
+### Added
+
+- **A presented terrain can be bound to an effect that has no decision**
+  (`effect_contracts`, Fabric#51). `PresentedTerrainRef` gains
+  `source_effect_ref`, `trace_id`, `synthetic_identity_refs` and
+  `synthetic_credential_refs`; `activation_decision_ref` becomes optional.
+
+  **This is additive.** Every `v0.9.0rc4` terrain payload still validates and
+  still chains, which `test_an_rc4_terrain_payload_still_validates` checks
+  against the literal `rc4` field set rather than asserting it.
+
+  What it fixes is a path that did not work at all. The chain check compared
+  the terrain's `activation_decision_ref` against the effect's `decision_ref`,
+  which is `None` for a `planned_shadow` effect, while the terrain's was
+  required and non-empty — so the comparison could only ever fail. AZ-06 runs
+  in that mode by default, so the family's own default producer could not
+  produce a valid chain.
+
+  The fix is not to skip the comparison. A terrain that chains to a
+  decision-less effect binds through `source_effect_ref` **and** `trace_id`,
+  both compared, because an effect id on its own is still satisfied by a
+  cross-trace collision. Filling `activation_decision_ref` with something that
+  is not a decision is refused: the effect has none, so whatever was named did
+  not activate this terrain. A terrain carrying neither binding is refused at
+  construction — "no reference" is not a weaker record, it is an
+  unattributable one.
+
+  Two golden vectors are published for the decision-less chain
+  (`effect_shadow_defensive_effect_ref_v0.json`,
+  `effect_shadow_presented_terrain_v0.json`), for the same reason the
+  decision-bearing chain is published: so four repositories check the path
+  against the same bytes rather than each inventing one.
+
+  `synthetic_identity_refs` and `synthetic_credential_refs` take typed
+  `identity:` and `credential:` references under the artifact rules — opaque,
+  and refused if they carry recognizable secret material. The reference
+  travels; the credential does not.
 
 ## [0.9.0rc4] — An observation may claim only what it observed (Fabric#52)
 

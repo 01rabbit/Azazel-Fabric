@@ -34,6 +34,8 @@ from azazel_fabric.testing.effect import (
     golden_gadget_effect_observation,
     golden_knowledge_outcome_envelope,
     golden_replay_provenance,
+    golden_shadow_effect_ref,
+    golden_shadow_presented_terrain,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures" / "effect"
@@ -45,6 +47,10 @@ MODEL_FOR_FIXTURE = {
     "effect_deception_observation_v0.json": EffectObservation,
     "effect_gadget_observation_v0.json": EffectObservation,
     "effect_knowledge_outcome_envelope_v0.json": OutcomeObservationEnvelope,
+    # Fabric#51: the decision-less half of the family, which had no vector
+    # because it had no working code path.
+    "effect_shadow_defensive_effect_ref_v0.json": DefensiveEffectRef,
+    "effect_shadow_presented_terrain_v0.json": PresentedTerrainRef,
 }
 
 
@@ -128,3 +134,50 @@ def test_the_published_provenance_confers_nothing():
     provenance = ReplayProvenance.model_validate(golden_replay_provenance())
     assert provenance.confers_authority is False
     assert provenance.model_ref is not None
+
+
+def test_the_decision_less_chain_correlates_end_to_end():
+    """The second published chain, and the one that could not exist before.
+
+    `assert_effect_chain_consistent` compared the terrain's
+    `activation_decision_ref` against the effect's `decision_ref`, which is
+    `None` for a `planned_shadow` effect -- so the comparison could only ever
+    fail and this whole mode was unchainable. AZ-06 runs in it by default.
+
+    Published as vectors rather than kept as unit tests so that Edge, AZ-06,
+    Gadget and Knowledge check the decision-less path against the same bytes
+    Fabric ships, which is the reason the decision-bearing chain is published
+    too.
+    """
+
+    effect = DefensiveEffectRef.model_validate(golden_shadow_effect_ref())
+    terrain = PresentedTerrainRef.model_validate(golden_shadow_presented_terrain())
+
+    assert effect.decision_ref is None
+    assert terrain.activation_decision_ref is None
+    assert terrain.source_effect_ref == effect.effect_id
+    assert terrain.trace_id == effect.trace_id
+
+    assert_effect_chain_consistent(effect, terrain=terrain)
+
+
+def test_the_two_published_chains_do_not_cross():
+    """Each terrain belongs to its own effect, and swapping them is refused.
+
+    Two chains in one fixture set is how a cross-chain mix-up becomes
+    possible, so it is also how it becomes testable.
+    """
+
+    decision_effect = DefensiveEffectRef.model_validate(golden_edge_effect_ref())
+    decision_terrain = PresentedTerrainRef.model_validate(
+        golden_deception_presented_terrain()
+    )
+    shadow_effect = DefensiveEffectRef.model_validate(golden_shadow_effect_ref())
+    shadow_terrain = PresentedTerrainRef.model_validate(
+        golden_shadow_presented_terrain()
+    )
+
+    with pytest.raises(ValueError):
+        assert_effect_chain_consistent(decision_effect, terrain=shadow_terrain)
+    with pytest.raises(ValueError):
+        assert_effect_chain_consistent(shadow_effect, terrain=decision_terrain)
