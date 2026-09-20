@@ -30,6 +30,18 @@ no possible producer at `rc2`. A consumer on `rc1` or `rc2` that does not use
 `effect_contracts` is unaffected: no released symbol changed, and the grammar
 only ever accepts more in the slots that require a typed ref.
 
+**`v0.9.0rc4` will be the first non-additive candidate in this series, and a
+consumer cannot treat a candidate move as free from here on.** An
+`EffectObservation` may claim only `observed_fact` or `active_materialized`
+(Fabric#52); the four other authority classes were accepted, which let a record
+*reporting* an effect assert authority *over* it — the exact confusion
+`DefensiveEffectRef` has refused in the other direction since the family
+shipped. A payload that was valid at `rc3` and claims `producer_decision_ref`,
+`advisory_inference`, `planned_shadow` or `stale_or_unknown` is refused at
+`rc4`. This lands before `v0.9.0` because the alternative is carrying it into a
+stable release, where the same correction would break a stability promise
+instead of a candidate one.
+
 The package version in `src/azazel_fabric/version.py`, release tag, and GitHub
 release must agree before any release — candidate or stable — is described as
 available. A `.devN` version is never a release.
@@ -43,6 +55,7 @@ available. A `.devN` version is never a release.
 | `v0.9.0rc1` (candidate) | Outcome-as-Evidence shared facts (`outcome_contracts`); R1a provisioning and M.I.O. contract families (`provisioning_contracts`, `mio_contracts`) | Additive; pinnable, **not stable** — adopt to produce R1c evidence, expect to re-pin to `v0.9.0` |
 | `v0.9.0rc2` (candidate) | Canonical `DefensiveState` vocabulary (`schema.defensive_state`, Fabric#14); cross-series effect / outcome / terrain family (`effect_contracts`, Fabric#15) | Additive; pinnable, **not stable**. No released symbol changed, so a consumer on `v0.9.0rc1` may stay there |
 | `v0.9.0rc3` (candidate) | A typed cross-series reference may carry further colons in its body (`effect_contracts/refs.py`) | Additive for every consumer; **required for an `effect_contracts` adopter** — at `rc2` the grammar refused every hierarchical reference in the series, so the family had no possible producer |
+| `v0.9.0rc4` (candidate, unpublished) | An `EffectObservation` may claim only `observed_fact` or `active_materialized` (`effect_contracts/models.py`, Fabric#52) | **Non-additive — the first in this series.** Input accepted at `rc3` is refused at `rc4`. Required before `v0.9.0` stable; a producer that emitted an observation under any other authority class must correct it, not re-pin around it |
 
 All consumer deployments MUST pin an exact compatible Fabric tag or immutable
 image lock. They MUST NOT pin a branch. A product chooses when to adopt a newer

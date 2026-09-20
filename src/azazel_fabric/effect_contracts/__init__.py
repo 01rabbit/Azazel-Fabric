@@ -26,6 +26,7 @@ from .authority import (
     is_authoritative_decision_reference,
 )
 from .models import (
+    OBSERVABLE_AUTHORITY_CLASSES,
     UNKNOWN_EFFECT_CLASS_FALLBACK,
     DefensiveEffectRef,
     EffectClass,
@@ -58,6 +59,7 @@ from .validation import (
 
 __all__ = [
     "BANNED_EFFECT_AUTHORITY_FIELDS",
+    "OBSERVABLE_AUTHORITY_CLASSES",
     "OPAQUE_REF_PATTERN",
     "SECRET_MATERIAL_MARKERS",
     "UNKNOWN_AUTHORITY_FALLBACK",
