@@ -8,16 +8,17 @@ itself, an interoperability certification.
 ## Current Fabric release
 
 The latest **stable** release is `v0.8.0`. The latest **published** tag is the
-release candidate `v0.9.0rc3`, which widens the `effect_contracts` reference
-grammar on top of `v0.9.0rc2` — the canonical `DefensiveState` vocabulary and
-the cross-series `effect_contracts` family — which in turn sits on `v0.9.0rc1`,
+release candidate `v0.9.0rc4`, which narrows what an `EffectObservation` may
+claim on top of `v0.9.0rc3` — the widened `effect_contracts` reference grammar
+— which sits on `v0.9.0rc2`, the canonical `DefensiveState` vocabulary and the
+cross-series `effect_contracts` family, which in turn sits on `v0.9.0rc1`,
 itself additive contract work (`outcome_contracts`, and the R1a
 `provisioning_contracts` / `mio_contracts` families) over `v0.8.0`.
 
 A candidate is pinnable but makes no stability promise. It exists so a consumer
 can pin an exact tag — never a branch — while producing the downstream evidence
 `v0.9.0` requires. A consumer that needs stability stays on `v0.8.0`; a consumer
-adopting the new contract families pins the newest candidate, `v0.9.0rc3`, and
+adopting the new contract families pins the newest candidate, `v0.9.0rc4`, and
 expects to re-pin to `v0.9.0`.
 
 **A consumer adopting `effect_contracts` should move to `v0.9.0rc3`, and this
@@ -30,7 +31,7 @@ no possible producer at `rc2`. A consumer on `rc1` or `rc2` that does not use
 `effect_contracts` is unaffected: no released symbol changed, and the grammar
 only ever accepts more in the slots that require a typed ref.
 
-**`v0.9.0rc4` will be the first non-additive candidate in this series, and a
+**`v0.9.0rc4` is the first non-additive candidate in this series, and a
 consumer cannot treat a candidate move as free from here on.** An
 `EffectObservation` may claim only `observed_fact` or `active_materialized`
 (Fabric#52); the four other authority classes were accepted, which let a record
@@ -55,7 +56,7 @@ available. A `.devN` version is never a release.
 | `v0.9.0rc1` (candidate) | Outcome-as-Evidence shared facts (`outcome_contracts`); R1a provisioning and M.I.O. contract families (`provisioning_contracts`, `mio_contracts`) | Additive; pinnable, **not stable** — adopt to produce R1c evidence, expect to re-pin to `v0.9.0` |
 | `v0.9.0rc2` (candidate) | Canonical `DefensiveState` vocabulary (`schema.defensive_state`, Fabric#14); cross-series effect / outcome / terrain family (`effect_contracts`, Fabric#15) | Additive; pinnable, **not stable**. No released symbol changed, so a consumer on `v0.9.0rc1` may stay there |
 | `v0.9.0rc3` (candidate) | A typed cross-series reference may carry further colons in its body (`effect_contracts/refs.py`) | Additive for every consumer; **required for an `effect_contracts` adopter** — at `rc2` the grammar refused every hierarchical reference in the series, so the family had no possible producer |
-| `v0.9.0rc4` (candidate, unpublished) | An `EffectObservation` may claim only `observed_fact` or `active_materialized` (`effect_contracts/models.py`, Fabric#52) | **Non-additive — the first in this series.** Input accepted at `rc3` is refused at `rc4`. Required before `v0.9.0` stable; a producer that emitted an observation under any other authority class must correct it, not re-pin around it |
+| `v0.9.0rc4` (candidate) | An `EffectObservation` may claim only `observed_fact` or `active_materialized` (`effect_contracts/models.py`, Fabric#52) | **Non-additive — the first in this series.** Input accepted at `rc3` is refused at `rc4`. Required before `v0.9.0` stable; a producer that emitted an observation under any other authority class must correct it, not re-pin around it |
 
 All consumer deployments MUST pin an exact compatible Fabric tag or immutable
 image lock. They MUST NOT pin a branch. A product chooses when to adopt a newer

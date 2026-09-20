@@ -25,6 +25,14 @@ python3 tools/rc_signature.py release/v0.9.0rc1.digest.json --check
 # v0.9.0rc1.digest.json signed by: release-owner
 ```
 
+`v0.9.0rc3` and `v0.9.0rc4` were signed the same way, each before its tag
+existed.
+
+```bash
+python3 tools/rc_signature.py release/v0.9.0rc4.digest.json --check
+# v0.9.0rc4.digest.json signed by: release-owner
+```
+
 The steps below remain the procedure for the next candidate and for the
 stable tag.
 
@@ -36,18 +44,36 @@ differs, but not always in length:
 | `v0.9.0rc1` | 7071 | `cdfb735c002eb26ef5e0f31ea617b2576a3b9a4a938f04b27f6a353a4f1b06fe` |
 | `v0.9.0rc2` | 7915 | `3876b6d1d103b4832274a91e9ec12e6697fab095723b17c940d68af3207961ae` |
 | `v0.9.0rc3` | **7915** | `0210f96783248aa64f392cd73c987fa119aa0d7918589f393d4f5a0a0f855d8e` |
+| `v0.9.0rc4` | **7915** | `b02ee97bf7b7783567b070129144b1f84987384873c96eb34ff7f4105f33101d` |
 
-`rc2` and `rc3` cover the same 66 files, so their payloads are the same length
-and only their contents differ. A size check cannot tell them apart; the
-digest can. Signing `rc2`'s payload while believing it is `rc3`'s would produce
-a signature that verifies — against the wrong candidate.
+`rc2`, `rc3` and `rc4` cover the same 66 files, so all three payloads are the
+same length and only their contents differ. A size check cannot tell any of
+them apart; the digest can. Signing `rc2`'s payload while believing it is
+`rc4`'s would produce a signature that verifies — against the wrong candidate.
 
-## `v0.9.0rc3` signs before its tag exists, not after
+Three candidates at 7915 bytes is not a coincidence worth noting once. It is
+this repository's standing condition: the file set has been stable for three
+candidates, so the length check is useless by construction and will stay that
+way. Check the digest.
+
+## A candidate signs before its tag exists, not after
 
 `rc1` and `rc2` were signed after their tags were cut, which is why step 2
-below checks the digest against the tag. `rc3` is being prepared the other way
-round: the manifest is signed on the branch, the branch merges, and the tag is
-then cut at the merge commit.
+below checks the digest against the tag. `rc3` was prepared the other way
+round and `rc4` followed it: the manifest is signed on the branch, the branch
+merges, and the tag is then cut at the merge commit.
+
+One consequence is worth stating, because it was nearly got wrong while
+preparing `rc4`. The manifest and the signature belong in the **same commit**.
+Committing the manifest first — a claim that this tree is what the tag records
+— and the signature afterwards recreates, on the branch, exactly the window
+this order exists to close. `rc4`'s manifest was generated, reverted, and
+regenerated once the signature existed, which costs nothing: the manifest is
+derived from `src/` and `pyproject.toml`, so it is reproducible at any time
+and the release owner regenerates it independently to sign it. That
+independent regeneration is also the cross-check — if the signer's payload
+digest does not match the one they were told to expect, the trees differ and
+nothing should be signed.
 
 That is the better order and it is worth saying why. Signing after the tag
 means a window in which a published tag has no signature, which is exactly the
