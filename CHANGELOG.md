@@ -10,6 +10,23 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ### Changed
 
+- **`effect_contracts` has its first producer, and the adoption measured three
+  things the family could not do** (`docs/release-compatibility.md`,
+  `docs/effect-contracts.md`). Azazel-Deception#46 emits `PresentedTerrainRef`
+  from the presented-terrain record AZ-06 already keeps. The row still reads
+  `not met` — one producer, no consumer — but it is no longer empty for the
+  reason it was.
+
+  What the attempt found, recorded because the next adopter would otherwise
+  find it again: the reference grammar refused every hierarchical id in the
+  series (fixed below); `EffectObservation` and `OutcomeObservationEnvelope`
+  are keyed on an `effect:` id **nothing in Azazel mints**, so they have no
+  possible producer whoever adopts the family; and
+  `assert_effect_chain_consistent` can only chain a presented terrain to a
+  `producer_decision_ref` effect, so a `planned_shadow` one — AZ-06's default
+  mode — cannot be chained at all.
+
+
 - **A typed cross-series reference may carry further colons in its body**
   (`effect_contracts/refs.py`). The grammar shipped in `v0.9.0rc2` split on a
   colon and then forbade the body from containing one. That was measured

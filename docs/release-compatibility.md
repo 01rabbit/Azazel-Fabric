@@ -80,7 +80,7 @@ library, not exchanging a contract through it.
 |---|---|---|---|
 | `cti_contracts` | — | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | not met |
 | `deception_contracts` | Azazel-Edge:`py/azazel_edge/deception_transition.py`, Azazel-Deception:`src/azazel_deception/runtime/observation_export.py` | Azazel-Deception:`src/azazel_deception/runtime/transitions.py`, Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | **met** |
-| `effect_contracts` | — | — | not met |
+| `effect_contracts` | Azazel-Deception:`src/azazel_deception/runtime/effect_projection.py` | — | not met |
 | `engagement_contracts` | Azazel-Edge:`py/azazel_edge/engagement/candidate.py`, Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py`, Azazel-Edge:`py/azazel_edge/engagement_advisory_client.py` | **met** |
 | `mio_contracts` | — | — | not met |
 | `outcome_contracts` | Azazel-Edge:`py/azazel_edge/outcome/shared_export.py`, Azazel-Deception:`src/azazel_deception/runtime/outcome_export.py` | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py`, Azazel-Deception:`src/azazel_deception/runtime/producer_evidence.py` | **met** |
@@ -94,7 +94,7 @@ Producer and consumer are different products in both directions, which is what
 the gate is asking about. `engagement_contracts` and `outcome_contracts` are
 the others, for the reasons set out below.
 
-Four patterns in that table are worth naming rather than leaving to be
+Five patterns in that table are worth naming rather than leaving to be
 noticed.
 
 **`engagement_contracts` cleared the gate on a round trip, not a count.**
@@ -226,6 +226,43 @@ family at its ingest boundary and uses the advisory-only primitives; making it
 produce the response model would mean changing a published wire shape, which
 is a decision for a new ADR and not something an adoption table should imply
 is owed.
+
+**`effect_contracts` had no possible producer at all, and finding that out is
+what the gate is for.** This row stayed `— | —` while the family shipped a full
+set of models, an authority classification and an adversarial test suite. The
+reason was not that nobody had got to it. Azazel-Deception#46 tried, against
+the record AZ-06 already keeps, and measured that **every hierarchical
+reference the series mints was refused by every slot requiring a typed ref**:
+`surface:http:8080`, `artifact:honey:invoice-2026` and `isolation:proof:1` from
+AZ-06, `edge:nft:1` from Edge. The grammar split on a colon and then forbade
+the body from containing one, so the family was unproducible by construction.
+Azazel-Fabric#48 widened the body; `v0.9.0rc2` still carries the narrow form.
+
+AZ-06 is now the producer, for `PresentedTerrainRef` — the record that says
+what the defender presented. What it will not do is fill a gap: Fabric requires
+a bounded presentation and AZ-06 commonly declares no expiry, so the projection
+**refuses** rather than inventing one. An invented bound would report that AZ-06
+time-boxed a presentation it did not, in a record that validates. Each
+projection also returns the local fields that reach no Fabric slot, because a
+lossy projection that says nothing is how a consumer comes to read the Fabric
+record as the whole of what AZ-06 observed.
+
+Two of the family's records remain unproducible, and by a cause outside any one
+repository: `EffectObservation` and `OutcomeObservationEnvelope` are keyed on an
+`effect:`-typed id minted by whoever constructed the effect, and **nothing in
+the series mints one**. AZ-06 receives an `EnvironmentActivationDecision`, which
+carries none. AZ-06 is the materializer, so those observations are its records
+to make — it has nothing to make them against. The chain head
+(`DefensiveEffectRef`, `authority_class = producer_decision_ref`) belongs to
+Edge, and until Edge mints effect ids this row cannot reach two consumers
+however many products adopt it.
+
+One more measurement is on the record because it constrains who can adopt this
+family next: `assert_effect_chain_consistent` compares a presented terrain to
+`effect_ref.decision_ref`, which is `None` for every authority class except
+`producer_decision_ref`, while the terrain's own `activation_decision_ref` is
+required and non-empty. A `planned_shadow` effect therefore cannot be chained
+to a terrain at all — and shadow is AZ-06's default mode.
 
 **`provisioning_contracts` and `mio_contracts` have neither.** Azazel-Boot
 names them in `PLANNED_FABRIC_MODULES` and checks whether they can be imported,

@@ -2,9 +2,12 @@
 
 Status: **shipped in the candidate `v0.9.0rc2`, not stable**
 (`azazel_fabric.effect_contracts`). Introduced for Fabric#15 on top of
-`v0.9.0rc1`. **No product produces or consumes it yet** — a contract that has
-never been exchanged is not known to interoperate, and the R1c gate counts it
-as unmet; see [release compatibility](release-compatibility.md).
+`v0.9.0rc1`. **One producer, no consumer** — Azazel-Deception emits
+`PresentedTerrainRef` (Azazel-Deception#46); nothing reads one yet, and a
+contract that has never been read is not known to interoperate, so the R1c gate
+counts it as unmet. See [release compatibility](release-compatibility.md) for
+what the first adoption measured, including two records of this family that
+**no product can produce today**.
 Additive: a product that never imports this family is unaffected, and the
 released `outcome_contracts` family is untouched.
 
@@ -184,10 +187,23 @@ shape.
    references them by id; it does not replace or re-interpret them.
 3. Emit typed ids for anything this family introduces. Your existing trace,
    decision and execution ids need no change.
-4. Read `authority_class` before acting on any record, and apply your own
+
+   A typed ref's body may contain further colons — the split point is the
+   first one — so a hierarchical id like `surface:http:8080` is a valid
+   `surface` reference. That was **not** true in `v0.9.0rc2`, where the body
+   excluded colons and consequently refused every hierarchical reference in
+   the series. If you are pinned to `rc2`, this step is the one that will stop
+   you; re-pin rather than rewriting your identifiers, because a rewritten
+   identifier no longer resolves to the thing it named.
+
+4. Do not fill a slot you have no fact for. Where your record cannot supply
+   something this family requires — a bounded `expires_at` is the usual one —
+   refuse to emit rather than defaulting. A plausible default produces a record
+   that validates and misreports, and the consumer has no way to tell.
+5. Read `authority_class` before acting on any record, and apply your own
    authority rules to what it claims. Fabric having validated a record means
    the record is well-formed, not that it is authorized.
-5. Treat an unrecognized enum value as the weakest reading. The coercion
+6. Treat an unrecognized enum value as the weakest reading. The coercion
    helpers already do; do not add a mapping that does otherwise.
 
 Nothing about this family is required. A product that does not adopt it keeps
