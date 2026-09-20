@@ -93,7 +93,7 @@ Producer and consumer are different products in both directions, which is what
 the gate is asking about. `engagement_contracts` and `outcome_contracts` are
 the others, for the reasons set out below.
 
-Three patterns in that table are worth naming rather than leaving to be
+Four patterns in that table are worth naming rather than leaving to be
 noticed.
 
 **`engagement_contracts` cleared the gate on a round trip, not a count.**
@@ -188,6 +188,43 @@ sibling of the `grep` warning below — there, a name match was mistaken for
 adoption; here, real adoption went uncounted because it was spelled without
 the contract's name. Both are answered the same way: read the import and the
 direction.
+
+**`cti_contracts` has a consumer and no producer, and that is the schedule
+rather than an oversight.** This row is the opposite shape to the one above,
+so it was checked the same way and the answer came out the other way: there is
+no unrecorded producer to find.
+
+The contract names who may be one. `SourceProduct = Literal["edge", "gadget"]`
+is on every ingest envelope and on `CtiContextRequest`, so exactly two
+products can legally produce here, and neither does:
+
+- **Azazel-Edge has no such code, by its own plan.** Its adapter plan calls the
+  CTI integration "a next-fiscal-year-onward (FY2027+) plan ... not a
+  near-term deliverable", and says the request builders would be "new code,
+  not adaptations of existing sites". Edge does push data upstream today —
+  `integrations/upstream.py` emits an Edge-local `format_version: v1`
+  envelope and `integrations/taxii_push.py` pushes STIX 2.1 bundles — but
+  neither is a Fabric contract, and Edge's own plan names them as templates a
+  builder would grow *from*.
+- **Azazel-Gadget does not use this family.** It pins Fabric at `v0.4.0` and
+  imports `schema.mode` and `view` only. `cti_contracts` has shipped since
+  `v0.1.0`, so the module is present in its pin and simply unused.
+
+Outside this package and its own tests, nothing in the series constructs a
+`CtiEventBatch`, `CtiFlowBatch`, `CtiReactionBatch` or `CtiContextRequest`.
+
+**The return direction is a ratified non-adoption, not a missing citation.**
+`CtiContextResponse` is the CTI → Edge/Gadget half, and Azazel-Knowledge
+decided in its ADR-0010 not to emit it, "not forced where shapes genuinely
+diverge". Measured, the divergence is not a near miss: Knowledge's context
+response and `CtiContextResponse` share 2 field names out of 18, both of those
+two differ in type, `CtiContextResponse` is `extra="forbid"` so Knowledge's
+other thirteen fields would each be rejected, and `IocMatch.confidence` is
+bounded 0.0–1.0 against Knowledge's 0–100 score. Knowledge consumes this
+family at its ingest boundary and uses the advisory-only primitives; making it
+produce the response model would mean changing a published wire shape, which
+is a decision for a new ADR and not something an adoption table should imply
+is owed.
 
 **`provisioning_contracts` and `mio_contracts` have neither.** Azazel-Boot
 names them in `PLANNED_FABRIC_MODULES` and checks whether they can be imported,
