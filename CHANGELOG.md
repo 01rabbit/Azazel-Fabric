@@ -6,10 +6,20 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 `01rabbit/Azazel-Fabric`; consumers pin an exact tag (see
 `docs/migration-plan.md`).
 
-## [Unreleased]
+## [0.9.0rc2] — R1c contract candidate
 
-Not in any tag. A consumer cannot adopt the items below by pinning
-`v0.9.0rc1`; see `docs/release-compatibility.md`.
+A **release candidate**, not the stable release. Everything below is additive
+over `v0.9.0rc1` and non-breaking: no released symbol changed, and a consumer
+pinned to `v0.9.0rc1` keeps working unchanged.
+
+It exists so the consumers waiting on this vocabulary can pin an exact tag
+instead of `main` — Azazel-Knowledge#65, Azazel-Deception#28 and Azazel#62 each
+hold a test that turns red the moment a pin carrying `DefensiveState` lands,
+which is the signal that their remaining work became actionable.
+
+A candidate makes no stability promise. `v0.9.0` is cut only after the plan's
+"at least one real producer and two real consumers per non-experimental
+contract" gate has linked evidence.
 
 ### Added
 
@@ -34,8 +44,12 @@ Not in any tag. A consumer cannot adopt the items below by pinning
 
 ### Changed
 
-- `src/azazel_fabric/version.py` is `0.9.0rc2.dev0`. A `.devN` version is never
-  a release, and the release-digest gate skips by design while it is set.
+- `src/azazel_fabric/version.py` is `0.9.0rc2`, and
+  `release/v0.9.0rc2.digest.json` records the reproducible manifest of `src/`
+  and `pyproject.toml` at this tag. The release workflow verifies both: the tag
+  must equal the package version, and the tree must match the manifest.
+  Dropping the `.devN` suffix is what activates the release-digest gate — the
+  seven tests that skipped while it was set now run.
 
 ## [0.9.0rc1] — R1b release candidate (Fabric#23)
 
