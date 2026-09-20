@@ -34,6 +34,26 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
   cited file really produces what the row says is verified by reading it, and
   the test does not pretend otherwise.
 
+- **The purity gate covers every module, not only the R1a families**
+  (`tests/test_package_purity.py`). "Fabric describes; it never reaches the OS,
+  the network, or a subprocess" was enforced only for `provisioning_contracts`
+  and `mio_contracts`. `outcome_contracts`, `effect_contracts` and
+  `schema.defensive_state` all shipped outside that gate, and a family outside
+  R1 importing `subprocess` would be exactly as wrong.
+
+  The R1a gate is not widened, because its other rules are genuinely
+  R1a-specific — a narrow import allowlist that `effect_contracts` would fail
+  for importing `enum`, and isolation from other families that
+  `deception_contracts` legitimately breaks. The new file checks only the part
+  that is true of every module, over a walked file list, catching a deferred
+  import inside a function as well as a module-level one, and verifies at
+  runtime that importing the whole package pulls in nothing banned.
+
+  Measured, not assumed: pydantic alone pulls in `socket`, `urllib`,
+  `platform` and nine more when its first model is built, so the runtime check
+  is baseline-differential. Without that, the gate reports pydantic's imports
+  as Fabric's and fails on a finding that is not Fabric's.
+
 - **The feature-to-minimum-version matrix is complete and enforced**
   (`docs/provisioning-contracts.md`, `tests/test_feature_minimums.py`). The
   matrix is published so consumers converge deliberately instead of re-pinning
