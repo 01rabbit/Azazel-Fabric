@@ -608,3 +608,89 @@ def test_the_trust_boundary_is_stated_somewhere_a_reader_will_find_it():
         "It is the file read when a release is cut, and the reader there is "
         "the one who would otherwise believe the tag carries the signature."
     )
+
+
+#: Every filename `docs/release-signing.md` tells a signer to create.
+#:
+#: Derived from the document rather than listed here, so a procedure that
+#: starts naming a new scratch file cannot quietly leave it un-ignored.
+_SIGNING_ARTIFACT_PATTERN = re.compile(
+    r"\b(fabric-release\.key|candidate(?:-rc\d+)?\.(?:bin|sig))\b"
+)
+
+
+def _ignored_by_gitignore(name: str) -> bool:
+    """Whether `.gitignore` covers `name`, by the rules git actually applies.
+
+    `fnmatch` rather than a substring search: the entry `*.key` must count as
+    covering `fabric-release.key`, and an entry that merely mentions the word
+    in a comment must not count as covering anything.
+    """
+
+    import fnmatch
+
+    for line in (REPO_ROOT / ".gitignore").read_text(encoding="utf-8").splitlines():
+        pattern = line.strip()
+        if not pattern or pattern.startswith("#"):
+            continue
+        if fnmatch.fnmatch(name, pattern.lstrip("/")):
+            return True
+    return False
+
+
+def test_gitignore_covers_every_file_the_signing_procedure_creates():
+    """The rule git enforces, as opposed to the one the document states.
+
+    `docs/release-signing.md` has said "PRIVATE — never commit" since the
+    procedure was written, and `.gitignore` said nothing. A `git stash -u`
+    run in this directory while preparing `v0.9.0rc4` therefore took
+    `fabric-release.key` into a stash entry: a private key inside `.git`, put
+    there by a command that was moving a version bump out of the way.
+
+    `git stash -u` skips ignored files. That is the whole mechanism, and it is
+    why this belongs in `.gitignore` rather than in one more sentence of the
+    document. The names are read out of the document so that a procedure
+    which starts creating a new scratch file cannot leave it uncovered.
+    """
+
+    procedure = (REPO_ROOT / "docs" / "release-signing.md").read_text(encoding="utf-8")
+    named = sorted(set(_SIGNING_ARTIFACT_PATTERN.findall(procedure)))
+    assert named, "the signing procedure names no files; this check has nothing to cover"
+
+    uncovered = [name for name in named if not _ignored_by_gitignore(name)]
+    assert uncovered == [], (
+        f"docs/release-signing.md tells a signer to create {uncovered}, and "
+        ".gitignore does not cover them. An untracked file in this directory "
+        "is one `git stash -u` away from being inside .git, which is how the "
+        "release key got there once already."
+    )
+
+
+def test_the_key_is_not_in_the_repository_at_all():
+    """The other half: covered by `.gitignore` and also simply not here.
+
+    An ignore rule stops a file being added by accident. It does nothing about
+    one that is already tracked, so this asks the index directly rather than
+    trusting the rule to have always been there.
+    """
+
+    import subprocess
+
+    tracked = subprocess.run(
+        ["git", "ls-files"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split()
+
+    offenders = [
+        path
+        for path in tracked
+        if path.endswith(".key") or Path(path).name == "fabric-release.key"
+    ]
+    assert offenders == [], (
+        f"{offenders} are tracked in this repository. The release signing key "
+        "must never enter it; if one of these is a different kind of key, it "
+        "still needs a name that does not read as the signing one."
+    )

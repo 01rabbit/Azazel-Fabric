@@ -14,3 +14,20 @@ venv/
 .ruff_cache/
 .coverage
 htmlcov/
+
+# Release signing (R1b). The private key must never enter this repository.
+#
+# Listed here and not only in docs/release-signing.md because an ignore rule is
+# the only form of that instruction git itself enforces. `git stash -u` takes
+# untracked files but leaves ignored ones alone, and that difference is not
+# hypothetical: preparing v0.9.0rc4, a `git stash -u` run in this directory
+# pulled fabric-release.key into a stash entry -- a private key inside .git,
+# from a command whose purpose was to move a version bump out of the way.
+#
+# `git stash -a` ignores this list. Do not use it here.
+fabric-release.key
+*.key
+candidate.bin
+candidate.sig
+candidate-*.bin
+candidate-*.sig

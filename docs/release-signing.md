@@ -200,6 +200,25 @@ The commands for this route are given inline with each step.
 Steps 1–3 happen on the release owner's machine, with a key that must never
 enter this repository. Steps 4–6 are ordinary repository work.
 
+**Never run `git stash -u` or `git stash -a` in a directory holding the key.**
+
+`-u` takes untracked files. `-a` takes ignored ones too. Preparing
+`v0.9.0rc4`, a `git stash -u` here — run to move a version bump out of the way
+so a checkout could proceed — pulled `fabric-release.key` into a stash entry,
+which put a private key inside `.git`. It was recovered and the objects were
+pruned, and it should not have been possible in the first place.
+
+It is not possible now: `.gitignore` covers the key and the scratch files this
+procedure creates, and `git stash -u` skips ignored files.
+`tests/test_release_signature.py::test_gitignore_covers_every_file_the_signing_procedure_creates`
+reads the filenames out of *this document* and fails if any of them is
+uncovered, so a procedure that starts creating a new scratch file cannot leave
+it exposed. `-a` overrides the ignore list, which is why it is named here as
+well: that one has no mechanical guard and never will.
+
+The instruction "PRIVATE — never commit" was already in this document when it
+happened. A rule written in prose is a rule git does not apply.
+
 ### 1. Create the signing key (once)
 
 Route A (PyNaCl):
