@@ -128,19 +128,39 @@ repository or its workflows needs it; only the 64-hex public key is published.
 
 ### 2. Get the bytes to sign
 
+Two commands on two different refs, and the order matters.
+
+**`tools/rc_signature.py` does not exist at `v0.9.0rc2`.** The tag was cut
+before the signing tooling was written, and a tag is not rewritten to acquire
+it. Running `--signable` from a checkout of the tag produces an empty
+`candidate.bin`, and signing that would sign nothing.
+
 ```bash
+# 1. At the tag: confirm the digest still describes what the tag ships.
 git checkout v0.9.0rc2
-python3 tools/rc_digest.py --check release/v0.9.0rc2.digest.json   # digest still describes the tag
+python3 tools/rc_digest.py --check release/v0.9.0rc2.digest.json
+# release/v0.9.0rc2.digest.json matches: sha256:3876b6d1...961ae
+
+# 2. Back on a ref that carries the tool: produce the bytes to sign.
+git switch main && git pull
 python3 tools/rc_signature.py release/v0.9.0rc2.digest.json --signable > candidate.bin
 ```
 
-Neither command needs PyNaCl: `--signable` only serializes the manifest. For
-`v0.9.0rc2` the result is 7915 bytes; check it before signing:
+Step 2 is correct from `main` because `--signable` reads the **manifest file**,
+not the working tree, and `release/v0.9.0rc2.digest.json` is byte-identical on
+`main` and at the tag. Step 1 is what ties the manifest to the tag's actual
+contents, and it has to happen at the tag to mean anything.
+
+Neither command needs PyNaCl. Check the result before signing — for
+`v0.9.0rc2` it is 7915 bytes:
 
 ```bash
 shasum -a 256 candidate.bin   # macOS; sha256sum elsewhere
 # 3876b6d1d103b4832274a91e9ec12e6697fab095723b17c940d68af3207961ae
 ```
+
+An empty file hashes to `e3b0c442...b855`. If you see that, `--signable` wrote
+nothing — you are on a ref without the tool. **Do not sign it.**
 
 Verify the digest before signing. Signing bytes you have not checked is signing
 whatever happens to be in the working tree.

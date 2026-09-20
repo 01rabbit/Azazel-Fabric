@@ -253,3 +253,73 @@ def test_a_malformed_key_file_is_refused_rather_than_ignored(tmp_path, keys_doc,
     keys_path.write_text(json.dumps(keys_doc), encoding="utf-8")
     with pytest.raises(SignatureError, match=match):
         load_trusted_keys(keys_path)
+
+
+# --------------------------------------------------------------------------
+# the procedure document has to describe this repository, not a past one
+# --------------------------------------------------------------------------
+
+
+DOC = REPO_ROOT / "docs" / "release-signing.md"
+
+
+def test_the_documented_checksum_is_the_one_a_signer_would_see(manifest):
+    """`docs/release-signing.md` tells the owner what `candidate.bin` must hash to.
+
+    That number is the last thing standing between the owner and a signature
+    over the wrong bytes, and it earned its place: a first attempt at the
+    procedure produced an empty `candidate.bin`, and this check is what caught
+    it before anything was signed. A stale number would have waved it through.
+    """
+
+    import re
+
+    expected = hashlib.sha256(signable_bytes(manifest)).hexdigest()
+    text = DOC.read_text(encoding="utf-8")
+
+    # Every full checksum in the document, not just one of them. The number
+    # appears in several places, and `expected in text` passes while the
+    # others say something else -- a partial update is exactly how a document
+    # ends up disagreeing with itself.
+    shown = set(re.findall(r"\b[0-9a-f]{64}\b", text))
+    assert shown, "docs/release-signing.md shows no checksum at all"
+    assert shown == {expected}, (
+        f"docs/release-signing.md shows {sorted(shown - {expected})}; "
+        f"`--signable` now produces {expected} for release/v0.9.0rc2.digest.json"
+    )
+
+
+def test_the_document_warns_about_the_empty_file(manifest):
+    """The failure mode that actually happened, named with its hash.
+
+    `tools/rc_signature.py` does not exist at the `v0.9.0rc2` tag, so running
+    `--signable` from a checkout of the tag writes nothing. Signing an empty
+    file produces a signature that verifies — over nothing at all — so this is
+    a case the procedure has to name rather than leave to be rediscovered.
+    """
+
+    empty = hashlib.sha256(b"").hexdigest()
+    assert empty.startswith("e3b0c442")
+    text = DOC.read_text(encoding="utf-8")
+    assert "e3b0c442" in text, "the empty-file hash is not called out in the procedure"
+    assert "Do not sign it" in text
+
+
+def test_the_signing_tool_is_absent_from_the_tag_the_procedure_signs():
+    """Pins the reason step 2 needs two refs.
+
+    If a future tag ever ships the tool, this fails and the procedure can be
+    simplified back to a single checkout — deliberately, rather than by
+    someone assuming it was always fine.
+    """
+
+    import subprocess
+
+    present = subprocess.run(
+        ["git", "-C", str(REPO_ROOT), "cat-file", "-e", "v0.9.0rc2:tools/rc_signature.py"],
+        capture_output=True,
+    )
+    assert present.returncode != 0, (
+        "v0.9.0rc2 now carries tools/rc_signature.py; step 2 of "
+        "docs/release-signing.md no longer needs to switch refs"
+    )
