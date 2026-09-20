@@ -319,6 +319,84 @@ def test_ref_parsing_reports_what_it_can_and_stays_silent_otherwise(raw, expecte
     assert kind is expected_kind
 
 
+#: Reference values the other Azazel repositories mint **today**, copied
+#: literally rather than derived.
+#:
+#: Every one of them was refused by the original colon-free body, which meant
+#: the family had no possible producer anywhere in the series. A derived list
+#: would go quiet the moment a producer stopped minting one of these; a literal
+#: one keeps saying what it was written to say.
+REAL_PRODUCER_REFS = (
+    # Azazel-Deception, tests/test_presented_terrain_evidence.py
+    ("surface:http:8080", RefKind.SURFACE),
+    # Azazel-Deception, tests/test_defensive_state_boundary.py
+    ("deception:surface:http-8080", None),
+    # Azazel-Deception, tests/test_cross_product_golden_outcome.py
+    ("artifact:honey:invoice-2026", RefKind.ARTIFACT),
+    # A presentation id re-minted from AZ-06's local `presentation-<sha24>`
+    ("presentation:c8f1b94314c70a0a8cc13673", RefKind.PRESENTATION),
+)
+
+
+@pytest.mark.parametrize("raw,expected_kind", REAL_PRODUCER_REFS)
+def test_a_hierarchical_producer_reference_is_a_reference(raw, expected_kind):
+    """The body may carry further colons; only the first one splits.
+
+    `deception:surface:http-8080` parses to no kind for a different reason --
+    `deception` is not a `RefKind` -- and that distinction is the point: a
+    value is untyped because Fabric does not know its kind, never because it
+    was punctuated in a way the grammar happened to exclude.
+    """
+
+    assert parse_ref(raw)[0] is expected_kind
+
+
+def test_the_split_point_is_the_first_colon_and_nothing_else():
+    """Unambiguous because the kind group cannot contain a colon itself."""
+
+    kind, body = parse_ref("surface:http:8080")
+    assert (kind, body) == (RefKind.SURFACE, "http:8080")
+    assert require_ref_kind("surface:http:8080", RefKind.SURFACE, field="surface")
+
+
+def test_widening_the_body_did_not_widen_what_may_be_mistaken_for_a_decision():
+    """The tightening direction, which is the one worth checking.
+
+    `reject_ref_kinds` is the guard for slots that must still accept the
+    released family's untyped ids. A hierarchical value it could not parse was
+    a value it could not refuse, so `surface:http:8080` in a `trace_id` used to
+    pass. It no longer does.
+    """
+
+    with pytest.raises(ValueError, match="surface"):
+        effect_ref(trace_id="surface:http:8080")
+
+    # ...while an untyped inherited id is exactly as acceptable as before.
+    assert effect_ref(trace_id="decision-golden-redirect-1").trace_id
+
+
+@pytest.mark.parametrize(
+    "hostile",
+    [
+        "artifact:ssh-ed25519:AAAA",
+        "artifact:-----BEGIN:KEY",
+        "artifact:token=abc",
+    ],
+)
+def test_what_the_wider_grammar_now_admits_is_still_caught_downstream(hostile):
+    """The specific hole widening the body could have opened, proved closed.
+
+    Each value below was refused by the *grammar* while a colon was excluded
+    from the body, and is admitted by it now. None of them reaches a record:
+    the marker scan on presented-terrain reference fields refuses them, which
+    is the layer that was always meant to be doing this job. A value rejected
+    only as a punctuation accident was never actually being screened.
+    """
+
+    with pytest.raises(ValidationError, match="secret material"):
+        terrain(synthetic_artifact_refs=(hostile,))
+
+
 def test_an_opaque_ref_cannot_be_a_path_a_url_or_a_pem_block():
     """Structural opacity is what keeps secret material out of a ref slot."""
     for hostile in (

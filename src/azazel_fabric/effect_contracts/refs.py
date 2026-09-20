@@ -67,14 +67,30 @@ class RefKind(str, Enum):
     FIXTURE = "fixture"
 
 
-#: A typed ref is a kind, a colon, and an opaque body.
+#: A typed ref is a kind, the **first** colon, and an opaque body.
 #:
 #: The body character class is what makes the ref *opaque*: no slash, no
 #: backslash, no whitespace, no quote, no newline. That structurally excludes
 #: filesystem paths, URLs, PEM blocks and command fragments from every slot
 #: that requires a typed ref -- which is the enforcement behind "opaque; no
 #: secret material" for presented-terrain artifact references.
-OPAQUE_REF_PATTERN = re.compile(r"^(?P<kind>[a-z][a-z0-9_]{0,31}):(?P<body>[A-Za-z0-9._~@=+-]{1,200})$")
+#:
+#: The body *does* admit further colons, because the kind group cannot contain
+#: one: the split point is unambiguously the first colon, whatever follows.
+#: Excluding them bought no opacity and cost every producer in the series.
+#: Azazel-Deception mints hierarchical references (``surface:http:8080``,
+#: ``isolation:proof:1``, ``deception:surface:http-8080``) and Azazel-Edge
+#: mints ``edge:nft:1``; under the colon-free body **none of them could be
+#: placed in any slot this family requires a typed ref for**, so the family had
+#: no possible producer at all. Rewriting a producer's identifier to fit a
+#: grammar is not an option -- an identifier that has been rewritten no longer
+#: resolves to the thing it named.
+#:
+#: Widening here is safe in both directions that matter. ``require_ref_kind``
+#: only ever accepts more than it did. ``reject_ref_kinds`` only ever rejects
+#: more -- and exactly where it should, since a value like ``surface:http:8080``
+#: supplied as a ``trace_id`` was previously invisible to it.
+OPAQUE_REF_PATTERN = re.compile(r"^(?P<kind>[a-z][a-z0-9_]{0,31}):(?P<body>[A-Za-z0-9._~@=+:-]{1,200})$")
 
 
 def parse_ref(raw: object) -> tuple[RefKind | None, str]:

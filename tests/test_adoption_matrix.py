@@ -37,6 +37,50 @@ VERDICTS = {"**met**", "not met"}
 
 EMPTY_CELL = "—"
 
+#: Where the record of what has actually been published lives.
+#:
+#: The packaged version is **not** that record. Between releases it carries a
+#: ``.devN`` suffix and names a candidate that does not exist yet, so asking
+#: the compatibility document to describe it would demand prose about an
+#: unpublished tag -- and the two checks below did exactly that the first time
+#: this package went back to a development version.
+RELEASE_DIR = REPO_ROOT / "release"
+
+#: A published candidate is one that shipped a digest manifest.
+PUBLISHED_MANIFEST = re.compile(r"^v(?P<version>.+)\.digest\.json$")
+
+#: Sortable form for a published version. ``.devN`` never appears here: a
+#: development build publishes no manifest, which is the point.
+_ORDER = re.compile(r"^(?P<release>\d+\.\d+\.\d+)(?:(?P<kind>rc|a|b)(?P<serial>\d+))?$")
+
+
+def _sortable(version: str) -> tuple:
+    match = _ORDER.fullmatch(version)
+    assert match is not None, f"unparseable published version {version!r}"
+    release = tuple(int(part) for part in match.group("release").split("."))
+    # A final release sorts after every candidate of itself.
+    serial = float("inf") if match.group("kind") is None else int(match.group("serial"))
+    return release + (serial,)
+
+
+def latest_published_tag() -> str:
+    """The newest tag this repository has actually published.
+
+    Derived from ``release/``, not from the version string, because a version
+    string is a statement of intent and a digest manifest is a record of an
+    event. Deleting a manifest to make a check pass would be caught by
+    ``tests/test_release_signature.py``, which pins the published candidates
+    literally.
+    """
+
+    versions = [
+        match.group("version")
+        for path in RELEASE_DIR.glob("*.digest.json")
+        if (match := PUBLISHED_MANIFEST.fullmatch(path.name))
+    ]
+    assert versions, "release/ records no published candidate"
+    return "v" + max(versions, key=_sortable)
+
 
 def _package_contract_families() -> set[str]:
     """Derived from the package, never listed here.
@@ -206,7 +250,7 @@ def test_the_release_history_has_a_row_for_the_packaged_version():
     """
 
     text = DOC_PATH.read_text(encoding="utf-8")
-    tag = f"v{__version__}"
+    tag = latest_published_tag()
     rows = [
         line for line in text.splitlines()
         if line.strip().startswith(f"| `{tag}`")
@@ -214,7 +258,7 @@ def test_the_release_history_has_a_row_for_the_packaged_version():
 
     assert len(rows) == 1, (
         f"the release table in docs/{DOC_PATH.name} has {len(rows)} rows for the "
-        f"packaged version {tag}, expected exactly one. A release the "
+        f"published tag {tag}, expected exactly one. A release the "
         "compatibility document has not been updated for is a release consumers "
         "will read wrongly."
     )
@@ -241,8 +285,40 @@ def test_the_prose_names_the_packaged_version_as_the_latest_published_tag():
     tail = prose.split(marker, 1)[1]
     sentence = re.split(r"\.(?=\s|$)", tail, maxsplit=1)[0]
 
-    assert f"`v{__version__}`" in sentence, (
-        f"the document says the latest published tag is{sentence!r}, but this "
-        f"package is v{__version__}. Update the sentence consumers read to "
-        "decide what to pin, not only the history table below it."
+    tag = latest_published_tag()
+
+    # The *first* tag in the sentence, not merely a tag somewhere in it. This
+    # sentence legitimately names older tags after the current one ("...on top
+    # of `v0.9.0rc1`"), so "mentions it" is satisfied by a stale answer -- a
+    # mutation that made this check ask for the oldest published candidate
+    # passed until it was narrowed to the tag the sentence leads with.
+    named = re.findall(r"`(v[0-9][^`]*)`", sentence)
+    assert named, (
+        f"the document's latest-tag sentence names no tag at all: {sentence!r}"
+    )
+    assert named[0] == tag, (
+        f"the document answers 'latest published tag' with {named[0]!r}, but the "
+        f"newest manifest in release/ is {tag}. Update the sentence consumers "
+        "read to decide what to pin, not only the history table below it."
+    )
+
+
+def test_a_development_version_is_ahead_of_every_published_tag():
+    """The relationship the two checks above now rely on.
+
+    They ask the document about ``release/`` rather than about
+    ``__version__``. That is only the right question while the package version
+    is at or ahead of what has been published. If a version bump ever went
+    backwards -- or a candidate were published without the package version
+    moving past it -- those checks would quietly start describing the wrong
+    release, and this is what refuses to let that happen silently.
+    """
+
+    packaged = __version__.split(".dev", 1)[0]
+    published = latest_published_tag().lstrip("v")
+    assert _sortable(packaged) >= _sortable(published), (
+        f"the package is {__version__} but {latest_published_tag()} is already "
+        "published. Bump src/azazel_fabric/version.py past the newest published "
+        "candidate; a package that claims to be older than a tag it ships the "
+        "manifest for cannot be reasoned about."
     )

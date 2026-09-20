@@ -10,6 +10,46 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ### Changed
 
+- **A typed cross-series reference may carry further colons in its body**
+  (`effect_contracts/refs.py`). The grammar shipped in `v0.9.0rc2` split on a
+  colon and then forbade the body from containing one. That was measured
+  against what the series actually mints, and the result was that
+  `effect_contracts` **had no possible producer anywhere in Azazel**:
+  `surface:http:8080`, `artifact:honey:invoice-2026` and `isolation:proof:1`
+  (Azazel-Deception) and `edge:nft:1` (Azazel-Edge) were all refused by every
+  slot that requires a typed ref. The alternative — a producer rewriting its
+  own identifiers to fit — is not one: a rewritten identifier no longer
+  resolves to the thing it named.
+
+  The split point is still unambiguous, because the kind group cannot contain
+  a colon. `require_ref_kind` therefore only ever accepts more than before,
+  and `reject_ref_kinds` only ever rejects more — in the right direction,
+  since a hierarchical value supplied in a `trace_id` slot was previously
+  invisible to it and now is not.
+
+  Opacity is unchanged where it was doing work: no slash, backslash,
+  whitespace, quote or newline, so paths, URLs and PEM blocks stay out. The
+  values the wider body now admits (`artifact:ssh-ed25519:AAAA`,
+  `artifact:-----BEGIN:KEY`) are refused by the secret-material scan on
+  presented-terrain reference fields, which is the layer that was always meant
+  to screen them; a value rejected only as a punctuation accident was never
+  being screened at all.
+
+- **The package version moved to `0.9.0rc3.dev0`.** `v0.9.0rc2` is published
+  and signed, so the first source change after it made
+  `release/v0.9.0rc2.digest.json` disagree with the tree — which is exactly
+  what that gate exists to report. Both published manifests and their
+  signatures stay in the tree unchanged, describing their tags rather than
+  `main`.
+
+  That bump was the first time this package went back to a development version
+  since the adoption-matrix and feature-minimum checks were written, and it
+  broke three of them: they asked the compatibility document to describe
+  `__version__` as "the latest **published** tag", which a `.devN` version is
+  not. They now derive the published tag from `release/` — a record of an
+  event rather than a statement of intent — and a new check refuses a package
+  version that has fallen behind a tag it ships the manifest for.
+
 - **The R1c adoption gate is recorded per contract family, and the record is
   enforced** (`docs/release-compatibility.md`,
   `tests/test_adoption_matrix.py`). R1c — the stable `v0.9.0` — waits on "at

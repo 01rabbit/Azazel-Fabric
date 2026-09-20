@@ -28,7 +28,15 @@ DOC_PATH = REPO_ROOT / "docs" / "provisioning-contracts.md"
 HEADING = "## Feature-to-minimum-Fabric-version matrix"
 
 #: `0.9.0`, `0.9.0rc2`, `1.0.0` — the shapes `version.py` and the tags use.
-VERSION = re.compile(r"^(?P<release>\d+\.\d+\.\d+)(?:(?P<kind>rc|a|b)(?P<serial>\d+))?$")
+#: ``.devN`` is recognized and then discarded: a development build *toward*
+#: ``0.9.0rc3`` contains what ``0.9.0rc3`` will contain, which is what makes a
+#: row naming that candidate satisfiable from ``main``. Whether the tree really
+#: is that candidate yet is the release digest gate's question
+#: (``tests/test_release_candidate_digest.py``), not this file's -- and it is
+#: answered there against bytes rather than against a version string.
+VERSION = re.compile(
+    r"^(?P<release>\d+\.\d+\.\d+)(?:(?P<kind>rc|a|b)(?P<serial>\d+))?(?:\.dev\d+)?$"
+)
 
 #: Families whose row carries a different feature id than the module name, or
 #: whose surface is documented under another row. Each entry needs a reason:
