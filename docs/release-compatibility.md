@@ -82,17 +82,19 @@ library, not exchanging a contract through it.
 | `effect_contracts` | — | — | not met |
 | `engagement_contracts` | Azazel-Edge:`py/azazel_edge/engagement/candidate.py`, Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py`, Azazel-Edge:`py/azazel_edge/engagement_advisory_client.py` | **met** |
 | `mio_contracts` | — | — | not met |
-| `outcome_contracts` | Azazel-Edge:`py/azazel_edge/outcome/shared_export.py` | — | not met |
+| `outcome_contracts` | Azazel-Edge:`py/azazel_edge/outcome/shared_export.py` | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | not met |
 | `provisioning_contracts` | — | — | not met |
 
-`deception_contracts` is the only family that clears the gate, and it does so
-on a real round trip rather than a count: Edge constructs and signs an
+Two families clear the gate, and both do so on a real round trip rather than a
+count. `deception_contracts`: Edge constructs and signs an
 `EnvironmentTransitionDecision` that Deception verifies, and Deception emits
 `InteractionObservation` records that Knowledge validates at its API boundary.
 Producer and consumer are different products in both directions, which is what
-the gate is asking about.
+the gate is asking about. `engagement_contracts` is the second, for the reason
+set out below.
 
-Two patterns in that table are worth naming rather than leaving to be noticed.
+Three patterns in that table are worth naming rather than leaving to be
+noticed.
 
 **`engagement_contracts` cleared the gate on a round trip, not a count.**
 Until Azazel-Edge#418 this family had two producers and no consumer: Edge and
@@ -132,6 +134,31 @@ else's actions; for Deception alone it would be about its own, which puts
 "read the advice" one step from "choose among the activities it lists". AZ-06
 materializes an Edge-approved environment and does not select. Clearing a gate
 is not worth thinning the boundary it sits behind.
+
+**`outcome_contracts` has its first consumer, and is still one short.** Edge's
+`outcome/shared_export.py` builds these four records from Fabric's models and
+dumps them with, in its own words, "deliberately no fallback" — a record Fabric
+did not validate must not travel as one that it did. Nothing had ever held up
+the other end. Azazel-Knowledge#106 is the reader.
+
+What makes that row worth reading twice is what it looked like *before*.
+Knowledge already had the whole storage lane — four tables since its migration
+`0005`, plus a module validating the wire shapes on its own — and would have
+looked like an obvious consumer to anyone grepping for the record names. It was
+not one: no Fabric model had ever seen those payloads. **Storing a shape that
+happens to match is not consuming a contract**, which is the same distinction
+Azazel-Edge#413 drew about Edge's own producer side ("byte-for-byte identical
+to Fabric's models by coincidence of maintenance rather than by construction").
+The row stayed empty until a Fabric model actually decided what got in.
+
+That coincidence had already cost something measurable. Knowledge's independent
+copy of the rules was missing `effectiveness` and `initiative_score`, which
+Fabric had added to the tactical-claim refusals — so a producer barred from
+writing `tactical_effect` into a descriptive fact map could have written
+`effectiveness: 0.9` and meant the same thing. Knowledge cannot import Fabric
+in the module that stores these (its worker runs without the `api` extra), so
+the second statement of the contract is permanent there; it is now pinned
+field-for-field against these models by a drift test instead of by maintenance.
 
 **`provisioning_contracts` and `mio_contracts` have neither.** Azazel-Boot
 names them in `PLANNED_FABRIC_MODULES` and checks whether they can be imported,
