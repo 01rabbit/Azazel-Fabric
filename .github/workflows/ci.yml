@@ -18,9 +18,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+      # PyNaCl is installed here, not declared in pyproject.toml. It is needed
+      # only to verify R1b release signatures (tools/rc_signature.py), which
+      # lives outside the installable surface the release digest covers, so a
+      # consumer pinning the tag gets nothing extra. Without it the signature
+      # guards would skip, and a skipped guard reports success.
       - name: Install package with test extras
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[test]"
+          pip install -e ".[test]" pynacl
       - name: Run tests
         run: pytest -q

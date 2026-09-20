@@ -147,6 +147,7 @@ by `tests/test_release_candidate_digest.py`.
 | [`docs/design-principles.md`](docs/design-principles.md) | What goes in Fabric vs. what never does, and why |
 | [`docs/contracts.md`](docs/contracts.md) | Stable shared schema and Edge/Gadget ↔ CTI contracts |
 | [`docs/deception-contracts.md`](docs/deception-contracts.md) | Canonical AZ-06 contract family (`v0.5.0`), authority and migration rules |
+| [`docs/release-signing.md`](docs/release-signing.md) | R1b: how a release-candidate digest is signed (Ed25519, detached) and verified |
 | [`docs/provisioning-contracts.md`](docs/provisioning-contracts.md) | Provisioning and M.I.O. contract families (R1a), authority rules, feature-to-minimum-version matrix |
 | [`docs/release-compatibility.md`](docs/release-compatibility.md) | Current release truth, supported contract families, and observed consumer pins |
 | [`docs/adoption-guide.md`](docs/adoption-guide.md) | Day-1 adoption playbook for a series product |

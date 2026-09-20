@@ -30,7 +30,7 @@ jobs:
       - name: Install package with test extras
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[test]"
+          pip install -e ".[test]" pynacl
       - name: Verify tag matches package version
         run: |
           tag="${GITHUB_REF_NAME#v}"
@@ -42,8 +42,6 @@ jobs:
           fi
       - name: Verify the release digest manifest matches the tree
         run: python tools/rc_digest.py --check "release/${GITHUB_REF_NAME}.digest.json"
-      - name: Run tests
-        run: pytest -q
       - name: Classify the tag
         id: classify
         run: |
@@ -55,6 +53,24 @@ jobs:
           else
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
           fi
+      # R1b is a *signed* candidate digest. A stable tag must carry a
+      # signature the repository's trusted keys verify; a candidate may not
+      # yet, because v0.9.0rc1 and rc2 were published before the signing
+      # procedure existed and re-running their workflow must not now fail.
+      # Either way the outcome is printed rather than left to be assumed.
+      - name: Verify the detached release signature
+        run: |
+          manifest="release/${GITHUB_REF_NAME}.digest.json"
+          if python tools/rc_signature.py "$manifest" --check; then
+            exit 0
+          fi
+          if [ "${{ steps.classify.outputs.prerelease }}" = "false" ]; then
+            echo "::error::A stable tag must carry a verified R1b signature."
+            exit 1
+          fi
+          echo "::warning::${GITHUB_REF_NAME} is an unsigned candidate (R1b incomplete)."
+      - name: Run tests
+        run: pytest -q
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:

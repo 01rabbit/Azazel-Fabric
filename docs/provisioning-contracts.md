@@ -7,7 +7,11 @@ These are the contract families the Nexus/Boot program plan
 R1a is the draft schema plus conformance kit. **R1b** is the release-candidate
 digest: `release/v0.9.0rc2.digest.json` covers the packaged surface and is
 verified by `tests/test_release_candidate_digest.py`; the detached signature
-over it needs the release owner's key and is not in the candidate. **R1c** —
+over it needs the release owner's key and is not in the candidate. The
+procedure for producing and verifying it is
+[release signing](release-signing.md) — Ed25519, detached, with
+`tools/rc_signature.py --check` reporting every published candidate as
+unsigned until a key is trusted. **R1c** —
 the stable `v0.9.0` — waits on downstream evidence.
 
 **No product produces or consumes these two families yet**, so R1c is unmet for
@@ -282,7 +286,9 @@ under `tests/fixtures/provisioning/` and `tests/fixtures/mio/`. Vectors in
 ## What R1a does not include
 
 - **The R1b signature and R1c.** The candidate digest exists; the detached
-  signature over it does not, because it needs the release owner's key. There
+  signature over it does not, because it needs the release owner's key —
+  see [release signing](release-signing.md) for the procedure that is waiting
+  on it. There
   is no stable tag, and no downstream evidence *for these two families* —
   other families have some, which is why the gate is tracked per family.
 - **Consumer adoption.** Edge, Knowledge, Deception, Nexus, and Boot adapters
