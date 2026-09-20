@@ -28,8 +28,8 @@ python3 tools/rc_signature.py release/v0.9.0rc1.digest.json --check
 # v0.9.0rc1.digest.json signed by: release-owner
 ```
 
-The digests for `v0.9.0rc3` and `v0.9.0rc4` were signed the same way, each
-before its tag existed.
+The digests for `v0.9.0rc3`, `v0.9.0rc4` and `v0.9.0rc5` were signed the same
+way, each before its tag existed.
 
 ```bash
 python3 tools/rc_signature.py release/v0.9.0rc4.digest.json --check
@@ -48,16 +48,18 @@ differs, but not always in length:
 | `v0.9.0rc2` | 7915 | `3876b6d1d103b4832274a91e9ec12e6697fab095723b17c940d68af3207961ae` |
 | `v0.9.0rc3` | **7915** | `0210f96783248aa64f392cd73c987fa119aa0d7918589f393d4f5a0a0f855d8e` |
 | `v0.9.0rc4` | **7915** | `b02ee97bf7b7783567b070129144b1f84987384873c96eb34ff7f4105f33101d` |
+| `v0.9.0rc5` | **7915** | `c183eb92dfd706cc2bcf69bad37641588f440c488b0264564c7a8e044647cc9d` |
 
-`rc2`, `rc3` and `rc4` cover the same 66 files, so all three payloads are the
+`rc2` through `rc5` cover the same 66 files, so four payloads in a row are the
 same length and only their contents differ. A size check cannot tell any of
 them apart; the digest can. Signing `rc2`'s payload while believing it is
 `rc4`'s would produce a signature that verifies — against the wrong candidate.
 
-Three candidates at 7915 bytes is not a coincidence worth noting once. It is
-this repository's standing condition: the file set has been stable for three
-candidates, so the length check is useless by construction and will stay that
-way. Check the digest.
+Four candidates at 7915 bytes is not a coincidence worth noting once. It is
+this repository's standing condition: the file set has been stable across all
+of them, so the length check is useless by construction and will stay that
+way. Check the digest — the tagging chain for `rc5` was built around exactly
+that check, and it is what confirmed the signer's tree matched.
 
 ## A candidate signs before its tag exists, not after
 

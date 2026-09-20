@@ -8,6 +8,12 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ## [Unreleased]
 
+Nothing yet. The entries below moved into the tags that shipped them.
+
+## [0.9.0rc5] — A terrain can bind to an effect that has no decision (Fabric#51)
+
+**Additive.** Every `v0.9.0rc4` payload still validates and still chains.
+
 ### Added
 
 - **A presented terrain can be bound to an effect that has no decision**

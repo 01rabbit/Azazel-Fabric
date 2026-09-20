@@ -155,7 +155,7 @@ def test_the_trusted_key_set_is_exactly_what_it_should_be():
 
 #: Every candidate whose manifest is in the tree, written out rather than
 #: globbed. A candidate added without a signature has to be visible here.
-PUBLISHED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3", "v0.9.0rc4")
+PUBLISHED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3", "v0.9.0rc4", "v0.9.0rc5")
 
 #: Those of them a release owner has signed.
 #:
@@ -165,7 +165,7 @@ PUBLISHED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3", "v0.9.0rc4")
 #: bytes. Collapsing them would mean a candidate could be recorded as covered
 #: by being written down, which is exactly the gap `v0.9.0rc1` sat in while
 #: Azazel-Boot pinned it.
-SIGNED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3", "v0.9.0rc4")
+SIGNED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3", "v0.9.0rc4", "v0.9.0rc5")
 
 
 def test_this_file_covers_every_published_candidate():

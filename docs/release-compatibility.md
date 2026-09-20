@@ -8,8 +8,9 @@ itself, an interoperability certification.
 ## Current Fabric release
 
 The latest **stable** release is `v0.8.0`. The latest **published** tag is the
-release candidate `v0.9.0rc4`, which narrows what an `EffectObservation` may
-claim on top of `v0.9.0rc3` — the widened `effect_contracts` reference grammar
+release candidate `v0.9.0rc5`, which gives a presented terrain a way to bind to
+an effect that has no decision, on top of `v0.9.0rc4`, which narrows what an
+`EffectObservation` may claim on top of `v0.9.0rc3` — the widened `effect_contracts` reference grammar
 — which sits on `v0.9.0rc2`, the canonical `DefensiveState` vocabulary and the
 cross-series `effect_contracts` family, which in turn sits on `v0.9.0rc1`,
 itself additive contract work (`outcome_contracts`, and the R1a
@@ -18,7 +19,7 @@ itself additive contract work (`outcome_contracts`, and the R1a
 A candidate is pinnable but makes no stability promise. It exists so a consumer
 can pin an exact tag — never a branch — while producing the downstream evidence
 `v0.9.0` requires. A consumer that needs stability stays on `v0.8.0`; a consumer
-adopting the new contract families pins the newest candidate, `v0.9.0rc4`, and
+adopting the new contract families pins the newest candidate, `v0.9.0rc5`, and
 expects to re-pin to `v0.9.0`.
 
 **A consumer adopting `effect_contracts` should move to `v0.9.0rc3`, and this
@@ -57,7 +58,7 @@ available. A `.devN` version is never a release.
 | `v0.9.0rc2` (candidate) | Canonical `DefensiveState` vocabulary (`schema.defensive_state`, Fabric#14); cross-series effect / outcome / terrain family (`effect_contracts`, Fabric#15) | Additive; pinnable, **not stable**. No released symbol changed, so a consumer on `v0.9.0rc1` may stay there |
 | `v0.9.0rc3` (candidate) | A typed cross-series reference may carry further colons in its body (`effect_contracts/refs.py`) | Additive for every consumer; **required for an `effect_contracts` adopter** — at `rc2` the grammar refused every hierarchical reference in the series, so the family had no possible producer |
 | `v0.9.0rc4` (candidate) | An `EffectObservation` may claim only `observed_fact` or `active_materialized` (`effect_contracts/models.py`, Fabric#52) | **Non-additive — the first in this series.** Input accepted at `rc3` is refused at `rc4`. Required before `v0.9.0` stable; a producer that emitted an observation under any other authority class must correct it, not re-pin around it |
-| `v0.9.0rc5` (candidate, unpublished) | Presented-terrain provenance: `source_effect_ref`, `trace_id`, `synthetic_identity_refs`, `synthetic_credential_refs`; `activation_decision_ref` becomes optional (`effect_contracts`, Fabric#51) | **Additive.** Every `rc4` terrain payload still validates and still chains — checked by `test_an_rc4_terrain_payload_still_validates`. What changes is that a decision-less effect can be chained to a terrain **at all**, which `rc4` made structurally impossible |
+| `v0.9.0rc5` (candidate) | Presented-terrain provenance: `source_effect_ref`, `trace_id`, `synthetic_identity_refs`, `synthetic_credential_refs`; `activation_decision_ref` becomes optional (`effect_contracts`, Fabric#51) | **Additive.** Every `rc4` terrain payload still validates and still chains — checked by `test_an_rc4_terrain_payload_still_validates`. What changes is that a decision-less effect can be chained to a terrain **at all**, which `rc4` made structurally impossible |
 
 All consumer deployments MUST pin an exact compatible Fabric tag or immutable
 image lock. They MUST NOT pin a branch. A product chooses when to adopt a newer
