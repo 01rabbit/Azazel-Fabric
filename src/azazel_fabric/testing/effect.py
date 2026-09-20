@@ -38,6 +38,17 @@ _EFFECT = "effect:golden-effect-1"
 _PRESENTATION = "presentation:golden-effect-1"
 _CONFIG_DIGEST = "sha256:" + "b" * 64
 
+#: A second chain, for the case a decision-bearing one cannot demonstrate.
+#:
+#: The published chain above runs on a `producer_decision_ref` effect, so it
+#: exercises exactly one of the two ways a terrain binds. The other -- an
+#: effect with no decision at all -- was unreachable before `v0.9.0rc5`
+#: (Fabric#51), which is why nothing here covered it. It is AZ-06's ordinary
+#: mode, so it gets vectors rather than only unit tests.
+_SHADOW_TRACE = "trace-golden-shadow-1"
+_SHADOW_EFFECT = "effect:golden-shadow-1"
+_SHADOW_PRESENTATION = "presentation:golden-shadow-1"
+
 
 def golden_edge_effect_ref() -> dict[str, Any]:
     """AZ-01 Edge: the arbiter's own decision, expressed as a shared reference."""
@@ -93,6 +104,8 @@ def golden_deception_presented_terrain() -> dict[str, Any]:
         lifecycle_state_ref="lifecycle:env-golden-1.active",
         active_surface_refs=("surface:http-8080", "surface:smb-445"),
         synthetic_artifact_refs=("artifact:golden-invoice-pdf",),
+        synthetic_identity_refs=("identity:golden-finance-clerk",),
+        synthetic_credential_refs=("credential:golden-smb-session",),
         isolation_assertion_ref="evidence:isolation-assert-golden-1",
         isolation_result_ref="evidence:isolation-result-golden-1",
         created_at=_T0,
@@ -188,6 +201,56 @@ def golden_knowledge_outcome_envelope() -> dict[str, Any]:
 
 
 #: Every published vector, by the name its fixture file carries.
+def golden_shadow_effect_ref() -> dict[str, Any]:
+    """An effect with no decision behind it. AZ-06's ordinary mode.
+
+    `planned_shadow` says something was considered or shadow-run and nothing
+    was materialized, so there is no decision to name -- and a record that
+    named one would be claiming an authority nobody exercised.
+    """
+
+    return DefensiveEffectRef(
+        effect_id=_SHADOW_EFFECT,
+        effect_class=EffectClass.REDIRECT_TO_PRESENTED_TERRAIN,
+        producer_product="deception",
+        producer_node="az06-golden-1",
+        trace_id=_SHADOW_TRACE,
+        target_scope_ref="scope:session-golden-shadow-1",
+        policy_ref="policy-golden-shadow-v1",
+        created_at=_T0,
+        expires_at=_T3,
+        authority_class=AuthorityClass.PLANNED_SHADOW,
+    ).model_dump(mode="json")
+
+
+def golden_shadow_presented_terrain() -> dict[str, Any]:
+    """The terrain for that effect, bound without a decision (Fabric#51).
+
+    `activation_decision_ref` is absent because there is nothing to put in it.
+    What ties this record to the chain is `source_effect_ref` plus `trace_id`,
+    and both are compared: the effect reference alone would still be satisfied
+    by a cross-trace collision.
+    """
+
+    return PresentedTerrainRef(
+        presentation_id=_SHADOW_PRESENTATION,
+        presentation_version=1,
+        producer_product="deception",
+        source_effect_ref=_SHADOW_EFFECT,
+        trace_id=_SHADOW_TRACE,
+        lifecycle_state_ref="lifecycle:env-golden-shadow-1.shadow",
+        active_surface_refs=("surface:http-8081",),
+        synthetic_artifact_refs=("artifact:golden-shadow-memo",),
+        synthetic_identity_refs=("identity:golden-shadow-operator",),
+        synthetic_credential_refs=("credential:golden-shadow-token",),
+        isolation_assertion_ref="evidence:isolation-assert-golden-shadow-1",
+        created_at=_T0,
+        expires_at=_T3,
+        evidence_refs=("evidence:deception-runtime-golden-shadow-1",),
+        authority_class=AuthorityClass.PLANNED_SHADOW,
+    ).model_dump(mode="json")
+
+
 GOLDEN_EFFECT_VECTORS: dict[str, Callable[[], dict[str, Any]]] = {
     "effect_edge_defensive_effect_ref_v0.json": golden_edge_effect_ref,
     "effect_knowledge_advisory_ref_v0.json": golden_advisory_effect_ref,
@@ -195,6 +258,8 @@ GOLDEN_EFFECT_VECTORS: dict[str, Callable[[], dict[str, Any]]] = {
     "effect_deception_observation_v0.json": golden_deception_effect_observation,
     "effect_gadget_observation_v0.json": golden_gadget_effect_observation,
     "effect_knowledge_outcome_envelope_v0.json": golden_knowledge_outcome_envelope,
+    "effect_shadow_defensive_effect_ref_v0.json": golden_shadow_effect_ref,
+    "effect_shadow_presented_terrain_v0.json": golden_shadow_presented_terrain,
 }
 
 __all__ = [
@@ -206,4 +271,6 @@ __all__ = [
     "golden_gadget_effect_observation",
     "golden_knowledge_outcome_envelope",
     "golden_replay_provenance",
+    "golden_shadow_effect_ref",
+    "golden_shadow_presented_terrain",
 ]
