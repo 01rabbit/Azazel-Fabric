@@ -82,16 +82,16 @@ library, not exchanging a contract through it.
 | `effect_contracts` | — | — | not met |
 | `engagement_contracts` | Azazel-Edge:`py/azazel_edge/engagement/candidate.py`, Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py`, Azazel-Edge:`py/azazel_edge/engagement_advisory_client.py` | **met** |
 | `mio_contracts` | — | — | not met |
-| `outcome_contracts` | Azazel-Edge:`py/azazel_edge/outcome/shared_export.py` | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | not met |
+| `outcome_contracts` | Azazel-Edge:`py/azazel_edge/outcome/shared_export.py`, Azazel-Deception:`src/azazel_deception/runtime/outcome_export.py` | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py`, Azazel-Deception:`src/azazel_deception/runtime/producer_evidence.py` | **met** |
 | `provisioning_contracts` | — | — | not met |
 
-Two families clear the gate, and both do so on a real round trip rather than a
-count. `deception_contracts`: Edge constructs and signs an
+Three families clear the gate, and each does so on a real round trip rather
+than a count. `deception_contracts`: Edge constructs and signs an
 `EnvironmentTransitionDecision` that Deception verifies, and Deception emits
 `InteractionObservation` records that Knowledge validates at its API boundary.
 Producer and consumer are different products in both directions, which is what
-the gate is asking about. `engagement_contracts` is the second, for the reason
-set out below.
+the gate is asking about. `engagement_contracts` and `outcome_contracts` are
+the others, for the reasons set out below.
 
 Three patterns in that table are worth naming rather than leaving to be
 noticed.
@@ -135,11 +135,24 @@ else's actions; for Deception alone it would be about its own, which puts
 materializes an Edge-approved environment and does not select. Clearing a gate
 is not worth thinning the boundary it sits behind.
 
-**`outcome_contracts` has its first consumer, and is still one short.** Edge's
-`outcome/shared_export.py` builds these four records from Fabric's models and
-dumps them with, in its own words, "deliberately no fallback" — a record Fabric
-did not validate must not travel as one that it did. Nothing had ever held up
-the other end. Azazel-Knowledge#106 is the reader.
+**`outcome_contracts` cleared the gate by finding its second consumer, not by
+building one.** Edge's `outcome/shared_export.py` builds these four records
+from Fabric's models and dumps them with, in its own words, "deliberately no
+fallback" — a record Fabric did not validate must not travel as one that it
+did. Nothing had ever held up the other end. Azazel-Knowledge#106 is the
+reader.
+
+The second consumer was already running. Azazel-Deception's
+`runtime/producer_evidence.py` says so in its own first line — "Deception
+consumes an already-observed REDIRECTION mechanism fact" — and it had never
+imported Fabric to do it. It restated the contract instead: a 14-name field
+list identical to `MechanismObservationV0`'s, a copy of the banned-key set,
+and five bound constants matching `outcome_contracts/validation.py`
+byte-for-byte. `runtime/outcome_export.py` was in the same state on the
+producer side, assembling the `OutcomeObservationV0` wire shape by hand.
+Azazel-Deception#45 routed both ends through the models. AZ-06 can import
+Fabric — it is a core dependency there, not an optional extra — so unlike
+Knowledge it was fixed by construction rather than by a drift test.
 
 What makes that row worth reading twice is what it looked like *before*.
 Knowledge already had the whole storage lane — four tables since its migration
@@ -151,14 +164,30 @@ Azazel-Edge#413 drew about Edge's own producer side ("byte-for-byte identical
 to Fabric's models by coincidence of maintenance rather than by construction").
 The row stayed empty until a Fabric model actually decided what got in.
 
-That coincidence had already cost something measurable. Knowledge's independent
-copy of the rules was missing `effectiveness` and `initiative_score`, which
-Fabric had added to the tactical-claim refusals — so a producer barred from
-writing `tactical_effect` into a descriptive fact map could have written
-`effectiveness: 0.9` and meant the same thing. Knowledge cannot import Fabric
-in the module that stores these (its worker runs without the `api` extra), so
-the second statement of the contract is permanent there; it is now pinned
-field-for-field against these models by a drift test instead of by maintenance.
+That coincidence had already cost something measurable, and in two products at
+once. Knowledge's independent copy of the rules was missing `effectiveness`
+and `initiative_score`, which Fabric had added to the tactical-claim refusals
+— so a producer barred from writing `tactical_effect` into a descriptive fact
+map could have written `effectiveness: 0.9` and meant the same thing.
+Deception's independent copy was missing **the same two keys**. Neither
+product had done anything wrong that the other had not; both were maintaining
+a second statement of somebody else's contract, and the same addition passed
+both by.
+
+Deception's copy is gone. Knowledge cannot import Fabric in the module that
+stores these (its worker runs without the `api` extra), so the second
+statement is permanent there; it is now pinned field-for-field against these
+models by a drift test instead of by maintenance.
+
+**A citation can be missing because the adoption looks like something else.**
+The `outcome_contracts` consumer column read `—` for as long as it did while
+two consumers were running, and neither was hiding: Knowledge had four tables
+and a validator for these records, Deception had an adapter that said
+"consumes" in its first line. What neither had was an import. This is the
+sibling of the `grep` warning below — there, a name match was mistaken for
+adoption; here, real adoption went uncounted because it was spelled without
+the contract's name. Both are answered the same way: read the import and the
+direction.
 
 **`provisioning_contracts` and `mio_contracts` have neither.** Azazel-Boot
 names them in `PLANNED_FABRIC_MODULES` and checks whether they can be imported,
