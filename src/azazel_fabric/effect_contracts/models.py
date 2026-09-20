@@ -44,6 +44,7 @@ __all__ = [
     "EffectClass",
     "EffectObservation",
     "EffectStatus",
+    "OBSERVABLE_AUTHORITY_CLASSES",
     "OutcomeObservationEnvelope",
     "PresentedTerrainRef",
     "ReplayProvenance",
@@ -128,6 +129,29 @@ EffectStatus = Literal[
     "terminated",
     "failed",
 ]
+
+#: The only two claims an observation is allowed to make (Fabric#52).
+#:
+#: ``DefensiveEffectRef`` already refuses exactly these two, on the grounds
+#: that they are "an observation's to make". The converse was written down and
+#: never enforced, so an ``EffectObservation`` could arrive claiming
+#: ``producer_decision_ref`` -- a report of an effect asserting authority over
+#: it -- or ``advisory_inference`` or ``planned_shadow``, which describe
+#: records where nothing was materialized and therefore nothing was observed.
+#: ``stale_or_unknown`` claims nothing at all, and an observation that claims
+#: nothing is not an observation; it is a gap, and a consumer must see it as
+#: one rather than as a fact with a weak label.
+#:
+#: The two sets partition ``AuthorityClass`` exactly, which is what
+#: ``test_every_authority_class_belongs_to_exactly_one_record`` pins. A member
+#: added later belongs to one side or the other, and that test refuses to let
+#: the choice be made by omission.
+OBSERVABLE_AUTHORITY_CLASSES = frozenset(
+    {
+        AuthorityClass.OBSERVED_FACT,
+        AuthorityClass.ACTIVE_MATERIALIZED,
+    }
+)
 
 #: Kinds that must never stand in for an inherited decision/trace/execution id.
 _NOT_A_DECISION = frozenset(
@@ -256,6 +280,13 @@ class EffectObservation(_StrictFrozenModel):
         require_ref_kind(self.effect_ref, RefKind.EFFECT, field="effect_ref")
         reject_ref_kinds(self.execution_ref, _NOT_A_DECISION, field="execution_ref")
         parse_timestamp(self.observed_at, field="observed_at")
+
+        if self.authority_class not in OBSERVABLE_AUTHORITY_CLASSES:
+            raise ValueError(
+                f"{self.authority_class.value!r} is not something an observation "
+                "can have observed; an EffectObservation may claim only "
+                "observed_fact or active_materialized"
+            )
 
         if self.status in ("terminated", "failed") and self.termination_reason is None:
             raise ValueError(

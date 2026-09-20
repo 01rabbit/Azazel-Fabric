@@ -10,6 +10,31 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ### Changed
 
+- **An `EffectObservation` may claim only `observed_fact` or
+  `active_materialized`** (`effect_contracts/models.py`, Fabric#52). **This is
+  not additive: a payload that validated under `v0.9.0rc3` is refused.**
+
+  `DefensiveEffectRef` has refused those same two classes since the family
+  shipped, with the stated reason that they are "an observation's to make". The
+  converse was never enforced, so all six classes were accepted on the
+  observation side. A record *reporting* an effect could therefore claim
+  `producer_decision_ref` — asserting authority over the thing it reports — or
+  `advisory_inference` and `planned_shadow`, which describe records where
+  nothing was materialized and so nothing was observed, or `stale_or_unknown`,
+  which claims nothing at all and must read to a consumer as a gap rather than
+  as a weakly-labelled fact.
+
+  The two sets now partition `AuthorityClass` exactly, and
+  `test_every_authority_class_belongs_to_exactly_one_record` enumerates from
+  the enum rather than from either model's constant, so a class added later has
+  to be placed deliberately instead of defaulting to "effect-only" by silence.
+
+  It lands in a candidate on purpose. The same correction after `v0.9.0` would
+  break a stability promise; before it, it breaks a candidate that says it
+  makes none. `azazel_fabric.effect_contracts.OBSERVABLE_AUTHORITY_CLASSES` is
+  exported so a producer can check its own emission against the rule rather
+  than discovering it at validation.
+
 - **`effect_contracts` has its first producer, and the adoption measured three
   things the family could not do** (`docs/release-compatibility.md`,
   `docs/effect-contracts.md`). Azazel-Deception#46 emits `PresentedTerrainRef`

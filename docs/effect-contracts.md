@@ -129,6 +129,23 @@ must name its advisory and must not carry a decision reference at all. A
 schema-valid advisory therefore cannot reach
 `is_authoritative_decision_reference`, whatever else it carries.
 
+**The two record kinds partition the six classes** (`v0.9.0rc4`, Fabric#52).
+A `DefensiveEffectRef` may claim any class except `observed_fact` and
+`active_materialized`, because those are an observation's to make. An
+`EffectObservation` may claim *only* those two, because the other four describe
+something nobody observed: `producer_decision_ref` would make a report of an
+effect an assertion of authority over it, `advisory_inference` and
+`planned_shadow` describe records where nothing was materialized, and
+`stale_or_unknown` claims nothing — which a consumer must see as a gap rather
+than as a fact with a weak label.
+
+The second half of that rule was prose until `v0.9.0rc4`, and prose is not a
+gate: an observation claiming `producer_decision_ref` validated. Correcting it
+refuses input `v0.9.0rc3` accepted, which is why it lands in a candidate rather
+than after `v0.9.0`. The partition is total and disjoint, and a test enumerates
+it from `AuthorityClass` itself so that a class added later has to be placed by
+someone rather than by omission.
+
 **Provenance is not authorization.** `ReplayProvenance.confers_authority` is
 pinned to `False`. Carrying a model reference makes a run reproducible; it does
 not give the model's output authority.
@@ -203,6 +220,12 @@ shape.
 5. Read `authority_class` before acting on any record, and apply your own
    authority rules to what it claims. Fabric having validated a record means
    the record is well-formed, not that it is authorized.
+
+   Which class you may claim depends on which record you are emitting, and the
+   two sets do not overlap: see §5. If you emit an `EffectObservation`, derive
+   its class from what you observed, never from the effect record you are
+   reporting on — copying the effect's class across is how a report acquires
+   the authority of the thing it reports.
 6. Treat an unrecognized enum value as the weakest reading. The coercion
    helpers already do; do not add a mapping that does otherwise.
 

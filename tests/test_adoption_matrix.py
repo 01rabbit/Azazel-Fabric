@@ -322,3 +322,73 @@ def test_a_development_version_is_ahead_of_every_published_tag():
         "candidate; a package that claims to be older than a tag it ships the "
         "manifest for cannot be reasoned about."
     )
+
+
+def _published_tags() -> set[str]:
+    """Every tag ``release/`` records a manifest for."""
+
+    return {
+        "v" + match.group("version")
+        for path in RELEASE_DIR.glob("*.digest.json")
+        if (match := PUBLISHED_MANIFEST.fullmatch(path.name))
+    }
+
+
+def _release_history_rows() -> list[tuple[str, str]]:
+    """``(tag, first cell)`` for each row of the release history table."""
+
+    text = DOC_PATH.read_text(encoding="utf-8")
+    rows: list[tuple[str, str]] = []
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("| `v"):
+            continue
+        cell = stripped.split("|")[1].strip()
+        tag = re.match(r"`(v[^`]+)`", cell)
+        if tag is not None:
+            rows.append((tag.group(1), cell))
+    return rows
+
+
+def test_a_release_row_for_an_unpublished_tag_says_so():
+    """`v0.9.0rc4` is documented before it is cut, and that is new here.
+
+    Every row before it described a tag that already existed, so "appears in
+    the table" and "can be pinned" meant the same thing. They no longer do. A
+    reader who pins `v0.9.0rc4` today resolves to nothing -- the same failure
+    `v0.7.0` records, one row of this table earning its own line of prose
+    because nobody wrote it down in time.
+
+    Derived from ``release/`` rather than from a list kept here, so publishing
+    a tag is what retires its marker: a manifest appearing makes this test
+    require the word to go, rather than leaving it to be noticed.
+    """
+
+    published = _published_tags()
+    rows = _release_history_rows()
+    assert rows, f"docs/{DOC_PATH.name} lost its release history table"
+
+    # `release/` began at the first candidate, so it is evidence only from
+    # there forward. `v0.5.0` through `v0.8.0` are published and have no
+    # manifest, and reading that absence as "unpublished" is the mistake this
+    # file exists to catch in the other direction: silence is not a claim.
+    # This test therefore says nothing about a tag older than the oldest
+    # manifest, rather than guessing about it.
+    floor = min(_sortable(tag.lstrip("v")) for tag in published)
+
+    for tag, cell in rows:
+        if _sortable(tag.lstrip("v")) < floor:
+            continue
+        marked = "unpublished" in cell.lower() or "never released" in cell.lower()
+        if tag in published:
+            assert not marked, (
+                f"{tag} has a manifest in release/ but its row still calls it "
+                "unpublished; a reader is being told not to pin a tag that exists"
+            )
+        else:
+            assert marked, (
+                f"the release history has a row for {tag}, which release/ has no "
+                "manifest for, and does not say so. A consumer that pins it "
+                "resolves to nothing -- which is the failure the v0.7.0 row in "
+                "this same table exists to record."
+            )

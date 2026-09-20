@@ -22,6 +22,7 @@ from azazel_fabric.effect_contracts import (
     DefensiveEffectRef,
     EffectClass,
     EffectObservation,
+    OBSERVABLE_AUTHORITY_CLASSES,
     OutcomeObservationEnvelope,
     PresentedTerrainRef,
     RefKind,
@@ -497,6 +498,75 @@ def test_an_effect_reference_cannot_claim_to_be_an_observation():
     for claimed in (AuthorityClass.OBSERVED_FACT, AuthorityClass.ACTIVE_MATERIALIZED):
         with pytest.raises(ValidationError):
             effect_ref(authority_class=claimed)
+
+
+@pytest.mark.parametrize(
+    "claimed",
+    sorted(set(AuthorityClass) - OBSERVABLE_AUTHORITY_CLASSES, key=lambda m: m.value),
+)
+def test_an_observation_cannot_claim_what_it_did_not_observe(claimed):
+    """Fabric#52. The converse of the rule above, which was prose until now.
+
+    ``DefensiveEffectRef`` has refused ``observed_fact`` and
+    ``active_materialized`` since the family shipped, on the stated grounds
+    that they are "an observation's to make". The other direction was written
+    in the docstring and enforced nowhere, so a record reporting an effect
+    could arrive claiming authority *over* it.
+
+    Each rejected class fails for its own reason and they are not
+    interchangeable: ``producer_decision_ref`` is a report asserting a
+    decision; ``advisory_inference`` and ``planned_shadow`` describe records
+    where nothing was materialized, so there was nothing to observe; and
+    ``stale_or_unknown`` claims nothing, which a consumer must read as a gap
+    rather than as a weakly-labelled fact.
+    """
+
+    with pytest.raises(ValidationError):
+        observation(status="completed", authority_class=claimed)
+
+
+def test_every_authority_class_belongs_to_exactly_one_record():
+    """The two rules are one rule, and this is what keeps them that way.
+
+    An ``AuthorityClass`` member added later has to land on one side. Without
+    this, the default would be "accepted by ``DefensiveEffectRef``, rejected by
+    ``EffectObservation``" -- a placement nobody chose, arrived at by not
+    writing anything. Enumerating from the enum rather than from either
+    model's constant is what lets a new member be *seen*.
+    """
+
+    effect_only = set(AuthorityClass) - OBSERVABLE_AUTHORITY_CLASSES
+
+    assert effect_only & OBSERVABLE_AUTHORITY_CLASSES == set()
+    assert effect_only | OBSERVABLE_AUTHORITY_CLASSES == set(AuthorityClass)
+
+    for member in sorted(OBSERVABLE_AUTHORITY_CLASSES, key=lambda m: m.value):
+        with pytest.raises(ValidationError):
+            effect_ref(authority_class=member)
+    for member in sorted(effect_only, key=lambda m: m.value):
+        with pytest.raises(ValidationError):
+            observation(status="completed", authority_class=member)
+
+
+def test_an_observation_still_accepts_both_classes_it_is_meant_to_carry():
+    """A rule that rejected everything would pass every test above.
+
+    ``observed_fact`` for an effect that is no longer live, and
+    ``active_materialized`` for one that is: the whole accepted set, stated
+    positively, so that narrowing it further is a failure rather than a
+    tightening nobody notices.
+    """
+
+    assert (
+        observation(status="completed", authority_class=AuthorityClass.OBSERVED_FACT)
+        .authority_class
+        is AuthorityClass.OBSERVED_FACT
+    )
+    assert (
+        observation(status="active", authority_class=AuthorityClass.ACTIVE_MATERIALIZED)
+        .authority_class
+        is AuthorityClass.ACTIVE_MATERIALIZED
+    )
 
 
 @pytest.mark.parametrize(
