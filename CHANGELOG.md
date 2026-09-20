@@ -34,6 +34,22 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
   cited file really produces what the row says is verified by reading it, and
   the test does not pretend otherwise.
 
+- **The feature-to-minimum-version matrix is complete and enforced**
+  (`docs/provisioning-contracts.md`, `tests/test_feature_minimums.py`). The
+  matrix is published so consumers converge deliberately instead of re-pinning
+  in lockstep (Fabric#23), which only works if every shipped feature has a row.
+  Two did not: `defensive-state/v0.1` and `effect-contracts/v0.1` shipped in
+  `v0.9.0rc2` while the matrix still stopped at `rc1`. Both are added, and the
+  test now fails if a `*_contracts` family ships without a row, if a row names
+  a version newer than the package (the same gap seen from the other side), if
+  a minimum is a range rather than an exact pin, or if a candidate row drops
+  the caveat a reader decides on.
+
+  It also corrects a false statement: "until `v0.9.0` is tagged, the `0.9.0`
+  rows name a version no consumer can pin". `v0.9.0rc1` and `v0.9.0rc2` are
+  published tags and four products are on one of them. What the `rc` suffix
+  withholds is the stability promise, not the tag.
+
 - **Documentation corrected against the tree.** The consumer table said every
   product was pinned to `v0.8.0`; four had moved and they do not agree on which
   candidate. `effect_contracts` was described as "unreleased … not in any tag"
