@@ -288,6 +288,41 @@ python tools/rc_signature.py release/v0.9.0rc2.digest.json --check
 # v0.9.0rc2.digest.json signed by: release-owner
 ```
 
+**`--check` needs PyNaCl, and route B does not install it.** That is not a
+detail: a release owner who signed with OpenSSL alone could not verify their
+own signature, and it stopped the `v0.9.0rc4` tagging chain mid-way with
+`UNSIGNED: PyNaCl is required to verify Ed25519 signatures`. The two halves of
+this document offered a choice for signing and no choice for verifying.
+
+The OpenSSL equivalent, which needs no PyNaCl. The public key is turned into
+a DER `SubjectPublicKeyInfo` by prefixing the 32 raw bytes with the twelve
+fixed bytes Ed25519's encoding always has:
+
+```bash
+python3 tools/rc_signature.py release/v0.9.0rc4.digest.json --signable > /tmp/rc4.bin
+python3 -c "
+import binascii, json, pathlib
+key = json.load(open('release/signing-keys.json'))['keys']['release-owner']
+sig = [l.split(':',1)[1].strip() for l in open('release/v0.9.0rc4.digest.json.sig')
+       if l.startswith('release-owner:')][0]
+pathlib.Path('/tmp/rc4.pub.der').write_bytes(binascii.unhexlify('302a300506032b6570032100' + key))
+pathlib.Path('/tmp/rc4.sig.bin').write_bytes(binascii.unhexlify(sig))
+"
+openssl pkeyutl -verify -pubin -inkey /tmp/rc4.pub.der -keyform DER \
+  -rawin -in /tmp/rc4.bin -sigfile /tmp/rc4.sig.bin
+# Signature Verified Successfully
+```
+
+Only the hex decoding uses Python, and only the standard library; the
+verification itself is OpenSSL's. This was checked in both directions before
+being written down — altering one byte of the payload, and flipping one bit of
+the signature, each produce `Signature Verification Failure` and exit 1. A
+verification command that has only ever been seen to succeed is not known to
+be a verification.
+
+`--signable` still needs Fabric's own dependencies, which the signing machine
+already has: producing `candidate.bin` in step 2 is the same command.
+
 `tests/test_release_signature.py` then fails, on purpose: it asserts this
 repository trusts no key and that the published candidates report as unsigned.
 Those two tests are the record of the current state, and updating them is the
