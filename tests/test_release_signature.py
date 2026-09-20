@@ -1,11 +1,12 @@
-"""R1b is a *signed* candidate digest, and `v0.9.0rc2` now carries one.
+"""R1b is a *signed* candidate digest, and both published candidates carry one.
 
 `tools/rc_digest.py` produces the digest; `tools/rc_signature.py` is the half
 that says a release owner stood behind it. The program plan
 (`Azazel/docs/roadmaps/nexus-boot-program-plan.md` §5 R1) asks for both.
 
-These tests hold two things: that the signature on `v0.9.0rc2` is real and
-over the right bytes, and that everything *else* still reports as unsigned.
+These tests hold two things: that the signatures on `v0.9.0rc1` and
+`v0.9.0rc2` are real, distinct, and each over its own candidate's bytes, and
+that everything the verifier should refuse is still refused.
 A verifier that quietly passes when nothing is signed is worse than no
 verifier -- it converts a missing signature into a green check -- so most of
 what follows is about the refusals.
@@ -143,13 +144,34 @@ def test_the_trusted_key_set_is_exactly_what_it_should_be():
     assert load_trusted_keys(RELEASE_DIR / KEYS_FILENAME) == EXPECTED_TRUSTED_KEYS
 
 
-def test_v0_9_0rc2_is_signed():
-    """R1b's signature half, for this candidate, is done."""
+#: Every published candidate, written out rather than globbed. A candidate
+#: that lost its signature, or one added without one, has to be visible here.
+SIGNED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2")
 
-    assert verify(RELEASE_DIR / "v0.9.0rc2.digest.json") == ["release-owner"]
+
+def test_this_file_covers_every_published_candidate():
+    """Globbing `release/*.digest.json` would make a new unsigned candidate
+    invisible: it would simply not be in the list. The list is written out, so
+    adding a candidate means deciding, in this file, whether it is signed."""
+
+    published = {p.name[: -len(".digest.json")] for p in RELEASE_DIR.glob("*.digest.json")}
+    assert published == set(SIGNED_CANDIDATES)
 
 
-def test_the_signature_is_over_the_digest_the_tag_ships():
+@pytest.mark.parametrize("candidate", SIGNED_CANDIDATES)
+def test_the_candidate_is_signed(candidate):
+    """R1b's signature half is done for both published candidates.
+
+    `rc1` was signed after `rc2`, with the same key: it predates the procedure
+    but Azazel-Boot pins it, so leaving it unsigned would have meant a
+    consumer pinning a candidate nobody had stood behind.
+    """
+
+    assert verify(RELEASE_DIR / f"{candidate}.digest.json") == ["release-owner"]
+
+
+@pytest.mark.parametrize("candidate", SIGNED_CANDIDATES)
+def test_the_signature_is_over_the_digest_that_tag_ships(candidate):
     """Signed, and signed over the right thing.
 
     `verify()` returning a key id says a trusted key signed *something this
@@ -158,22 +180,46 @@ def test_the_signature_is_over_the_digest_the_tag_ships():
     `tools/rc_digest.py --check` compares against the tag's tree.
     """
 
-    manifest = json.loads((RELEASE_DIR / "v0.9.0rc2.digest.json").read_text(encoding="utf-8"))
+    manifest = json.loads(
+        (RELEASE_DIR / f"{candidate}.digest.json").read_text(encoding="utf-8")
+    )
     signed = hashlib.sha256(signable_bytes(manifest)).hexdigest()
     assert manifest["content_digest"] == f"sha256:{signed}"
 
 
-def test_v0_9_0rc1_is_still_unsigned():
-    """Not an oversight: `rc1` was published before the procedure existed.
+def test_each_signature_belongs_to_its_own_candidate():
+    """Two candidates, two signatures, and neither covers the other.
 
-    It is superseded by `rc2` and nothing signs it retroactively. Azazel-Boot
-    still pins `rc1`, so whether to sign it as well is a release-owner
-    decision rather than something to infer -- recorded here so the asymmetry
-    is deliberate and visible rather than discovered later.
+    Both are signed by the same key over payloads that differ only in
+    content, so a copied or swapped `.sig` file would still parse, still name
+    a trusted key, and still look right in a diff. What it would not do is
+    verify -- and that is the only thing that distinguishes a real signature
+    from a plausible one.
     """
 
-    with pytest.raises(SignatureError, match="no signature from a key listed|unsigned"):
-        verify(RELEASE_DIR / "v0.9.0rc1.digest.json")
+    from nacl.exceptions import BadSignatureError
+
+    key = nacl_signing.VerifyKey(bytes.fromhex(EXPECTED_TRUSTED_KEYS["release-owner"]))
+    payloads, signatures = {}, {}
+    for candidate in SIGNED_CANDIDATES:
+        manifest = json.loads(
+            (RELEASE_DIR / f"{candidate}.digest.json").read_text(encoding="utf-8")
+        )
+        payloads[candidate] = signable_bytes(manifest)
+        sig_path = RELEASE_DIR / f"{candidate}.digest.json{SIGNATURE_SUFFIX}"
+        (_, hex_sig), = parse_signature_file(sig_path.read_text(encoding="utf-8"))
+        signatures[candidate] = bytes.fromhex(hex_sig)
+
+    assert len(set(payloads.values())) == len(SIGNED_CANDIDATES), "payloads collide"
+    assert len(set(signatures.values())) == len(SIGNED_CANDIDATES), "the same signature twice"
+
+    for signed_candidate, signature in signatures.items():
+        for other, payload in payloads.items():
+            if other == signed_candidate:
+                key.verify(payload, signature)  # must not raise
+                continue
+            with pytest.raises(BadSignatureError):
+                key.verify(payload, signature)
 
 
 # --------------------------------------------------------------------------
