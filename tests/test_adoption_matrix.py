@@ -33,7 +33,14 @@ MATRIX_HEADING = "## Contract family adoption and the R1c gate"
 CITATION = re.compile(r"^Azazel(?:-[A-Za-z]+)?:`[^`]+`$")
 
 #: The verdicts a row may carry. Anything else is a row nobody has decided.
-VERDICTS = {"**met**", "not met"}
+#: The three answers a family's row may give.
+#:
+#: `**experimental**` is not a third grade of adoption. It says the family is
+#: outside the R1c gate entirely, which the gate's own sentence has assumed
+#: since it was written ("per non-experimental contract family") without ever
+#: naming one. A verdict of `not met` on a family nobody intends to build is a
+#: gap that will never close, and reads as work outstanding.
+VERDICTS = {"**met**", "not met", "**experimental**"}
 
 EMPTY_CELL = "—"
 
@@ -251,8 +258,15 @@ def test_the_release_history_has_a_row_for_the_packaged_version():
 
     text = DOC_PATH.read_text(encoding="utf-8")
     tag = latest_published_tag()
+    # The release table, not the document. The docstring has said so since
+    # this test was written and the implementation scanned everything, which
+    # only showed up once a second table in this document keyed its rows on
+    # tag literals too -- and then reported the new table as a duplicate
+    # release row. A check that is narrower in its docstring than in its code
+    # fails on the wrong thing.
     rows = [
-        line for line in text.splitlines()
+        line
+        for line in _release_table(text).splitlines()
         if line.strip().startswith(f"| `{tag}`")
     ]
 
@@ -324,6 +338,35 @@ def test_a_development_version_is_ahead_of_every_published_tag():
     )
 
 
+#: The header of the release history table, used to find it.
+_RELEASE_TABLE_HEADER = "| Release | Contract addition | Compatibility effect |"
+
+
+def _release_table(text: str) -> str:
+    """The release history table alone, header to blank line."""
+
+    assert _RELEASE_TABLE_HEADER in text, (
+        f"docs/{DOC_PATH.name} lost its release history table header"
+    )
+    after = text.split(_RELEASE_TABLE_HEADER, 1)[1]
+    lines = []
+    for line in after.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            # The split leaves an empty first element before the separator
+            # row. Breaking on it ends the table before it starts, which is
+            # how the first version of this returned nothing and reported the
+            # release table as missing.
+            if lines:
+                break
+            continue
+        if not stripped.startswith("|"):
+            break
+        lines.append(line)
+    assert lines, f"docs/{DOC_PATH.name} release table header has no rows under it"
+    return "\n".join(lines)
+
+
 def _published_tags() -> set[str]:
     """Every tag ``release/`` records a manifest for."""
 
@@ -337,9 +380,8 @@ def _published_tags() -> set[str]:
 def _release_history_rows() -> list[tuple[str, str]]:
     """``(tag, first cell)`` for each row of the release history table."""
 
-    text = DOC_PATH.read_text(encoding="utf-8")
     rows: list[tuple[str, str]] = []
-    for line in text.splitlines():
+    for line in _release_table(DOC_PATH.read_text(encoding="utf-8")).splitlines():
         stripped = line.strip()
         if not stripped.startswith("| `v"):
             continue
@@ -392,3 +434,66 @@ def test_a_release_row_for_an_unpublished_tag_says_so():
                 "resolves to nothing -- which is the failure the v0.7.0 row in "
                 "this same table exists to record."
             )
+
+
+def test_every_experimental_family_says_why_it_is_one(rows):
+    """Outside the gate is a position, and a position has a reason.
+
+    `**experimental**` removes a family from what blocks `v0.9.0`. That is a
+    decision with consequences for the release, so the row alone is not
+    enough: the document has to say what makes the family experimental and
+    what it means for the stable tag. Without that, the verdict is
+    indistinguishable from a convenient way to stop a row reading `not met`.
+    """
+
+    text = DOC_PATH.read_text(encoding="utf-8")
+    section = text.split(MATRIX_HEADING, 1)[1]
+
+    experimental = [row[0].strip("`") for row in rows if row[3] == "**experimental**"]
+    assert experimental, (
+        "no family is marked experimental, yet the gate's own sentence says it "
+        "applies 'per non-experimental contract family'. Either mark them or "
+        "drop the qualifier"
+    )
+
+    # The explanation block, taken by its lead-in rather than by guessing
+    # which of two identically-shaped rows is which. Both tables open a row
+    # with the same `| \`family\` |`, so a line-shape heuristic picks the wrong
+    # one -- it did, on the first attempt at this test.
+    lead_in = "**Which families are experimental, stated rather than implied.**"
+    assert lead_in in section, (
+        f"docs/{DOC_PATH.name} lost the block explaining which families are "
+        "experimental; the verdict then appears with no stated reason"
+    )
+    explanation = section.split(lead_in, 1)[1].split("| Family | Producers", 1)[0]
+
+    for family in experimental:
+        assert f"`{family}`" in explanation, (
+            f"{family} is marked experimental in the adoption matrix and the "
+            "block above it does not say why. A family excused from the gate "
+            "needs its reason written where the gate is."
+        )
+        assert "stable tag" in explanation, (
+            "the explanation does not say what experimental means for the "
+            "stable tag, which is the only consequence a reader is after"
+        )
+
+
+def test_an_experimental_family_is_not_one_that_simply_has_no_adopter(rows):
+    """The distinction this verdict would otherwise erase.
+
+    `provisioning_contracts` has no producer and no consumer either, and it is
+    gated: Azazel-Nexus consumes `InterfaceIdentity` from it today, so the
+    missing half is a gap. Marking a family experimental because its row is
+    empty would turn every unfinished family into a design position.
+    """
+
+    for family, producers, consumers, verdict in rows:
+        if verdict != "**experimental**":
+            continue
+        assert family.strip("`") in {"cti_contracts", "mio_contracts"}, (
+            f"{family} is newly marked experimental. That takes it out of the "
+            "R1c gate, so it is a release decision rather than a table edit: "
+            "record it where the gate is defined and update this test "
+            "deliberately."
+        )
