@@ -30,11 +30,15 @@ shipped in `v0.5.0`; subsequent `v0.6.0`, `v0.7.0`, and `v0.8.0` releases are
 additive. See [release compatibility](docs/release-compatibility.md) for the
 supported contract families and observed consumer pins.
 
-`v0.9.0rc1` is a **release candidate** adding `azazel_fabric.outcome_contracts`,
-`azazel_fabric.provisioning_contracts`, and `azazel_fabric.mio_contracts`. It is
-pinnable but not stable: adopt it to produce the downstream evidence `v0.9.0`
-requires, and expect to re-pin. A consumer that needs stability stays on
-`v0.8.0`.
+Two **release candidates** are published toward `v0.9.0`. `v0.9.0rc1` adds
+`azazel_fabric.outcome_contracts`, `azazel_fabric.provisioning_contracts`, and
+`azazel_fabric.mio_contracts`; `v0.9.0rc2` adds the canonical `DefensiveState`
+vocabulary (`azazel_fabric.schema.defensive_state`) and
+`azazel_fabric.effect_contracts`, and changes no symbol released before it, so
+a consumer already on `rc1` has no urgent reason to move. Both are pinnable but
+not stable: adopt one to produce the downstream evidence `v0.9.0` requires, and
+expect to re-pin. A consumer that needs stability stays on `v0.8.0` — see the
+consumer table below for who is where.
 
 Stable `v0.5.0` also ships everything from `v0.4.0`:
 
@@ -68,12 +72,20 @@ See [`docs/deception-contracts.md`](docs/deception-contracts.md).
 
 | Product | Current status |
 |---|---|
-| Azazel-Edge (AZ-01) | Observed dependency pin: `v0.8.0`. Fabric remains optional for baseline Edge runtime. |
+| Azazel-Edge (AZ-01) | Observed dependency pin: `v0.9.0rc2` (a candidate) in `requirements/fabric.txt`. Fabric remains optional for baseline Edge runtime — the arbiter runs with none installed. |
 | Azazel-Gadget (AZ-02) | Shipping Fabric integration; observed dependency pin: `v0.8.0` for StatusView. AZ-06 compatibility remains a constrained future `gadget-lite` subset. |
-| Azazel-Knowledge (AZ-04) | Observed API optional-dependency pin: `v0.8.0`; core remains dependency-minimal and advisory-only. |
-| Azazel-Deception (AZ-06) | Observed dependency pin: `v0.8.0`; live exposure remains disabled by default. |
-| Azazel-Boot (AZ-03) | Observed `fabric` optional-extra pin: `v0.8.0`; an image lock is still required before a Boot implementation release. |
-| Azazel-Nexus | No pin yet — documentation-only repository. |
+| Azazel-Knowledge (AZ-04) | Observed API optional-dependency pin: `v0.9.0rc2` (a candidate); core remains dependency-minimal and advisory-only. |
+| Azazel-Deception (AZ-06) | Observed dependency pin: `v0.9.0rc2` (a candidate); live exposure remains disabled by default. |
+| Azazel-Boot (AZ-03) | Observed `fabric` optional-extra pin: `v0.9.0rc1` (a candidate, one behind the others); an image lock is still required before a Boot implementation release. |
+| Azazel-Nexus (AZ-07) | **No declaration.** No longer documentation-only — it carries code (`src/azazel_nexus/`) with `dependencies = []` on purpose. Its absence here is a design choice, not an omission. |
+
+Verified 2026-09-20 by reading each repository's dependency declaration at
+`origin/main`: Edge `f706057`, Gadget `7aeb923`, Knowledge `f29c29d`,
+Deception `fad6587`, Boot `5ad2f2e`, Nexus `6831d8b`. Four consumers carry a
+`v0.9.0` candidate and do not all carry the same one, so there is no single
+"reference release" until `v0.9.0` is cut;
+[`docs/release-compatibility.md`](docs/release-compatibility.md) is the
+authority for this table and carries the reasoning behind each row.
 
 ## Install
 
