@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -154,7 +155,7 @@ def test_the_trusted_key_set_is_exactly_what_it_should_be():
 
 #: Every candidate whose manifest is in the tree, written out rather than
 #: globbed. A candidate added without a signature has to be visible here.
-PUBLISHED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3")
+PUBLISHED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3", "v0.9.0rc4")
 
 #: Those of them a release owner has signed.
 #:
@@ -164,7 +165,7 @@ PUBLISHED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3")
 #: bytes. Collapsing them would mean a candidate could be recorded as covered
 #: by being written down, which is exactly the gap `v0.9.0rc1` sat in while
 #: Azazel-Boot pinned it.
-SIGNED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3")
+SIGNED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3", "v0.9.0rc4")
 
 
 def test_this_file_covers_every_published_candidate():
@@ -446,4 +447,48 @@ def test_the_signing_tool_is_absent_from_the_tag_the_procedure_signs():
     assert present.returncode != 0, (
         "v0.9.0rc2 now carries tools/rc_signature.py; step 2 of "
         "docs/release-signing.md no longer needs to switch refs"
+    )
+
+
+def test_every_published_candidate_has_a_changelog_section():
+    """`v0.9.0rc3` was tagged with its entries still under `[Unreleased]`.
+
+    Nothing caught it. This file's first paragraph says each release
+    corresponds to a `vX.Y.Z` tag, and for one release it did not — the tag
+    existed, the section describing it did not, and a reader looking up what
+    `rc3` changed found an unreleased heading.
+
+    Derived from `release/` rather than from a list kept here, for the same
+    reason `PUBLISHED_CANDIDATES` is checked against it above: publishing a
+    candidate is what makes this test demand its section, instead of leaving
+    the demand to whoever remembers.
+    """
+
+    text = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    headings = set(re.findall(r"^## \[([^\]]+)\]", text, re.M))
+
+    missing = [
+        candidate
+        for candidate in PUBLISHED_CANDIDATES
+        if candidate.lstrip("v") not in headings
+    ]
+    assert missing == [], (
+        f"CHANGELOG.md has no section for {missing}, which release/ records as "
+        "published. A tag whose changes are still filed under [Unreleased] "
+        "tells a reader looking it up that it changed nothing."
+    )
+
+
+def test_the_unreleased_heading_is_not_itself_a_published_candidate():
+    """The shape the check above cannot see on its own.
+
+    Renaming `[Unreleased]` to `[0.9.0rc4]` satisfies it whether or not the
+    entries beneath were ever separated, so this pins that an `[Unreleased]`
+    heading still exists to move the *next* candidate's entries out of.
+    """
+
+    text = (REPO_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert re.search(r"^## \[Unreleased\]", text, re.M), (
+        "CHANGELOG.md lost its [Unreleased] heading; the next change has "
+        "nowhere to be recorded before it is tagged"
     )

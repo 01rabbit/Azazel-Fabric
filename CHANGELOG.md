@@ -8,7 +8,14 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ## [Unreleased]
 
+Nothing yet. The entries below moved into the tags that shipped them.
+
+## [0.9.0rc4] — An observation may claim only what it observed (Fabric#52)
+
+**Not additive.** A payload that validated under `v0.9.0rc3` is refused here.
+
 ### Changed
+
 
 - **An `EffectObservation` may claim only `observed_fact` or
   `active_materialized`** (`effect_contracts/models.py`, Fabric#52). **This is
@@ -34,6 +41,17 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
   makes none. `azazel_fabric.effect_contracts.OBSERVABLE_AUTHORITY_CLASSES` is
   exported so a producer can check its own emission against the rule rather
   than discovering it at validation.
+
+## [0.9.0rc3] — A typed reference's body may carry colons (Fabric#48)
+
+Written after the fact. `v0.9.0rc3` was tagged while everything below sat
+under `[Unreleased]`, and nothing noticed: this file's own opening line says
+each release corresponds to a tag, and for one release it did not.
+`tests/test_release_signature.py::test_every_published_candidate_has_a_changelog_section`
+now checks that against `release/`, so the next candidate cannot be cut
+without its section.
+
+### Changed
 
 - **`effect_contracts` has its first producer, and the adoption measured three
   things the family could not do** (`docs/release-compatibility.md`,
