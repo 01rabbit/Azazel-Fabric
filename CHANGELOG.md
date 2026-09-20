@@ -34,6 +34,31 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
   cited file really produces what the row says is verified by reading it, and
   the test does not pretend otherwise.
 
+- **No contract encodes a RAM-to-tier threshold** (`tests/test_no_ram_tier_encoding.py`,
+  Fabric#23, plan §15 OF-01). The design was already right — this found no
+  defect — but nothing held it. The line, stated precisely: a contract **may**
+  carry measured capacity (`usable_memory_mib` and the rest are facts about a
+  host), **may** carry a package's declared requirement (a deployment tier's
+  `minimum` is what that package says it needs), and **may not** carry a tier
+  derived from measured capacity or the threshold that would derive one. The
+  difference is who decided — measurements and requirements are inputs; a
+  capability tier is a verdict, and it belongs to the product whose
+  deny-by-default admission policy has to live with it.
+
+  `CORE`/`LITE`/`FULL` stay registered in `provisioning_contracts/registry.py`
+  as an open registry of names, so two products call the same summary the same
+  thing. Naming a word is not deciding with it — the same reason
+  `REGISTERED_PRODUCTS` may list every product without Fabric admitting any of
+  them. What the registry may not grow is a *mapping*: a dict pairing a MiB
+  figure with a state, or a function that returns one.
+
+  The tier-shaped fields in `deception_contracts` (`DeploymentTier.tier_id`,
+  the four `selected_tier` fields) are exempt with the reason written down —
+  they record a package's own declaration or a product's own selection, which
+  is provenance, not Fabric classifying a host. An exemption naming a field
+  that no longer exists fails, so the list cannot become somewhere to park the
+  next one.
+
 - **Round-trip coverage reaches every family, and the projections are pinned
   descriptive** (`tests/test_contract_roundtrip.py`, Fabric#23). The
   completeness guard — the one that fails when a contract ships with no
