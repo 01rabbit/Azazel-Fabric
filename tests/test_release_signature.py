@@ -1,14 +1,14 @@
-"""R1b is a *signed* candidate digest, and this repository has no signature yet.
+"""R1b is a *signed* candidate digest, and `v0.9.0rc2` now carries one.
 
 `tools/rc_digest.py` produces the digest; `tools/rc_signature.py` is the half
 that says a release owner stood behind it. The program plan
-(`Azazel/docs/roadmaps/nexus-boot-program-plan.md` §5 R1) asks for both, and
-`docs/provisioning-contracts.md` records that only the first exists: the
-detached signature "needs the release owner's key and is not in the candidate".
+(`Azazel/docs/roadmaps/nexus-boot-program-plan.md` §5 R1) asks for both.
 
-So these tests are mostly about the *unsigned* state being reported as unsigned.
-A verifier that quietly passes when nothing is signed is worse than no verifier:
-it converts a missing signature into a green check.
+These tests hold two things: that the signature on `v0.9.0rc2` is real and
+over the right bytes, and that everything *else* still reports as unsigned.
+A verifier that quietly passes when nothing is signed is worse than no
+verifier -- it converts a missing signature into a green check -- so most of
+what follows is about the refusals.
 
 The happy path is exercised with a throwaway keypair generated in the test, not
 with a committed key. A private key that can sign a real release must not exist
@@ -123,27 +123,57 @@ def test_the_signature_files_are_outside_the_packaged_surface():
 # --------------------------------------------------------------------------
 
 
-def test_this_repository_trusts_no_signing_key_yet():
-    """The honest current state, asserted rather than assumed.
+#: The keys this repository trusts, written out rather than read from the
+#: file. A trusted signing key is not something that should be able to appear,
+#: change, or vanish without a test saying so.
+EXPECTED_TRUSTED_KEYS = {
+    "release-owner": "0d572c5abb49ebb09566a68a4143ed867d445e4f91b80ec69f6d02d479ef17bf",
+}
 
-    When a key is added this test fails, and that failure is the prompt to
-    update it deliberately — a trusted signing key is not something that
-    should be able to appear without anyone noticing.
+
+def test_the_trusted_key_set_is_exactly_what_it_should_be():
+    """Pinned, not merely non-empty.
+
+    This test used to assert the opposite -- that no key was trusted -- and it
+    failed the day the release owner's key landed, which was the point. It
+    now records the state that replaced it, and it will fail again on any
+    further change.
     """
 
-    assert load_trusted_keys(RELEASE_DIR / KEYS_FILENAME) == {}
+    assert load_trusted_keys(RELEASE_DIR / KEYS_FILENAME) == EXPECTED_TRUSTED_KEYS
 
 
-@pytest.mark.parametrize("candidate", ["v0.9.0rc1", "v0.9.0rc2"])
-def test_the_published_candidates_report_as_unsigned(candidate):
-    """R1b is not met, and `--check` is what says so.
+def test_v0_9_0rc2_is_signed():
+    """R1b's signature half, for this candidate, is done."""
 
-    This is the test that must fail the day a signature lands, so nobody can
-    believe the release is signed while the repository still says it is not.
+    assert verify(RELEASE_DIR / "v0.9.0rc2.digest.json") == ["release-owner"]
+
+
+def test_the_signature_is_over_the_digest_the_tag_ships():
+    """Signed, and signed over the right thing.
+
+    `verify()` returning a key id says a trusted key signed *something this
+    file derived*. This says what that something was: the canonical bytes
+    whose SHA-256 is the manifest's own `content_digest`, which is the number
+    `tools/rc_digest.py --check` compares against the tag's tree.
     """
 
-    with pytest.raises(SignatureError, match="unsigned|no trusted signing key"):
-        verify(RELEASE_DIR / f"{candidate}.digest.json")
+    manifest = json.loads((RELEASE_DIR / "v0.9.0rc2.digest.json").read_text(encoding="utf-8"))
+    signed = hashlib.sha256(signable_bytes(manifest)).hexdigest()
+    assert manifest["content_digest"] == f"sha256:{signed}"
+
+
+def test_v0_9_0rc1_is_still_unsigned():
+    """Not an oversight: `rc1` was published before the procedure existed.
+
+    It is superseded by `rc2` and nothing signs it retroactively. Azazel-Boot
+    still pins `rc1`, so whether to sign it as well is a release-owner
+    decision rather than something to infer -- recorded here so the asymmetry
+    is deliberate and visible rather than discovered later.
+    """
+
+    with pytest.raises(SignatureError, match="no signature from a key listed|unsigned"):
+        verify(RELEASE_DIR / "v0.9.0rc1.digest.json")
 
 
 # --------------------------------------------------------------------------
