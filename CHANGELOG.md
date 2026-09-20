@@ -34,6 +34,32 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
   cited file really produces what the row says is verified by reading it, and
   the test does not pretend otherwise.
 
+- **`engagement_contracts` cleared the R1c gate** (adoption matrix in
+  `docs/release-compatibility.md`). Both reads now exist, in opposite
+  directions: Knowledge reads Edge's `EngagementEvent`
+  (Azazel-Knowledge#105) and Edge reads Knowledge's `EngagementAdvisory`
+  (Azazel-Edge#418). Producer and consumer are different products in both,
+  which is what the gate is asking about — it is a round trip, not a count.
+
+  Edge's `EngagementEvent` builder had said "for audit / Knowledge ingest" in
+  its own docstring since it was written; Knowledge simply had no lane to put
+  one in. Its new lane keeps the Engage vocabulary verbatim and mapped to
+  nothing: three of the eight `activity` values coincide with Knowledge's
+  `reaction.action_applied` and five do not, and inventing the missing five
+  would make a product-local word canonical by the back door.
+
+  Two things stay on the record now that the row reads **met**. Edge's
+  advisory reader has no runtime caller yet — when Edge consults Knowledge is
+  a product decision left with the product. And **Deception was considered and
+  deliberately not used**: `PostureSuggestion.supported_activities` names
+  AZ-06's own actions, so for Deception alone an advisory would be about what
+  it does rather than what someone else does, which puts "read the advice" one
+  step from "choose among the activities it lists". Clearing a gate is not
+  worth thinning the boundary it sits behind.
+
+  `deception_contracts` and `engagement_contracts` are now the two families
+  with the evidence; five still have none.
+
 - **`engagement_contracts` has its first reader** (adoption matrix in
   `docs/release-compatibility.md`). Until Azazel-Edge#418 the family had two
   producers and no consumer — Edge and Knowledge both wrote the Engage-aligned

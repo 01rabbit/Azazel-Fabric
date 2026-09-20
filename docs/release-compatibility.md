@@ -80,7 +80,7 @@ library, not exchanging a contract through it.
 | `cti_contracts` | — | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | not met |
 | `deception_contracts` | Azazel-Edge:`py/azazel_edge/deception_transition.py`, Azazel-Deception:`src/azazel_deception/runtime/observation_export.py` | Azazel-Deception:`src/azazel_deception/runtime/transitions.py`, Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | **met** |
 | `effect_contracts` | — | — | not met |
-| `engagement_contracts` | Azazel-Edge:`py/azazel_edge/engagement/candidate.py`, Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | Azazel-Edge:`py/azazel_edge/engagement_advisory_client.py` | not met |
+| `engagement_contracts` | Azazel-Edge:`py/azazel_edge/engagement/candidate.py`, Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py` | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py`, Azazel-Edge:`py/azazel_edge/engagement_advisory_client.py` | **met** |
 | `mio_contracts` | — | — | not met |
 | `outcome_contracts` | Azazel-Edge:`py/azazel_edge/outcome/shared_export.py` | — | not met |
 | `provisioning_contracts` | — | — | not met |
@@ -94,31 +94,44 @@ the gate is asking about.
 
 Two patterns in that table are worth naming rather than leaving to be noticed.
 
-**`engagement_contracts` has its first reader, and still one short.** Until
-Azazel-Edge#418 this family had two producers and no consumer: Edge and
+**`engagement_contracts` cleared the gate on a round trip, not a count.**
+Until Azazel-Edge#418 this family had two producers and no consumer: Edge and
 Knowledge both wrote the Engage-aligned types and neither read what the other
 wrote. A contract that has only ever been serialized is not known to
 interoperate — the first read is where a disagreement surfaces.
 
-Edge now reads Knowledge's `EngagementAdvisory`
-(`py/azazel_edge/engagement_advisory_client.py`), verified fail-closed against
-the canonical model and degrading fail-open to "no advisory" so Edge's
-deterministic arbiter decides identically whether Knowledge answered or is
-absent. That is the first actual exchange in this family.
+Both reads now exist, in opposite directions:
 
-It does **not** clear the gate, which asks for two consumers. Two things are
-worth stating plainly rather than letting the row imply otherwise:
+| Direction | Contract | Reader |
+| --- | --- | --- |
+| Edge → Knowledge | `EngagementEvent` | Azazel-Knowledge#105 |
+| Knowledge → Edge | `EngagementAdvisory` | Azazel-Edge#418 |
 
-* the reader has **no runtime caller yet**. When Edge consults Knowledge for
-  engagement context — on what trigger, about which entity — is a product
-  decision that was left with the product; the module takes a caller-supplied
-  request body. It is a consumer in the sense the gate means (it parses and
-  validates an instance it received, against Knowledge's own contract shape),
-  and it is not yet a live path;
-* the second consumer is an open question, not a queued task. Deception is the
-  obvious candidate by proximity, but AZ-06 materializes an Edge-approved
-  environment, and whether reading an advisory directly fits that posture is a
-  doctrine call rather than a wiring exercise.
+Edge's `EngagementEvent` builder had said "for audit / Knowledge ingest" in
+its own docstring since it was written; Knowledge simply had no lane to put
+one in. It has one now, and the lane keeps the Engage vocabulary **verbatim
+and mapped to nothing**: three of the eight `activity` values coincide with
+Knowledge's `reaction.action_applied` and five do not, and deciding that
+`redirect_to_decoy` "is" `deception` would invent a correspondence between two
+product vocabularies. An engagement event is its own lane there, not a
+reaction in disguise.
+
+One caveat stays on the record rather than being quietly dropped now that the
+row reads **met**: Edge's advisory reader has **no runtime caller yet**. When
+Edge consults Knowledge for engagement context — on what trigger, about which
+entity — is a product decision that was left with the product, and the module
+takes a caller-supplied request body. It is a consumer in the sense the gate
+means (it parses and validates an instance it received, against Knowledge's
+own contract shape); it is not yet a live path.
+
+**Deception was considered for this and deliberately not used.** It is the
+obvious candidate by proximity, but `PostureSuggestion.supported_activities`
+names `redirect_to_decoy`, `expose_decoy_surface` and `collect_credentials` —
+AZ-06's own actions. For every other consumer an advisory is about somebody
+else's actions; for Deception alone it would be about its own, which puts
+"read the advice" one step from "choose among the activities it lists". AZ-06
+materializes an Edge-approved environment and does not select. Clearing a gate
+is not worth thinning the boundary it sits behind.
 
 **`provisioning_contracts` and `mio_contracts` have neither.** Azazel-Boot
 names them in `PLANNED_FABRIC_MODULES` and checks whether they can be imported,
