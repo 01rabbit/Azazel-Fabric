@@ -26,9 +26,41 @@ python3 tools/rc_signature.py release/v0.9.0rc1.digest.json --check
 ```
 
 The steps below remain the procedure for the next candidate and for the
-stable tag. Note that each candidate's payload differs — `rc1` is 7071 bytes
-(`sha256:cdfb735c...06fe`), `rc2` is 7915 (`sha256:3876b6d1...961ae`) — so the
-checksum you verify before signing is per candidate, never carried over.
+stable tag.
+
+**Verify the payload's sha256, not its size.** Each candidate's payload
+differs, but not always in length:
+
+| Candidate | payload bytes | payload sha256 |
+|---|---|---|
+| `v0.9.0rc1` | 7071 | `cdfb735c002eb26ef5e0f31ea617b2576a3b9a4a938f04b27f6a353a4f1b06fe` |
+| `v0.9.0rc2` | 7915 | `3876b6d1d103b4832274a91e9ec12e6697fab095723b17c940d68af3207961ae` |
+| `v0.9.0rc3` | **7915** | `0210f96783248aa64f392cd73c987fa119aa0d7918589f393d4f5a0a0f855d8e` |
+
+`rc2` and `rc3` cover the same 66 files, so their payloads are the same length
+and only their contents differ. A size check cannot tell them apart; the
+digest can. Signing `rc2`'s payload while believing it is `rc3`'s would produce
+a signature that verifies — against the wrong candidate.
+
+## `v0.9.0rc3` signs before its tag exists, not after
+
+`rc1` and `rc2` were signed after their tags were cut, which is why step 2
+below checks the digest against the tag. `rc3` is being prepared the other way
+round: the manifest is signed on the branch, the branch merges, and the tag is
+then cut at the merge commit.
+
+That is the better order and it is worth saying why. Signing after the tag
+means a window in which a published tag has no signature, which is exactly the
+gap `rc1` sat in — Azazel-Boot pinned it while nobody had stood behind it.
+Signing first closes the window: the tag, when it appears, already carries its
+signature.
+
+It changes one thing in step 2. There is no tag to check against, so
+`tools/rc_digest.py --check` runs on the branch — the tree that will *become*
+the tag. The manifest covers `src/` and `pyproject.toml` only, so any further
+documentation change before the tag leaves it valid, and `--check` at the tag
+afterwards must still pass. If it does not, the tag was cut from a different
+tree than the one that was signed, and the signature belongs to neither.
 
 ## Algorithm
 
