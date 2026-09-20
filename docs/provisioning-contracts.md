@@ -217,9 +217,22 @@ simultaneous untested pin change.
 | `outcome-contracts/v0.1` | `0.9.0rc1` | Outcome-as-Evidence shared facts (candidate) |
 | `provisioning-contracts/v0.1` | `0.9.0rc1` | this family (candidate) |
 | `mio-contracts/v0.1` | `0.9.0rc1` | M.I.O. cognition family (candidate) |
+| `defensive-state/v0.1` | `0.9.0rc2` | canonical `DefensiveState` vocabulary and `coerce_defensive_state` (candidate) |
+| `effect-contracts/v0.1` | `0.9.0rc2` | cross-series effect / outcome / presented-terrain family (candidate) |
 
-A minimum version is a compatibility claim, not an admission decision. Until
-`v0.9.0` is tagged, the `0.9.0` rows name a version no consumer can pin.
+A minimum version is a compatibility claim, not an admission decision.
+
+A candidate row names a version a consumer **can** pin: `v0.9.0rc1` and
+`v0.9.0rc2` are published tags and four products are on one of them. What the
+`rc` suffix withholds is the stability promise, not the tag. The rows stay
+marked `(candidate)` until `v0.9.0` is cut, at which point each one's minimum
+becomes `0.9.0` — a consumer already on a candidate needs no code change for
+that, only a re-pin.
+
+Completeness is enforced: `tests/test_feature_minimums.py` fails if a
+`*_contracts` family ships without a row here. A family with no stated minimum
+is a family a consumer cannot plan around, which is what publishing this matrix
+was for.
 
 ## Conformance kit
 
