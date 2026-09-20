@@ -1,0 +1,255 @@
+"""R1b is a *signed* candidate digest, and this repository has no signature yet.
+
+`tools/rc_digest.py` produces the digest; `tools/rc_signature.py` is the half
+that says a release owner stood behind it. The program plan
+(`Azazel/docs/roadmaps/nexus-boot-program-plan.md` §5 R1) asks for both, and
+`docs/provisioning-contracts.md` records that only the first exists: the
+detached signature "needs the release owner's key and is not in the candidate".
+
+So these tests are mostly about the *unsigned* state being reported as unsigned.
+A verifier that quietly passes when nothing is signed is worse than no verifier:
+it converts a missing signature into a green check.
+
+The happy path is exercised with a throwaway keypair generated in the test, not
+with a committed key. A private key that can sign a real release must not exist
+in this repository, and a fixture key that can would be exactly that.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+RELEASE_DIR = REPO_ROOT / "release"
+
+sys.path.insert(0, str(REPO_ROOT / "tools"))
+
+from rc_signature import (  # noqa: E402
+    KEYS_FILENAME,
+    SIGNATURE_SUFFIX,
+    SignatureError,
+    load_trusted_keys,
+    parse_signature_file,
+    signable_bytes,
+    verify,
+)
+
+nacl_signing = pytest.importorskip(
+    "nacl.signing",
+    reason="PyNaCl verifies the Ed25519 signatures; CI installs it alongside the test extra",
+)
+
+
+@pytest.fixture
+def manifest() -> dict:
+    """A real published manifest, so the shapes under test are the real ones."""
+
+    return json.loads((RELEASE_DIR / "v0.9.0rc2.digest.json").read_text(encoding="utf-8"))
+
+
+@pytest.fixture
+def signed(tmp_path: Path, manifest: dict):
+    """A manifest, a throwaway key trusted for it, and a valid signature."""
+
+    key = nacl_signing.SigningKey.generate()
+    manifest_path = tmp_path / "v9.9.9.digest.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
+
+    signature = key.sign(signable_bytes(manifest)).signature
+    (tmp_path / (manifest_path.name + SIGNATURE_SUFFIX)).write_text(
+        f"release-owner:{signature.hex()}\n", encoding="utf-8"
+    )
+    (tmp_path / KEYS_FILENAME).write_text(
+        json.dumps({"keys": {"release-owner": key.verify_key.encode().hex()}}),
+        encoding="utf-8",
+    )
+    return manifest_path, key
+
+
+# --------------------------------------------------------------------------
+# what gets signed
+# --------------------------------------------------------------------------
+
+
+def test_the_signature_covers_exactly_what_the_digest_covers(manifest):
+    """The two halves of R1b must be about the same bytes.
+
+    If the signable payload and the digested payload could differ, a release
+    could carry a valid signature over something other than the surface the
+    digest names, and neither check would notice.
+    """
+
+    digested = "sha256:" + hashlib.sha256(signable_bytes(manifest)).hexdigest()
+    assert digested == manifest["content_digest"]
+
+
+def test_signing_cannot_change_the_thing_it_signs(manifest):
+    """Adding the locator after signing must leave the signature valid.
+
+    `rc_digest.py` excludes `signature_ref` because "a locator assigned after
+    signing cannot be covered by the bytes that were signed". That is only
+    true if the signable payload ignores it too.
+    """
+
+    before = signable_bytes(manifest)
+    after = signable_bytes({**manifest, "signature_ref": "release/v0.9.0rc2.digest.json.sig"})
+    assert before == after
+
+
+def test_the_signature_files_are_outside_the_packaged_surface():
+    """A signature must not perturb the digest, or signing becomes circular.
+
+    `rc_digest.py` covers `src/` and `pyproject.toml`. `release/` is neither,
+    so committing a `.sig` or a key cannot change the digest being signed.
+    """
+
+    from rc_digest import COVERED_FILES, COVERED_ROOTS
+
+    assert COVERED_ROOTS == ("src",)
+    assert COVERED_FILES == ("pyproject.toml",)
+    for path in (RELEASE_DIR / KEYS_FILENAME, RELEASE_DIR / "v0.9.0rc2.digest.json.sig"):
+        rel = path.relative_to(REPO_ROOT).as_posix()
+        assert not rel.startswith(COVERED_ROOTS)
+        assert rel not in COVERED_FILES
+
+
+# --------------------------------------------------------------------------
+# the state this repository is actually in
+# --------------------------------------------------------------------------
+
+
+def test_this_repository_trusts_no_signing_key_yet():
+    """The honest current state, asserted rather than assumed.
+
+    When a key is added this test fails, and that failure is the prompt to
+    update it deliberately — a trusted signing key is not something that
+    should be able to appear without anyone noticing.
+    """
+
+    assert load_trusted_keys(RELEASE_DIR / KEYS_FILENAME) == {}
+
+
+@pytest.mark.parametrize("candidate", ["v0.9.0rc1", "v0.9.0rc2"])
+def test_the_published_candidates_report_as_unsigned(candidate):
+    """R1b is not met, and `--check` is what says so.
+
+    This is the test that must fail the day a signature lands, so nobody can
+    believe the release is signed while the repository still says it is not.
+    """
+
+    with pytest.raises(SignatureError, match="unsigned|no trusted signing key"):
+        verify(RELEASE_DIR / f"{candidate}.digest.json")
+
+
+# --------------------------------------------------------------------------
+# fail-closed
+# --------------------------------------------------------------------------
+
+
+def test_a_valid_signature_from_a_trusted_key_verifies(signed):
+    manifest_path, _ = signed
+    assert verify(manifest_path) == ["release-owner"]
+
+
+def test_a_tampered_manifest_no_longer_verifies(signed):
+    """The point of the whole exercise."""
+
+    manifest_path, _ = signed
+    doc = json.loads(manifest_path.read_text(encoding="utf-8"))
+    doc["files"]["pyproject.toml"] = "sha256:" + "0" * 64
+    manifest_path.write_text(json.dumps(doc, indent=2, sort_keys=True), encoding="utf-8")
+
+    with pytest.raises(SignatureError, match="does not verify"):
+        verify(manifest_path)
+
+
+def test_an_untrusted_signer_cannot_make_a_release_look_signed(signed, tmp_path):
+    manifest_path, _ = signed
+    intruder = nacl_signing.SigningKey.generate()
+    doc = json.loads(manifest_path.read_text(encoding="utf-8"))
+    (tmp_path / (manifest_path.name + SIGNATURE_SUFFIX)).write_text(
+        f"somebody-else:{intruder.sign(signable_bytes(doc)).signature.hex()}\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SignatureError, match="no signature from a key listed"):
+        verify(manifest_path)
+
+
+def test_an_untrusted_signature_beside_a_trusted_one_is_ignored(signed, tmp_path):
+    """Extra signers are not evidence, but they are not sabotage either."""
+
+    manifest_path, key = signed
+    doc = json.loads(manifest_path.read_text(encoding="utf-8"))
+    payload = signable_bytes(doc)
+    intruder = nacl_signing.SigningKey.generate()
+    (tmp_path / (manifest_path.name + SIGNATURE_SUFFIX)).write_text(
+        f"somebody-else:{intruder.sign(payload).signature.hex()}\n"
+        f"release-owner:{key.sign(payload).signature.hex()}\n",
+        encoding="utf-8",
+    )
+    assert verify(manifest_path) == ["release-owner"]
+
+
+def test_a_forged_signature_claiming_a_trusted_key_is_fatal(signed, tmp_path):
+    """Claiming the owner's id and failing to verify is tampering, not noise."""
+
+    manifest_path, _ = signed
+    intruder = nacl_signing.SigningKey.generate()
+    doc = json.loads(manifest_path.read_text(encoding="utf-8"))
+    (tmp_path / (manifest_path.name + SIGNATURE_SUFFIX)).write_text(
+        f"release-owner:{intruder.sign(signable_bytes(doc)).signature.hex()}\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(SignatureError, match="does not verify"):
+        verify(manifest_path)
+
+
+def test_a_missing_signature_file_is_unsigned(signed, tmp_path):
+    manifest_path, _ = signed
+    (tmp_path / (manifest_path.name + SIGNATURE_SUFFIX)).unlink()
+    with pytest.raises(SignatureError, match="unsigned"):
+        verify(manifest_path)
+
+
+@pytest.mark.parametrize(
+    "content",
+    ["", "\n\n", "# only a comment\n", "no-colon-here\n", "missing-sig:\n", ":only-a-sig\n"],
+)
+def test_an_unusable_signature_file_is_refused(signed, tmp_path, content):
+    manifest_path, _ = signed
+    (tmp_path / (manifest_path.name + SIGNATURE_SUFFIX)).write_text(content, encoding="utf-8")
+    with pytest.raises(SignatureError):
+        verify(manifest_path)
+
+
+def test_comments_and_blank_lines_are_allowed_beside_a_real_signature():
+    parsed = parse_signature_file("# owner key, rotated 2026-01-01\n\nowner:abcd\n")
+    assert parsed == [("owner", "abcd")]
+
+
+@pytest.mark.parametrize(
+    ("keys_doc", "match"),
+    [
+        ({"keys": []}, "must be an object"),
+        ({"keys": {"owner": "nothex!!"}}, "not hex"),
+        ({"keys": {"owner": "aabb"}}, "an Ed25519 public key is 32"),
+        ({"keys": {"": "00" * 32}}, "non-empty string"),
+        ({"keys": {"owner": 7}}, "hex string"),
+    ],
+)
+def test_a_malformed_key_file_is_refused_rather_than_ignored(tmp_path, keys_doc, match):
+    """A key file that cannot be read must not silently become "no keys".
+
+    Both end in a failed verification, but only one of them means somebody
+    should look at the file.
+    """
+
+    keys_path = tmp_path / KEYS_FILENAME
+    keys_path.write_text(json.dumps(keys_doc), encoding="utf-8")
+    with pytest.raises(SignatureError, match=match):
+        load_trusted_keys(keys_path)

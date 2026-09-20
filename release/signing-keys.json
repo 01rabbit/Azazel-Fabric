@@ -1,0 +1,18 @@
+{
+  "_comment": [
+    "Ed25519 public keys trusted to sign an Azazel-Fabric release-candidate",
+    "digest (R1b). Verified by tools/rc_signature.py --check.",
+    "",
+    "EMPTY ON PURPOSE. No release has been signed yet, and an empty list is",
+    "the honest statement of that: tools/rc_signature.py fails closed on it",
+    "and reports the candidate as unsigned, which is what it is.",
+    "",
+    "To trust a key, add \"<key_id>\": \"<64 hex chars>\". The id is free-form",
+    "and appears in the .sig file; the value is the 32-byte Ed25519 PUBLIC",
+    "key, hex-encoded. A private key never belongs in this repository.",
+    "",
+    "The format is Azazel-Knowledge's (bundle/verify.py), reused so one",
+    "convention covers both."
+  ],
+  "keys": {}
+}
