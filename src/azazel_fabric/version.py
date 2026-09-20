@@ -16,4 +16,4 @@ is verified by checking out ``v0.9.0rc1`` and running ``tools/rc_digest.py
 digest of a tag it no longer matches, which is worse than not checking it here.
 """
 
-__version__ = "0.9.0rc2.dev0"
+__version__ = "0.9.0rc2"

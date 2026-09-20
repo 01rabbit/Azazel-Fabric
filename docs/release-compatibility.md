@@ -8,9 +8,10 @@ itself, an interoperability certification.
 ## Current Fabric release
 
 The latest **stable** release is `v0.8.0`. The latest **published** tag is the
-release candidate `v0.9.0rc1`, which carries additive contract work
-(`outcome_contracts`, and the R1a `provisioning_contracts` / `mio_contracts`
-families) on top of `v0.8.0`.
+release candidate `v0.9.0rc2`, which carries the canonical `DefensiveState`
+vocabulary and the cross-series `effect_contracts` family on top of
+`v0.9.0rc1` — itself additive contract work (`outcome_contracts`, and the R1a
+`provisioning_contracts` / `mio_contracts` families) over `v0.8.0`.
 
 A candidate is pinnable but makes no stability promise. It exists so a consumer
 can pin an exact tag — never a branch — while producing the downstream evidence
@@ -29,7 +30,7 @@ available. A `.devN` version is never a release.
 | `v0.7.0` | **Never released.** No tag, no GitHub Release. The advisory-only engagement contracts it describes shipped inside `v0.8.0` | Not pinnable — a consumer that pins `v0.7.0` resolves to nothing |
 | `v0.8.0` | Canonical HMAC-SHA256 Edge-decision transport signature helpers **and** the advisory-only engagement contracts | Additive; signatures prove integrity/origin, not authority |
 | `v0.9.0rc1` (candidate) | Outcome-as-Evidence shared facts (`outcome_contracts`); R1a provisioning and M.I.O. contract families (`provisioning_contracts`, `mio_contracts`) | Additive; pinnable, **not stable** — adopt to produce R1c evidence, expect to re-pin to `v0.9.0` |
-| *(unreleased)* | Canonical `DefensiveState` vocabulary (`schema.defensive_state`, Fabric#14); cross-series effect / outcome / terrain family (`effect_contracts`, Fabric#15) | Additive, **not pinnable** — no tag carries these yet. A consumer cannot adopt them by pinning `v0.9.0rc1` |
+| `v0.9.0rc2` (candidate) | Canonical `DefensiveState` vocabulary (`schema.defensive_state`, Fabric#14); cross-series effect / outcome / terrain family (`effect_contracts`, Fabric#15) | Additive; pinnable, **not stable**. No released symbol changed, so a consumer on `v0.9.0rc1` may stay there |
 
 All consumer deployments MUST pin an exact compatible Fabric tag or immutable
 image lock. They MUST NOT pin a branch. A product chooses when to adopt a newer
