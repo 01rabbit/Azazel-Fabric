@@ -34,6 +34,30 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
   cited file really produces what the row says is verified by reading it, and
   the test does not pretend otherwise.
 
+- **Every banned field, in every family, at depth and inside collections**
+  (`tests/test_directive_rejection_depth.py`, Fabric#23). The R1 exit gate asks
+  for adversarial fixtures proving recursive directive rejection "at any
+  nesting depth, including inside collections". The machinery was already
+  sound — this found no bypass — but the proof reached nesting depth two, in
+  mappings only, for one of six families. 258 banned names across eight guards
+  are now exercised, in eight nesting shapes including lists, tuples and
+  lists-of-lists.
+
+  Two things it records rather than asserts. **Four guards walk unbounded**
+  (`deception_contracts` ×2, `effect_contracts`, `engagement_contracts`): they
+  find a directive at any depth, but past the interpreter's recursion limit
+  (~1000 levels, measured) they raise `RecursionError` where the two R1a
+  families raise a clean `ValueError`. A caller catching `ValueError` sees a
+  refusal either way, but not the same one. Bounding those four changes their
+  public behaviour and is a decision to take deliberately, so the split is
+  pinned in `BOUNDED_GUARDS` — a family that gains or loses a bound makes the
+  list wrong and someone looks.
+
+  **`BANNED_FIELD_COUNTS` is literal**, because every other case enumerates the
+  constant it checks: a name deleted from a guard would simply stop being
+  tested, and the suite would pass with one fewer case. The counts are the only
+  thing that notices — the same discipline as a test-count baseline.
+
 - **The purity gate covers every module, not only the R1a families**
   (`tests/test_package_purity.py`). "Fabric describes; it never reaches the OS,
   the network, or a subprocess" was enforced only for `provisioning_contracts`
