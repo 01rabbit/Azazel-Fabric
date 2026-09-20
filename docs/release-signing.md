@@ -52,6 +52,45 @@ digest and the signature. `rc_digest.py` excludes `signature_ref` from the
 digest for the same reason: "a locator assigned after signing cannot be covered
 by the bytes that were signed".
 
+## Prerequisites on the signing machine
+
+The signing steps need an Ed25519 implementation. Either route below works, and
+both were rehearsed end to end against `tools/rc_signature.py`; pick whichever
+is less trouble on the machine that holds the key.
+
+### Route A — PyNaCl in a throwaway virtualenv (recommended)
+
+Matches the verifier and Azazel-Knowledge's tooling, and works wherever Python
+does. A plain `pip install pynacl` often fails on a current macOS or Linux with
+`externally-managed-environment` (PEP 668), so use a virtualenv:
+
+```bash
+python3 -m venv .venv-signing
+./.venv-signing/bin/pip install pynacl
+./.venv-signing/bin/python -c "import nacl; print(nacl.__version__)"
+```
+
+Then run the signing steps with `./.venv-signing/bin/python` in place of
+`python`. `.venv-signing/` is scratch — delete it afterwards; the key is the
+thing worth keeping, and it is a separate file.
+
+### Route B — OpenSSL 3.x, no Python dependency
+
+OpenSSL 3 produces a raw 64-byte Ed25519 signature, which is exactly the
+encoding `tools/rc_signature.py` expects. Verified: a signature made this way
+verifies under the checker with no PyNaCl on the signing machine at all.
+
+**macOS ships LibreSSL, which cannot do this.** Check first:
+
+```bash
+openssl version
+# OpenSSL 3.x            -> usable
+# LibreSSL 2.8.3 (macOS) -> not usable; brew install openssl@3, then use
+#                           /opt/homebrew/opt/openssl@3/bin/openssl below
+```
+
+The commands for this route are given inline with each step.
+
 ## Procedure
 
 Steps 1–3 happen on the release owner's machine, with a key that must never
@@ -59,8 +98,10 @@ enter this repository. Steps 4–6 are ordinary repository work.
 
 ### 1. Create the signing key (once)
 
+Route A (PyNaCl):
+
 ```bash
-python - <<'PY'
+./.venv-signing/bin/python - <<'PY'
 from nacl.signing import SigningKey
 key = SigningKey.generate()
 open("fabric-release.key", "wb").write(bytes(key))   # PRIVATE — never commit
@@ -69,6 +110,19 @@ PY
 chmod 600 fabric-release.key
 ```
 
+Route B (OpenSSL 3.x) — the key is a PEM here rather than 32 raw bytes, which
+changes nothing for this repository: only the public key is ever published, and
+it comes out as the same 64 hex characters either way.
+
+```bash
+openssl genpkey -algorithm ed25519 -out fabric-release.key   # PRIVATE
+chmod 600 fabric-release.key
+openssl pkey -in fabric-release.key -pubout -outform DER \
+  | tail -c 32 | od -An -tx1 -v | tr -d ' \n'; echo
+```
+
+(The public key is the last 32 bytes of the DER `SubjectPublicKeyInfo`.)
+
 Keep the private key off shared machines and out of CI. Nothing in this
 repository or its workflows needs it; only the 64-hex public key is published.
 
@@ -76,8 +130,16 @@ repository or its workflows needs it; only the 64-hex public key is published.
 
 ```bash
 git checkout v0.9.0rc2
-python tools/rc_digest.py --check release/v0.9.0rc2.digest.json   # digest still describes the tag
-python tools/rc_signature.py release/v0.9.0rc2.digest.json --signable > candidate.bin
+python3 tools/rc_digest.py --check release/v0.9.0rc2.digest.json   # digest still describes the tag
+python3 tools/rc_signature.py release/v0.9.0rc2.digest.json --signable > candidate.bin
+```
+
+Neither command needs PyNaCl: `--signable` only serializes the manifest. For
+`v0.9.0rc2` the result is 7915 bytes; check it before signing:
+
+```bash
+shasum -a 256 candidate.bin   # macOS; sha256sum elsewhere
+# 3876b6d1d103b4832274a91e9ec12e6697fab095723b17c940d68af3207961ae
 ```
 
 Verify the digest before signing. Signing bytes you have not checked is signing
@@ -85,14 +147,27 @@ whatever happens to be in the working tree.
 
 ### 3. Sign
 
+Route A (PyNaCl):
+
 ```bash
-python - <<'PY'
+./.venv-signing/bin/python - <<'PY'
 from nacl.signing import SigningKey
 key = SigningKey(open("fabric-release.key", "rb").read())
 sig = key.sign(open("candidate.bin", "rb").read()).signature
 print("release-owner:" + sig.hex())
 PY
 ```
+
+Route B (OpenSSL 3.x):
+
+```bash
+openssl pkeyutl -sign -inkey fabric-release.key -rawin \
+  -in candidate.bin -out candidate.sig
+printf 'release-owner:%s\n' "$(od -An -tx1 -v candidate.sig | tr -d ' \n')"
+```
+
+`-rawin` is what makes this Ed25519 over the message itself rather than over a
+pre-hash, and it is why the output verifies under the checker unchanged.
 
 ### 4. Commit the public key
 
