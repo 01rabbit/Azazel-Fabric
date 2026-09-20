@@ -694,3 +694,75 @@ def test_the_key_is_not_in_the_repository_at_all():
         "must never enter it; if one of these is a different kind of key, it "
         "still needs a name that does not read as the signing one."
     )
+
+
+#: A signing command reading the key from a bare filename in the cwd.
+#:
+#: The shapes the procedure used to have: `-inkey fabric-release.key`,
+#: `open("fabric-release.key", ...)`. Each tells a signer to keep the key
+#: where they are working, which is where `git stash`, `git clean -x` and an
+#: archive of the directory can all reach it.
+_KEY_IN_WORKING_TREE = re.compile(
+    r"(?:-inkey|-out)\s+(?!\"?\$)[\w./-]*fabric-release\.key"
+    r"|open\(\s*[\"']fabric-release\.key",
+)
+
+
+def test_the_procedure_keeps_the_key_outside_the_working_tree():
+    """The layer above `.gitignore`, and the one that actually holds.
+
+    `.gitignore` stops `git stash -u`. It does not stop `git stash -a`,
+    `git clean -x`, an editor's project-wide backup, or someone tarring the
+    directory. A key that is not in the working tree is out of reach of all of
+    them — including the ones nobody has thought of yet, which is the whole
+    argument for preferring this layer.
+
+    Checked against the document's own commands because that is what a signer
+    runs. An instruction to keep the key elsewhere, sitting above commands
+    that write it into the current directory, is not an instruction.
+    """
+
+    procedure = (REPO_ROOT / "docs" / "release-signing.md").read_text(encoding="utf-8")
+
+    offenders = [
+        line.strip()
+        for line in procedure.splitlines()
+        if _KEY_IN_WORKING_TREE.search(line)
+    ]
+    assert offenders == [], (
+        "these commands read or write the signing key as a bare filename in "
+        f"the working directory: {offenders}. Use the absolute path in "
+        "$AZAZEL_SIGNING_KEY; a key inside the repository is one broad "
+        "command away from being inside .git (#61)."
+    )
+
+
+def test_the_procedure_names_the_variable_that_holds_the_key_path():
+    """The positive half: the alternative has to be stated, not just the ban."""
+
+    procedure = (REPO_ROOT / "docs" / "release-signing.md").read_text(encoding="utf-8")
+    assert "AZAZEL_SIGNING_KEY" in procedure, (
+        "docs/release-signing.md no longer tells a signer where to put the "
+        "key; the scan above then forbids a shape without offering one"
+    )
+    assert "Where the key lives" in procedure, (
+        "the section explaining why the key is kept outside the working tree "
+        "is gone; the rule then reaches a reviewer and not a signer"
+    )
+
+
+def test_the_procedure_forbids_the_broad_stash_forms():
+    """Both of them, and `-a` especially.
+
+    `-a` overrides `.gitignore`, so no ignore rule can cover it. Naming it is
+    the only control there is, which makes the naming load-bearing rather than
+    advisory.
+    """
+
+    procedure = (REPO_ROOT / "docs" / "release-signing.md").read_text(encoding="utf-8")
+    for form in ("git stash -u", "git stash -a"):
+        assert form in procedure, (
+            f"docs/release-signing.md no longer names {form!r} as forbidden. "
+            "`-a` ignores .gitignore entirely; if this document does not say "
+            "so, nothing does."
+        )
