@@ -42,7 +42,10 @@ import azazel_fabric
 _PACKAGE_ROOT = Path(azazel_fabric.__file__).parent
 
 # The modules this gate governs. Adding a third R1 module means adding it here.
-GATED_PACKAGES = ("provisioning_contracts", "mio_contracts")
+# `external_security_contracts` (Fabric#25, R2, experimental) is held to the
+# same strict rules: it describes what an EDR, firewall, router or device
+# adapter saw, and must never become a client for one.
+GATED_PACKAGES = ("provisioning_contracts", "mio_contracts", "external_security_contracts")
 
 # Everything a pure contract module legitimately needs.
 ALLOWED_IMPORT_ROOTS = frozenset(
@@ -183,6 +186,7 @@ _Baseline(b="2026-01-01T00:00:00+00:00").model_dump(mode="json")
 baseline = set(sys.modules)
 import azazel_fabric.provisioning_contracts  # noqa: F401
 import azazel_fabric.mio_contracts  # noqa: F401
+import azazel_fabric.external_security_contracts  # noqa: F401
 print(json.dumps(sorted(set(sys.modules) - baseline)))
 """
     result = subprocess.run(
@@ -192,6 +196,7 @@ print(json.dumps(sorted(set(sys.modules) - baseline)))
     added = json.loads(result.stdout.strip().splitlines()[-1])
     assert any(name.startswith("azazel_fabric.provisioning_contracts") for name in added)
     assert any(name.startswith("azazel_fabric.mio_contracts") for name in added)
+    assert any(name.startswith("azazel_fabric.external_security_contracts") for name in added)
 
     roots = {
         name.split(".")[0]

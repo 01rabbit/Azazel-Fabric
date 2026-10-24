@@ -47,6 +47,7 @@ FAMILIES = (
     "mio_contracts",
     "outcome_contracts",
     "effect_contracts",
+    "external_security_contracts",
 )
 
 #: Capability states the unratified table would assign. A contract naming one

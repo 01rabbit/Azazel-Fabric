@@ -1,0 +1,10 @@
+{
+  "canonical_sha256": {
+    "advisory_context_envelope_v0.json": "8f0d63598ab644e46b7270993f83f03e023b03fbbcbfe4b7e94471d823d9af97",
+    "device_change_observation_applied_v0.json": "070dc926383bce0969389eac15799d389b4931bb4960ea1954f739b6f2b12701",
+    "device_change_observation_released_v0.json": "0d401b7d64878c63c411bf2cbfe813cab52d22107b3b19ad30de94e24e44f9f2",
+    "exposure_change_proposal_v0.json": "313052234e365504d2ba831132d61c335541637403d6576bace10e8a7ebe6e62",
+    "external_observation_envelope_v0.json": "8777484bdc704549b832a7cab2995278b18a3a36c338705198791d2778561699"
+  },
+  "schema_version": "external-security-golden-manifest/v0.1"
+}

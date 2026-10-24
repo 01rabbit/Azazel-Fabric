@@ -404,3 +404,21 @@ Three boundaries are worth restating here:
   instead, and one reporting incomplete coverage must name its telemetry gaps.
 - `ReplayProvenance.confers_authority` is pinned `False`. Provenance says who
   vouches for the bytes; it never says anything is authorized.
+
+## 9. External-security profile (`azazel_fabric.external_security_contracts`)
+
+**Status: experimental** (Fabric#25). Minimum version `0.9.0rc6`, the next
+candidate, **unpublished** — on `main` only. No producer, no consumer, no
+compatibility promise; outside the R1c stable gate by the Fabric#23 program
+decision. Optional: nothing else in Fabric imports it.
+
+Four descriptive-only records: `ExternalObservationEnvelope` (`observed_fact`),
+`AdvisoryContextEnvelope` (`advisory_only`), `ExposureChangeProposal`
+(`proposal_only`), and `DeviceChangeObservation` (`observed_fact`, and
+`tactical_outcome_claimed` pinned `False`). `executable` is pinned `False` on
+all four; signatures and mTLS identity prove origin only.
+
+Ownership: [ADR-0001](adr/0001-external-security-contract-ownership.md).
+Reference, vocabularies, and the mapping to `DefensiveState` (§1, Fabric#14)
+and the effect/outcome/terrain family (§8, Fabric#15) — which these types sit
+beside without merging: [`external-security-contracts.md`](external-security-contracts.md).

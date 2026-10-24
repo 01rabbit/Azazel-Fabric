@@ -29,6 +29,7 @@ from pydantic import BaseModel, ValidationError
 import azazel_fabric.deception_contracts as dc
 import azazel_fabric.effect_contracts as fc
 import azazel_fabric.engagement_contracts as ec
+import azazel_fabric.external_security_contracts as xc
 import azazel_fabric.mio_contracts as mc
 import azazel_fabric.outcome_contracts as oc
 import azazel_fabric.provisioning_contracts as pc
@@ -57,7 +58,7 @@ _BANNED_FIELD_NAMES = set(BANNED_RUNTIME_DIRECTIVE_FIELDS) | set(
 # cross-cutting gate sees is exactly the drift these tests exist to catch: the
 # rest of `schema` predates `extra="forbid"` and stays off the surface, but a
 # model added today has no excuse to.
-_CONTRACT_MODULES = (dc, ec, fc, oc, pc, mc, ds)
+_CONTRACT_MODULES = (dc, ec, fc, oc, pc, mc, ds, xc)
 
 # The provisioning/M.I.O. families ban more field *names* than the older
 # families do (command / unit / route / firewall / device-path / executor /
@@ -65,7 +66,11 @@ _CONTRACT_MODULES = (dc, ec, fc, oc, pc, mc, ds)
 # That stricter ban applies only to them: `deception_contracts.ImageManifest`
 # legitimately carries `verified`, which the provisioning ban forbids, because
 # a provisioning record must not record a trust verdict at all.
-_R1_MODULES = (pc, mc)
+#
+# `external_security_contracts` (Fabric#25) is held to the stricter R1 ban
+# too: a record about firewalls and routers must not even *name* a field
+# after a rule, a route, or an executor.
+_R1_MODULES = (pc, mc, xc)
 
 # Known gap, recorded rather than hidden. `cti_contracts` is a contract family
 # but is NOT on this gated surface: `CtiEventBatch`, `CtiFlowBatch`,
@@ -185,6 +190,20 @@ _PINNED_LITERALS: dict[tuple[str, str], object] = {
     ("SanitizedRemoteFrame", "authority"): "descriptive_only",
     ("SanitizedRemoteFrame", "contains_raw_evidence"): False,
     ("SituationFrame", "authority"): "descriptive_only",
+    # External-security profile (Fabric#25, experimental). Every record is
+    # non-executable; an observation is a fact, an advisory advises, a
+    # proposal proposes, and a device report never claims a tactical outcome.
+    # Transport origin (signature / mTLS) confers no authority.
+    ("ExternalObservationEnvelope", "authority_class"): "observed_fact",
+    ("ExternalObservationEnvelope", "executable"): False,
+    ("AdvisoryContextEnvelope", "authority_class"): "advisory_only",
+    ("AdvisoryContextEnvelope", "executable"): False,
+    ("ExposureChangeProposal", "authority_class"): "proposal_only",
+    ("ExposureChangeProposal", "executable"): False,
+    ("DeviceChangeObservation", "authority_class"): "observed_fact",
+    ("DeviceChangeObservation", "executable"): False,
+    ("DeviceChangeObservation", "tactical_outcome_claimed"): False,
+    ("ExternalProvenance", "confers_authority"): False,
 }
 
 # Safety toggles that default to the safe value but are intentionally NOT

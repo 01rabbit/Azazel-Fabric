@@ -1,0 +1,55 @@
+{
+  "adapter_capability_ref": "capability:switch-vlan-exposure-v1",
+  "authority_class": "proposal_only",
+  "decision_ref": "decision:edge-golden-external-1",
+  "environment_ref": "environment:golden-decoy-1",
+  "evidence_refs": [
+    "evidence:deception-isolation-golden-1"
+  ],
+  "executable": false,
+  "expires_at": "2026-10-01T04:00:00+00:00",
+  "not_before": "2026-10-01T00:05:00+00:00",
+  "privacy_class": "internal",
+  "producer_node_ref": "node:deception-golden-1",
+  "producer_product": "deception",
+  "producer_version": "0.0.0-golden",
+  "proposal_id": "proposal:golden-deception-1",
+  "provenance": {
+    "chain": [
+      {
+        "at": "2026-10-01T00:01:00+00:00",
+        "node_ref": "node:deception-golden-1",
+        "product": "deception",
+        "product_version": "0.0.0-golden",
+        "role": "proposed",
+        "schema_version": "external-provenance-hop/v0.1",
+        "tenant_ref": "tenant:golden-site-1",
+        "transport_identity_ref": "transport:deception-mtls-golden"
+      }
+    ],
+    "confers_authority": false,
+    "schema_version": "external-provenance/v0.1",
+    "signature_ref": null
+  },
+  "requested_effect": "expose_deception_surface",
+  "rollback_requirement": {
+    "max_rollback_seconds": 120,
+    "required": true,
+    "schema_version": "external-rollback-requirement/v0.1",
+    "triggers": [
+      "on_expiry",
+      "on_failure",
+      "on_withdraw"
+    ]
+  },
+  "safety_constraints": [
+    "bounded_duration",
+    "no_production_access",
+    "no_outbound_egress",
+    "isolation_verified_before_exposure"
+  ],
+  "schema_version": "exposure-change-proposal/v0.1",
+  "target_scope_ref": "scope:golden-decoy-segment-1",
+  "tenant_ref": "tenant:golden-site-1",
+  "trace_ref": "trace:golden-external-1"
+}

@@ -491,7 +491,15 @@ def test_an_experimental_family_is_not_one_that_simply_has_no_adopter(rows):
     for family, producers, consumers, verdict in rows:
         if verdict != "**experimental**":
             continue
-        assert family.strip("`") in {"cti_contracts", "mio_contracts"}, (
+        # `external_security_contracts` was born experimental by the Fabric#23
+        # program decision (stable needs one producer and two independent
+        # consumers), recorded where the gate is defined in
+        # `docs/release-compatibility.md` and in its ADR.
+        assert family.strip("`") in {
+            "cti_contracts",
+            "mio_contracts",
+            "external_security_contracts",
+        }, (
             f"{family} is newly marked experimental. That takes it out of the "
             "R1c gate, so it is a release decision rather than a table edit: "
             "record it where the gate is defined and update this test "

@@ -1,0 +1,76 @@
+{
+  "adapter_ref": "adapter:switch-vlan-golden",
+  "authority_class": "observed_fact",
+  "confounders": [
+    "scheduled maintenance window overlapped"
+  ],
+  "correlation_refs": [
+    "external_observation:golden-edr-1",
+    "advisory:golden-knowledge-1"
+  ],
+  "decision_ref": "decision:edge-golden-external-1",
+  "evidence_refs": [
+    "evidence:switch-config-diff-golden-1"
+  ],
+  "executable": false,
+  "failure_reason": null,
+  "limitations": [
+    "device reported config acceptance; traffic not yet observed"
+  ],
+  "observation_id": "device_observation:golden-applied-1",
+  "observation_window": {
+    "end": "2026-10-01T00:10:00+00:00",
+    "schema_version": "external-event-window/v0.1",
+    "start": "2026-10-01T00:05:00+00:00"
+  },
+  "observed_at": "2026-10-01T00:10:00+00:00",
+  "privacy_class": "internal",
+  "producer_node_ref": "node:nexus-golden-1",
+  "producer_product": "nexus",
+  "producer_version": "0.0.0-golden",
+  "proposal_ref": "proposal:golden-deception-1",
+  "provenance": {
+    "chain": [
+      {
+        "at": "2026-10-01T00:10:00+00:00",
+        "node_ref": "node:switch-golden-1",
+        "product": "switch-sim",
+        "product_version": "15.2",
+        "role": "observed",
+        "schema_version": "external-provenance-hop/v0.1",
+        "tenant_ref": "tenant:golden-site-1",
+        "transport_identity_ref": "transport:switch-sim-mtls-golden"
+      },
+      {
+        "at": "2026-10-01T00:10:00+00:00",
+        "node_ref": "node:nexus-golden-1",
+        "product": "nexus",
+        "product_version": "0.0.0-golden",
+        "role": "reported",
+        "schema_version": "external-provenance-hop/v0.1",
+        "tenant_ref": "tenant:golden-site-1",
+        "transport_identity_ref": "transport:nexus-mtls-golden"
+      }
+    ],
+    "confers_authority": false,
+    "schema_version": "external-provenance/v0.1",
+    "signature_ref": null
+  },
+  "schema_version": "device-change-observation/v0.1",
+  "source_status_label": null,
+  "status": "applied",
+  "tactical_outcome_claimed": false,
+  "target_scope_ref": "scope:golden-decoy-segment-1",
+  "telemetry_coverage": {
+    "coverage_complete": false,
+    "gaps": [
+      "no flow telemetry from the decoy segment yet"
+    ],
+    "schema_version": "external-telemetry-coverage/v0.1",
+    "sources_expected": null,
+    "sources_reporting": null
+  },
+  "tenant_ref": "tenant:golden-site-1",
+  "trace_ref": "trace:golden-external-1",
+  "vendor_extensions": []
+}

@@ -224,6 +224,7 @@ simultaneous untested pin change.
 | `mio-contracts/v0.1` | `0.9.0rc1` | M.I.O. cognition family (candidate) |
 | `defensive-state/v0.1` | `0.9.0rc2` | canonical `DefensiveState` vocabulary and `coerce_defensive_state` (candidate) |
 | `effect-contracts/v0.1` | `0.9.0rc2` | cross-series effect / outcome / presented-terrain family (candidate) |
+| `external-security-contracts/v0.1` | `0.9.0rc6` | **experimental** external-security observation / advisory / exposure-proposal / device-observation profile (Fabric#25). Next candidate, **unpublished** — on `main` as `0.9.0rc6.dev0` only. No compatibility promise (candidate) |
 
 A minimum version is a compatibility claim, not an admission decision.
 
@@ -233,6 +234,12 @@ A candidate row names a version a consumer **can** pin: `v0.9.0rc1` and
 marked `(candidate)` until `v0.9.0` is cut, at which point each one's minimum
 becomes `0.9.0` — a consumer already on a candidate needs no code change for
 that, only a re-pin.
+
+`external-security-contracts/v0.1` is the one row naming a candidate that does
+not exist yet. It is on `main` (`0.9.0rc6.dev0`) and nowhere else; a consumer
+cannot pin it until `v0.9.0rc6` is cut, and the family is **experimental** —
+Fabric#23 excludes it from the R1c gate and promises nothing about its shape.
+See [external-security contracts](external-security-contracts.md).
 
 Completeness is enforced: `tests/test_feature_minimums.py` fails if a
 `*_contracts` family ships without a row here. A family with no stated minimum
