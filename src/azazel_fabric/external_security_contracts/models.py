@@ -33,27 +33,29 @@ R1c stable gate. It is also optional -- nothing else in Fabric imports it.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Literal, get_args
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, model_validator
 
 from azazel_fabric.external_security_contracts.validation import (
     FACT_PROJECTION_MAX_BYTES,
     FACT_PROJECTION_MAX_DEPTH,
     FACT_PROJECTION_MAX_ITEMS,
-    RESERVED_EXTENSION_KEYS,
     VENDOR_EXTENSION_MAX_BYTES,
     VENDOR_EXTENSION_MAX_COUNT,
     VENDOR_EXTENSION_MAX_DEPTH,
     VENDOR_EXTENSION_MAX_ITEMS,
     assert_bounded_opaque,
+    assert_no_command_text,
     assert_no_external_security_directives,
+    assert_no_locator_values,
     assert_no_secret_material,
     assert_no_target_locators,
     assert_tenant_confined,
     canonical_digest,
+    is_reserved_key,
     is_sha256_digest,
-    normalized_key,
     parse_ref,
     parse_timestamp,
     require_ref_kind,
@@ -179,7 +181,7 @@ _NOT_A_DECISION_KINDS = frozenset(
 #: bounded request; one that ran for a month would be a standing policy.
 MAX_PROPOSAL_WINDOW_SECONDS = 7 * 24 * 3600
 
-_NAMESPACE = r"^[a-z][a-z0-9-]{0,31}(\.[a-z0-9][a-z0-9-]{0,31}){1,3}$"
+_NAMESPACE = re.compile(r"[a-z][a-z0-9-]{0,31}(?:\.[a-z0-9][a-z0-9-]{0,31}){1,3}")
 
 
 def _coerce(raw: object, vocabulary: tuple[str, ...], fallback: str) -> tuple[str, bool]:
@@ -284,10 +286,10 @@ class TelemetryCoverage(_Descriptive):
     """
 
     schema_version: Literal["external-telemetry-coverage/v0.1"] = "external-telemetry-coverage/v0.1"
-    coverage_complete: bool
+    coverage_complete: StrictBool
     gaps: tuple[str, ...] = Field(default_factory=tuple, max_length=64)
-    sources_expected: int | None = Field(default=None, ge=0)
-    sources_reporting: int | None = Field(default=None, ge=0)
+    sources_expected: StrictInt | None = Field(default=None, ge=0)
+    sources_reporting: StrictInt | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
     def _validate(self) -> "TelemetryCoverage":
@@ -304,10 +306,20 @@ class TelemetryCoverage(_Descriptive):
             and self.sources_reporting > self.sources_expected
         ):
             raise ValueError("sources_reporting cannot exceed sources_expected")
+        if self.coverage_complete and (
+            self.sources_expected is None
+            or self.sources_reporting is None
+            or self.sources_reporting < 1
+        ):
+            raise ValueError(
+                "complete coverage must state how many sources were expected and "
+                "reported, and at least one must have reported; 'complete' with "
+                "nothing reporting is telemetry loss serialized as a clean result"
+            )
         if (
             self.coverage_complete
-            and self.sources_expected is not None
             and self.sources_reporting is not None
+            and self.sources_expected is not None
             and self.sources_reporting < self.sources_expected
         ):
             raise ValueError(
@@ -379,13 +391,15 @@ class VendorExtension(_Descriptive):
     """
 
     schema_version: Literal["external-vendor-extension/v0.1"] = "external-vendor-extension/v0.1"
-    namespace: str = Field(pattern=_NAMESPACE)
+    namespace: str = Field(min_length=3, max_length=131)
     body: dict[str, Any] = Field(default_factory=dict)
     body_digest: str = Field(min_length=1, max_length=80)
     evidence_ref: str | None = Field(default=None, max_length=256)
 
     @model_validator(mode="after")
     def _validate(self) -> "VendorExtension":
+        if _NAMESPACE.fullmatch(self.namespace) is None:
+            raise ValueError(f"namespace {self.namespace!r} must be dotted lower-case (vendor.product)")
         assert_bounded_opaque(
             self.body,
             max_depth=VENDOR_EXTENSION_MAX_DEPTH,
@@ -393,7 +407,7 @@ class VendorExtension(_Descriptive):
             max_bytes=VENDOR_EXTENSION_MAX_BYTES,
             what=f"vendor extension {self.namespace!r}",
         )
-        _reject_reserved_keys(self.body, namespace=self.namespace)
+        _reject_reserved_keys(self.body, namespace=f"vendor extension {self.namespace!r}")
         if not is_sha256_digest(self.body_digest):
             raise ValueError("body_digest must be a sha256:<64 hex> digest")
         if canonical_digest(self.body) != self.body_digest:
@@ -408,10 +422,10 @@ class VendorExtension(_Descriptive):
 def _reject_reserved_keys(value: Any, *, namespace: str) -> None:
     if isinstance(value, dict):
         for key, child in value.items():
-            if normalized_key(key) in RESERVED_EXTENSION_KEYS:
+            if is_reserved_key(key):
                 raise ValueError(
-                    f"vendor extension {namespace!r} reuses the reserved key {key!r}; "
-                    "an extension cannot restate what the envelope owns"
+                    f"{namespace} reuses the reserved key {key!r}; an opaque map "
+                    "cannot restate what the envelope owns"
                 )
             _reject_reserved_keys(child, namespace=namespace)
     elif isinstance(value, (list, tuple)):
@@ -441,6 +455,7 @@ class _Envelope(_Descriptive):
         assert_no_secret_material(payload)
         if forbid_target_locators:
             assert_no_target_locators(payload)
+            assert_no_locator_values(payload)
         require_ref_kind(self.producer_node_ref, "node", field="producer_node_ref")
         require_ref_kind(self.tenant_ref, "tenant", field="tenant_ref")
         assert_tenant_confined(payload, self.tenant_ref)
@@ -525,6 +540,7 @@ class ExternalObservationEnvelope(_Envelope):
             max_bytes=FACT_PROJECTION_MAX_BYTES,
             what="normalized_fact",
         )
+        _reject_reserved_keys(self.normalized_fact, namespace="normalized_fact")
         _check_extensions(self.vendor_extensions)
         return self
 
@@ -619,6 +635,16 @@ class AdvisoryContextEnvelope(_Envelope):
                 "nothing is indistinguishable from an instruction"
             )
         _window(self.generated_at, self.expires_at, start_field="generated_at", end_field="expires_at", strict=True)
+        assert_no_command_text(self.assessment_summary, field="assessment_summary")
+        assert_no_command_text(self.limitations, field="limitations")
+        assert_no_command_text(self.unknowns, field="unknowns")
+        for index, action in enumerate(self.recommended_actions):
+            assert_no_command_text(action.rationale, field=f"recommended_actions.{index}.rationale")
+            assert_no_command_text(action.constraints, field=f"recommended_actions.{index}.constraints")
+        for index, observation in enumerate(self.recommended_observations):
+            assert_no_command_text(
+                observation.rationale, field=f"recommended_observations.{index}.rationale"
+            )
         return self
 
 
@@ -633,7 +659,7 @@ class RollbackRequirement(_Descriptive):
     schema_version: Literal["external-rollback-requirement/v0.1"] = (
         "external-rollback-requirement/v0.1"
     )
-    required: bool
+    required: StrictBool
     triggers: tuple[RollbackTrigger, ...] = Field(default_factory=tuple, max_length=4)
     max_rollback_seconds: int | None = Field(default=None, ge=1, le=86400)
 

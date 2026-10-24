@@ -78,12 +78,26 @@ label.
 
 ## 4. What is refused, and where
 
-| Guard | Applies to | Refuses |
-| --- | --- | --- |
-| `assert_no_external_security_directives` | all four, whole record | command/provider syntax, route/firewall/DNS rule bodies, executors, tokens/credentials/credential locators, overrides, approvals/verdicts, success verdicts, execute flags (`executable` anything but `false`) — by exact name and by pattern (`*_command`, `*_rule(s)`, `execute_*`, `*_override`, any `token`/`password`/`secret`/`credential` segment, `*_success`) |
-| `assert_no_target_locators` | advisory and proposal | hostname, IP, MAC, FQDN, interface/port/VLAN and device-/vendor-object ids |
-| `assert_no_secret_material` | all four | PEM blocks, key prefixes, `token=`-style assignments, and refs of kind `credential:` `secret:` `token:` `key:` `vault:` `password:` `keychain:` |
-| `assert_tenant_confined` | all four | any `tenant:` ref other than the record's own |
+| Guard | Applies to | Looks at | Refuses |
+| --- | --- | --- | --- |
+| `assert_no_external_security_directives` | all four, whole record | **keys** | command/provider syntax, route/firewall/DNS rule bodies, executors, tokens/credentials/credential locators, overrides, approvals/verdicts, success verdicts — by exact name and by pattern (`*command*` prefix/suffix, `*rule(s)`, `execute*`, `*override*`, `executor`, any `token`/`password`/`secret`/`credential`/`apikey` substring, `*success*` prefix/suffix), compared after camelCase splitting and with separators removed; any key that is not printable ASCII; an `executable` key whose value is not `false`; non-finite numbers |
+| `assert_no_target_locators` | advisory and proposal | **keys** | hostname, IP, MAC, FQDN, interface/port/VLAN and device-/vendor-object ids, same normalization |
+| reserved-key check | `normalized_fact`, `VendorExtension.body` | **keys** | `authority_class`, `executable`, `decision_ref`, `tenant_ref`, `schema_version`, `privacy_class`, `fact_class`, `status`, `provenance` in any ASCII spelling |
+| `assert_no_secret_material` | all four | **keys and string values** | PEM blocks, key prefixes, `token=`-style assignments; a string *starting* with `credential`/`secret`/`token`/`key`/`vault`/`password`/`keychain` + `:` (any case, any body); the same kinds except `key` + `:` + non-space *inside* text |
+| `assert_tenant_confined` | all four | **string values** | any `tenant:` reference (any case, any body, anywhere inside a string) other than the record's own |
+| `assert_no_locator_values` | advisory and proposal | **string values** | locator-kind refs (`ip:` `host:` `hostname:` `mac:` `fqdn:` `url:` `uri:` `domain:`, any case); IPv4 / IPv6-shaped values (not in `*version` fields) |
+| `assert_no_command_text` | advisory free text (summary, limitations, unknowns, rationale, constraints) | **string values** | closed command-token denylist (`COMMAND_TEXT_TOKENS`) and shell metacharacter sequences (`SHELL_METACHARACTER_SEQUENCES`) |
+
+What is **not** checked: the meaning of prose (an instruction in plain words
+without a denylisted token passes), and confusable characters inside values
+(only keys are closed to ASCII). Observation and device records may carry
+addresses and command-like strings as values of non-banned keys — observing
+them is a fact. Every field is still input to the consumer's own authority.
+
+`canonical_external_security_json` re-validates a model before serializing
+it, so a frozen record whose mutable dict was changed after construction
+cannot canonicalize. Typed refs and digests are matched with `fullmatch`, so a
+trailing newline is refused.
 
 All walks recurse into mappings, lists and tuples and are **bounded**: past the
 nesting limit a payload is refused with a clean `ValueError` (both guards are
@@ -117,7 +131,8 @@ Pure helpers, no clock — the caller supplies `as_of`:
 - `assert_device_observation_within_proposal(proposal, observation)` — same
   proposal, tenant, trace and decision; an in-place status
   (`accepted_by_device`, `applied`, `observed`) outside
-  `[not_before, expires_at]` is refused. After expiry only `released`,
+  `[not_before, expires_at]`, or reported over an `observation_window` that
+  leaves that interval, is refused. After expiry only `released`,
   `failed`, `stale` or `unknown` may be reported.
 - `assert_privacy_admitted(record, admitted)` — the consumer's own admission
   set; Fabric decides nothing about it.
@@ -136,7 +151,27 @@ canonical-SHA-256 manifest. Experimental like the family: the bytes make no
 compatibility promise. `azazel_fabric.testing` does not import them, so the
 general conformance kit stays free of the optional profile.
 
-## 8. Not in scope
+## 8. Owner-facing defaults
+
+Chosen by the implementer, to be confirmed by the owner: proposal window ≤ 7
+days; vendor extension depth ≤ 4, ≤ 32 items, strings ≤ 1024, ≤ 8 KiB, ≤ 4 per
+record; fact projection depth ≤ 4, ≤ 64 items, ≤ 16 KiB; record walk depth ≤
+12. Complete coverage requires `sources_expected` and `sources_reporting`,
+with at least one source reporting.
+
+## 9. Known false positives (accepted, not loosened)
+
+The checks are closed, so some legitimate facts are refused. Pinned by
+`test_known_false_positives_stay_refused`:
+
+| Refused | Why | Where such data goes instead |
+| --- | --- | --- |
+| `"Slovakia"` anywhere | contains the `AKIA` access-key-id marker, case-folded | keep it at the source; cite it by `evidence:` ref / `payload_digest` |
+| `{"executable": true}` in an `endpoint_file` fact | `executable` with any value but `false` is an execute flag | carry the file attribute under a non-banned key (`file_mode_bits`) or by digest |
+| `command_line` in an EDR process fact | any key beginning or ending with `command` | a digest-only reference: hash the command line into an `evidence:` record held by the producer, and put only its digest in the projection |
+| `ssh brute force` in advisory text | `ssh` is a command token | name the fact class or cite the observation; advisory text is not where tool names go |
+
+## 10. Not in scope
 
 Vendor APIs, network clients, device adapters, decision/admission/approval
 logic, installers, containers and model execution. Promotion to stable needs

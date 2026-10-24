@@ -815,3 +815,230 @@ def test_every_family_model_is_exported():
     import azazel_fabric.external_security_contracts as family
 
     assert declared <= set(family.__all__), sorted(declared - set(family.__all__))
+
+
+# ---------------------------------------------------------------------------
+# Review follow-up: spellings, values, and the edges of the closed choices
+# ---------------------------------------------------------------------------
+
+#: Spellings of banned names that a lower-case-and-fold normalizer missed.
+_EVASIVE_DIRECTIVE_KEYS = (
+    "shellCommand",
+    "firewallRule",
+    "accessToken",
+    "executeNow",
+    "authorityOverride",
+    "commandLine",
+    "comm-and",
+    "Shell Command",
+    "fire_wall_rule",
+    "ＣＯＭＭＡＮＤ",  # fullwidth
+    "cоmmand",  # Cyrillic о
+    "com​mand",  # zero-width space
+    "exec­ute",  # soft hyphen
+    "token⁠",  # word joiner
+)
+
+
+@pytest.mark.parametrize("key", _EVASIVE_DIRECTIVE_KEYS)
+def test_an_evasive_spelling_is_refused_in_the_fact_projection(key):
+    with pytest.raises(ValidationError):
+        ExternalObservationEnvelope.model_validate(
+            _with(golden_external_observation(), normalized_fact={"a": [{key: "x"}]})
+        )
+
+
+@pytest.mark.parametrize("key", _EVASIVE_DIRECTIVE_KEYS)
+def test_an_evasive_spelling_is_refused_in_a_vendor_extension(key):
+    payload = golden_device_change_applied()
+    payload["vendor_extensions"] = [_extension({"x": [{key: "y"}]})]
+    with pytest.raises(ValidationError):
+        DeviceChangeObservation.model_validate(payload)
+
+
+@pytest.mark.parametrize("key", _EVASIVE_DIRECTIVE_KEYS)
+def test_the_directive_guard_refuses_evasive_spellings_at_depth(key):
+    with pytest.raises(ValueError):
+        assert_no_external_security_directives({"a": [({"b": {key: 1}},)]})
+
+
+@pytest.mark.parametrize(
+    "key", ["targetIp", "Target-Hostname", "deviceObjectId", "ｈｏｓｔｎａｍｅ", "host​name"]
+)
+def test_the_locator_guard_refuses_evasive_spellings(key):
+    with pytest.raises(ValueError):
+        assert_no_target_locators({"a": [{key: "x"}]})
+
+
+@pytest.mark.parametrize(
+    "key", ["authorityClass", "decisionRef", "Tenant-Ref", "STATUS", "authority class", "exe_cutable"]
+)
+@pytest.mark.parametrize("where", ["normalized_fact", "vendor_extension"])
+def test_a_reserved_key_is_refused_in_any_ascii_spelling(key, where):
+    payload = golden_external_observation()
+    if where == "normalized_fact":
+        payload["normalized_fact"] = {"nested": [{key: "observed_fact"}]}
+    else:
+        payload["vendor_extensions"] = [_extension({"nested": {key: "observed_fact"}})]
+    with pytest.raises(ValidationError):
+        ExternalObservationEnvelope.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "vault:secret/data/db",
+        "secret:projects/p/secrets/s",
+        "Credential:foo",
+        "TOKEN:abc",
+        " key : x",
+        "fetch it from vault:kv/switch-admin first",
+        "password: hunter2 was reused",
+    ],
+)
+def test_a_credential_locator_is_refused_in_any_case_and_grammar(value):
+    with pytest.raises(ValidationError, match="credential locator"):
+        ExternalObservationEnvelope.model_validate(
+            _with(golden_external_observation(), limitations=[value])
+        )
+
+
+@pytest.mark.parametrize(
+    "value", ["Tenant:other", "tenant:other/x", "seen in tenant:other-site last week", "TENANT : other"]
+)
+def test_a_cross_tenant_reference_is_refused_in_any_case_and_inside_text(value):
+    with pytest.raises(ValidationError, match="cross-tenant"):
+        ExternalObservationEnvelope.model_validate(
+            _with(golden_external_observation(), limitations=[value])
+        )
+
+
+def test_the_records_own_tenant_inside_text_is_accepted():
+    ExternalObservationEnvelope.model_validate(
+        _with(golden_external_observation(), limitations=["scoped to tenant:golden-site-1 only"])
+    )
+
+
+@pytest.mark.parametrize(
+    "ref", ["ip:10.0.0.5", "hostname:ws-17", "Host:ws-17", "mac:aa-bb", "fqdn:a.example", "url:x"]
+)
+def test_an_advisory_subject_cannot_be_a_locator(ref):
+    with pytest.raises(ValidationError, match="target locator"):
+        AdvisoryContextEnvelope.model_validate(_with(golden_advisory_context(), subject_refs=[ref]))
+
+
+@pytest.mark.parametrize(
+    "scope", ["scope:10.0.0.5", "scope:fe80::1", "scope:2001:db8:0:0:0:0:0:1"]
+)
+def test_a_proposal_scope_cannot_be_an_address(scope):
+    with pytest.raises(ValidationError, match="IP-address-shaped"):
+        ExposureChangeProposal.model_validate(_with(golden_exposure_proposal(), target_scope_ref=scope))
+
+
+def test_an_observation_may_still_carry_addresses_as_facts():
+    """Observing a flow between two addresses is a fact; only advice/proposals are closed."""
+    ExternalObservationEnvelope.model_validate(
+        _with(golden_external_observation(), normalized_fact={"src": "10.0.0.5", "dst": "fe80::1"})
+    )
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "run iptables -A INPUT -s 10.1.1.1 -j DROP",
+        "nft add rule inet filter input drop",
+        "use ip route add blackhole",
+        "ufw deny 22",
+        "firewall-cmd --add-rich-rule",
+        "sudo systemctl stop sshd",
+        "curl the payload",
+        "rm -rf the share",
+        "echo ok && reboot",
+        "$(whoami)",
+    ],
+)
+@pytest.mark.parametrize("field", ["rationale", "constraints"])
+def test_a_recommended_action_cannot_carry_command_text(text, field):
+    payload = golden_advisory_context()
+    payload["recommended_actions"][0][field] = text if field == "rationale" else [text]
+    with pytest.raises(ValidationError, match="command token|metacharacter|IP-address"):
+        AdvisoryContextEnvelope.model_validate(payload)
+
+
+def test_a_mutated_record_cannot_canonicalize():
+    record = ExternalObservationEnvelope.model_validate(golden_external_observation())
+    record.normalized_fact["shellCommand"] = "rm -rf /"  # frozen model, mutable dict
+    with pytest.raises(ValidationError):
+        canonical_external_security_json(record)
+
+
+@pytest.mark.parametrize("number", [float("nan"), float("inf"), float("-inf")])
+def test_a_non_finite_number_is_refused_rather_than_becoming_null(number):
+    with pytest.raises(ValidationError, match="non-finite"):
+        ExternalObservationEnvelope.model_validate(
+            _with(golden_external_observation(), normalized_fact={"score": number})
+        )
+
+
+@pytest.mark.parametrize("field", ["observation_id", "source_event_ref", "tenant_ref"])
+def test_a_ref_with_a_trailing_newline_is_refused(field):
+    payload = golden_external_observation()
+    payload[field] = payload[field] + "\n"
+    with pytest.raises(ValidationError):
+        ExternalObservationEnvelope.model_validate(payload)
+
+
+def test_a_namespace_with_a_trailing_newline_is_refused():
+    payload = golden_external_observation()
+    payload["vendor_extensions"] = [_extension({"a": 1}, "vendor.edr-sim\n")]
+    with pytest.raises(ValidationError):
+        ExternalObservationEnvelope.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"coverage_complete": True},
+        {"coverage_complete": True, "sources_expected": 0, "sources_reporting": 0},
+        {"coverage_complete": True, "sources_expected": 3},
+        {"coverage_complete": "true", "sources_expected": 1, "sources_reporting": 1},
+        {"coverage_complete": 1, "sources_expected": 1, "sources_reporting": 1},
+        {"coverage_complete": True, "sources_expected": "1", "sources_reporting": 1},
+    ],
+)
+def test_complete_coverage_must_be_counted_and_strictly_typed(kwargs):
+    with pytest.raises(ValidationError):
+        TelemetryCoverage(**kwargs)
+
+
+def test_an_observation_window_starting_before_the_proposal_is_refused():
+    proposal = ExposureChangeProposal.model_validate(golden_exposure_proposal())
+    payload = golden_device_change_applied()
+    payload["observation_window"]["start"] = "2026-10-01T00:03:00+00:00"  # before not_before
+    with pytest.raises(ValueError, match="observation window"):
+        assert_device_observation_within_proposal(
+            proposal, DeviceChangeObservation.model_validate(payload)
+        )
+
+
+@pytest.mark.parametrize(
+    "fact",
+    [
+        {"country": "Slovakia"},  # contains the AKIA key-id marker, case-folded
+        {"file_flags": {"executable": True}},  # an endpoint_file fact
+        {"command_line": "office_sim.exe /q"},  # an EDR process fact
+    ],
+    ids=["akia-substring", "executable-flag", "command-line"],
+)
+def test_known_false_positives_stay_refused(fact):
+    """Documented limitation, pinned so it is not loosened by accident.
+
+    These are legitimate facts the closed checks refuse. The documented home
+    for such data is a digest-only reference: carry the raw value at the
+    source, put its digest in `payload_digest` / an `evidence:` ref, and keep
+    it out of the projection. See docs/external-security-contracts.md §9.
+    """
+    with pytest.raises(ValidationError):
+        ExternalObservationEnvelope.model_validate(
+            _with(golden_external_observation(), normalized_fact=fact)
+        )

@@ -72,7 +72,7 @@
       "rationale": "two sensors were offline during the event window",
       "schema_version": "external-recommended-observation/v0.1",
       "subject_refs": [
-        "host:golden-workstation-17"
+        "asset:golden-workstation-17"
       ]
     }
   ],
@@ -81,7 +81,7 @@
     "external_observation:golden-edr-1"
   ],
   "subject_refs": [
-    "host:golden-workstation-17"
+    "asset:golden-workstation-17"
   ],
   "tenant_ref": "tenant:golden-site-1",
   "trace_ref": "trace:golden-external-1",

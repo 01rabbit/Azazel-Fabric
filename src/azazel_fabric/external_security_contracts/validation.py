@@ -276,37 +276,163 @@ RESERVED_EXTENSION_KEYS = frozenset(
     }
 )
 
-_TYPED_REF = re.compile(r"^(?P<kind>[a-z][a-z0-9_]{0,31}):(?P<body>[A-Za-z0-9._~@=+:-]{1,200})$")
-_SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
+# Used with ``fullmatch`` only: ``$`` would also accept a trailing newline.
+_TYPED_REF = re.compile(r"(?P<kind>[a-z][a-z0-9_]{0,31}):(?P<body>[A-Za-z0-9._~@=+:-]{1,200})")
+_SHA256 = re.compile(r"sha256:[0-9a-f]{64}")
+
+#: A credential locator at the start of a string, in any letter case and with
+#: any body grammar (``vault:secret/data/db``, ``TOKEN:abc``, ``Key : x``).
+_CREDENTIAL_LOCATOR_PREFIX = re.compile(
+    r"^\s*(?:credentials?|secrets?|tokens?|key|vault|passwords?|passwd|keychain)\s*:",
+    re.IGNORECASE,
+)
+#: The same locators *inside* free text. Narrower than the prefix rule (no bare
+#: ``key:``, which prose uses), and requires a non-space body.
+_CREDENTIAL_LOCATOR_INLINE = re.compile(
+    r"\b(?:credentials?|secrets?|tokens?|vault|passwords?|passwd|keychain)\s*:\s*\S",
+    re.IGNORECASE,
+)
+#: A tenant reference anywhere inside a string, any case, any body grammar.
+_TENANT_INLINE = re.compile(r"\btenant\s*:\s*([^\s,;\"'()\[\]{}]+)", re.IGNORECASE)
+
+#: Ref kinds that are, by their kind alone, a concrete target locator.
+#: Refused as values in advisory and proposal records.
+LOCATOR_REF_KINDS = frozenset(
+    {"ip", "ipv4", "ipv6", "host", "hostname", "mac", "fqdn", "url", "uri", "domain"}
+)
+_LOCATOR_REF_PREFIX = re.compile(
+    r"^\s*(?:ip|ipv4|ipv6|host|hostname|mac|fqdn|url|uri|domain)\s*:", re.IGNORECASE
+)
+_IPV4 = re.compile(r"(?<![0-9.])(?:\d{1,3}\.){3}\d{1,3}(?![0-9])")
+#: Compressed (``::``) or full eight-group IPv6. Timestamps (``00:05:00``) have
+#: neither shape, which is why a looser pattern is not used.
+_IPV6 = re.compile(
+    r"(?i)(?<![0-9a-f])(?:"
+    r"(?:[0-9a-f]{1,4}:){7}[0-9a-f]{1,4}"
+    r"|(?:[0-9a-f]{1,4}(?::[0-9a-f]{1,4}){0,6})?::(?:[0-9a-f]{1,4}(?::[0-9a-f]{1,4}){0,6})?"
+    r")(?![0-9a-f:])"
+)
+
+#: Command tokens refused in advisory/proposal free text (rationale,
+#: constraints, summary, limitations, unknowns). A closed denylist: it will
+#: refuse prose that merely *mentions* one of these words (``ssh brute force``),
+#: and that loss is accepted -- the alternative is guessing which mention is
+#: an instruction. Such context belongs in an observation envelope's fact
+#: projection, cited by ref.
+COMMAND_TEXT_TOKENS = (
+    "iptables",
+    "ip6tables",
+    "nft",
+    "nftables",
+    "ufw",
+    "firewall-cmd",
+    "netsh",
+    "ip route",
+    "ip rule",
+    "route add",
+    "ssh",
+    "scp",
+    "curl",
+    "wget",
+    "sudo",
+    "systemctl",
+    "rm",
+    "chmod",
+    "kubectl",
+    "docker",
+    "podman",
+    "powershell",
+    "cmd.exe",
+    "bash",
+    "sh -c",
+)
+_COMMAND_TOKEN = re.compile(
+    r"(?<![A-Za-z0-9_-])(?:" + "|".join(re.escape(t) for t in COMMAND_TEXT_TOKENS) + r")(?![A-Za-z0-9_-])",
+    re.IGNORECASE,
+)
+#: Shell metacharacter sequences refused in the same text.
+SHELL_METACHARACTER_SEQUENCES = ("&&", "||", "`", "$(", "${", " | ", ">>")
 
 
 def normalized_key(raw: str) -> str:
-    """Lower-case, fold every non-alphanumeric run to one ``_``, trim ``_``."""
+    """snake_case form of ``raw``: splits camelCase, folds separators.
 
-    normalized = "".join(ch.lower() if ch.isalnum() else "_" for ch in raw.strip())
+    Ported from ``provisioning_contracts.validation.normalized_key`` (copied:
+    the strict gate forbids the import). Only meaningful for ASCII keys --
+    non-ASCII keys are refused before this is consulted (:func:`_check_key`).
+    """
+
+    parts: list[str] = []
+    previous_is_lower_or_digit = False
+    for char in raw.strip():
+        if char.isupper() and previous_is_lower_or_digit:
+            parts.append("_")
+        parts.append(char.lower() if char.isalnum() else "_")
+        previous_is_lower_or_digit = char.islower() or char.isdigit()
+    normalized = "".join(parts)
     while "__" in normalized:
         normalized = normalized.replace("__", "_")
     return normalized.strip("_")
 
 
+def _squashed(key: str) -> str:
+    return key.replace("_", "")
+
+
+def _check_key(raw: str, location: str) -> None:
+    """Keys are closed to printable ASCII.
+
+    Fullwidth letters, Cyrillic or Greek lookalikes, zero-width and other
+    format characters can each spell a banned name that no ASCII comparison
+    sees. Mapping confusables would be an open-ended table; refusing them is
+    closed. A key outside printable ASCII is therefore refused outright.
+    """
+
+    if not (raw.isascii() and raw.isprintable()):
+        raise ValueError(
+            f"key {location!r} is not printable ASCII; non-ASCII and invisible "
+            "characters in keys are refused"
+        )
+
+
+_BANNED_SQUASHED = frozenset(_squashed(name) for name in BANNED_EXTERNAL_SECURITY_FIELDS)
+_SECRET_SUBSTRINGS = ("token", "password", "passwd", "secret", "credential", "apikey")
+
+
 def _is_directive_key(raw: str) -> bool:
     key = normalized_key(raw)
-    if key in BANNED_EXTERNAL_SECURITY_FIELDS:
+    squashed = _squashed(key)
+    if key in BANNED_EXTERNAL_SECURITY_FIELDS or squashed in _BANNED_SQUASHED:
         return True
     segments = set(key.split("_"))
     return (
-        key.endswith("_command")
-        or key.startswith("command_")
-        or key.endswith("_rule")
-        or key.endswith("_rules")
-        or key.startswith("execute_")
-        or key.endswith("_override")
-        or key.startswith("override_")
-        or "executor" in segments
+        squashed.endswith("command")
+        or squashed.startswith("command")
+        or squashed.endswith("rule")
+        or squashed.endswith("rules")
+        or squashed.startswith("execute")
+        or squashed.endswith("override")
+        or squashed.startswith("override")
+        or "executor" in squashed
         or bool(segments & _SECRET_SEGMENTS)
-        or key.endswith("_success")
-        or key.startswith("success_")
+        or any(part in squashed for part in _SECRET_SUBSTRINGS)
+        or squashed.endswith("success")
+        or squashed.startswith("success")
     )
+
+
+_BANNED_LOCATOR_SQUASHED = frozenset(_squashed(name) for name in BANNED_TARGET_LOCATOR_FIELDS)
+
+
+def _is_locator_key(raw: str) -> bool:
+    key = normalized_key(raw)
+    return key in BANNED_TARGET_LOCATOR_FIELDS or _squashed(key) in _BANNED_LOCATOR_SQUASHED
+
+
+def is_reserved_key(raw: str) -> bool:
+    """True when ``raw`` spells a key the envelope owns, in any ASCII spelling."""
+
+    return _squashed(normalized_key(raw)) in {_squashed(k) for k in RESERVED_EXTENSION_KEYS}
 
 
 def _as_payload(value: Any) -> Any:
@@ -329,6 +455,8 @@ def _walk(
         if len(value) > _MAX_STRING:
             raise ValueError("external-security payload contains oversized string")
         return
+    if isinstance(value, float) and not _is_finite(value):
+        raise ValueError("external-security payload contains a non-finite number")
     if value is None or isinstance(value, (bool, int, float)):
         return
     if isinstance(value, Mapping):
@@ -340,6 +468,7 @@ def _walk(
             if len(raw_key) > _MAX_KEY:
                 raise ValueError("external-security payload contains oversized key")
             location = ".".join((*path, raw_key))
+            _check_key(raw_key, location)
             if banned(raw_key):
                 raise ValueError(f"{message}: {location}")
             # `executable` is pinned False on every record. Anywhere it appears
@@ -356,6 +485,10 @@ def _walk(
             _walk(child, banned=banned, message=message, path=(*path, str(index)), depth=depth + 1)
         return
     raise ValueError(f"unsupported external-security payload type: {type(value).__name__}")
+
+
+def _is_finite(number: float) -> bool:
+    return number == number and number not in (float("inf"), float("-inf"))
 
 
 def contains_external_security_directive(value: Any) -> bool:
@@ -393,7 +526,7 @@ def assert_no_target_locators(value: Any) -> None:
 
     _walk(
         _as_payload(value),
-        banned=lambda raw: normalized_key(raw) in BANNED_TARGET_LOCATOR_FIELDS,
+        banned=_is_locator_key,
         message=(
             "external-security invariant violated: a concrete target locator is "
             "forbidden in an advisory or proposal; it belongs to the owning "
@@ -433,11 +566,10 @@ def assert_no_secret_material(value: Any) -> None:
                     f"{'.'.join(path) or '<root>'} carries recognizable secret material "
                     f"({marker!r}); this family carries opaque references only"
                 )
-        match = _TYPED_REF.match(text)
-        if match is not None and match.group("kind") in CREDENTIAL_LOCATOR_KINDS:
+        if _CREDENTIAL_LOCATOR_PREFIX.search(text) or _CREDENTIAL_LOCATOR_INLINE.search(text):
             raise ValueError(
-                f"{'.'.join(path) or '<root>'} is a credential locator "
-                f"({match.group('kind')}:); a contract never says where a secret lives"
+                f"{'.'.join(path) or '<root>'} carries a credential locator; a "
+                "contract never says where a secret lives"
             )
 
 
@@ -459,6 +591,8 @@ def assert_bounded_opaque(
             if len(node) > max_string:
                 raise ValueError(f"{what} contains a string over {max_string} characters")
             return
+        if isinstance(node, float) and not _is_finite(node):
+            raise ValueError(f"{what} contains a non-finite number")
         if node is None or isinstance(node, (bool, int, float)):
             return
         if isinstance(node, Mapping):
@@ -492,6 +626,10 @@ def canonical_external_security_json(value: Any) -> str:
     directive and secret guards run first: nothing refused here gets a digest.
     """
 
+    if hasattr(value, "model_validate") and hasattr(value, "model_dump"):
+        # Frozen records still hold mutable dicts. Re-validating the dump means
+        # a record mutated after construction cannot canonicalize.
+        value = type(value).model_validate(value.model_dump(mode="json"))
     payload = _as_payload(value)
     assert_no_external_security_directives(payload)
     assert_no_secret_material(payload)
@@ -533,7 +671,7 @@ def parse_ref(raw: object) -> tuple[str | None, str]:
 
     if not isinstance(raw, str):
         return None, ""
-    match = _TYPED_REF.match(raw)
+    match = _TYPED_REF.fullmatch(raw)
     if match is None:
         return None, raw
     return match.group("kind"), match.group("body")
@@ -572,12 +710,58 @@ def assert_tenant_confined(value: Any, tenant_ref: str) -> None:
     """
 
     for path, text in _strings(_as_payload(value)):
-        kind, _ = parse_ref(text)
-        if kind == "tenant" and text != tenant_ref:
+        for match in _TENANT_INLINE.finditer(text):
+            named = "tenant:" + match.group(1)
+            if named != tenant_ref:
+                raise ValueError(
+                    f"{'.'.join(path) or '<root>'} names {match.group(0)!r} inside a "
+                    f"record bound to {tenant_ref!r}; cross-tenant references are refused"
+                )
+
+
+def assert_no_locator_values(value: Any) -> None:
+    """Refuse concrete target locators carried as *values* (advisory, proposal).
+
+    A locator-kind ref (``ip:``, ``host:``, ``hostname:``, ``mac:``, ``fqdn:``,
+    ``url:``, ``uri:``, ``domain:``, any case) or an IPv4/IPv6-shaped value,
+    anywhere in the record. Fields named ``*version`` are exempt from the
+    address-shape scan only: ``1.2.3.4`` is a plausible version string.
+    """
+
+    for path, text in _strings(_as_payload(value)):
+        location = ".".join(path) or "<root>"
+        if _LOCATOR_REF_PREFIX.search(text):
             raise ValueError(
-                f"{'.'.join(path) or '<root>'} names tenant {text!r} inside a record "
-                f"bound to {tenant_ref!r}; cross-tenant references are refused"
+                f"{location} is a concrete target locator ({text!r}); an advisory or "
+                "proposal names an opaque scope, never an address"
             )
+        field = path[-1] if path else ""
+        if field.endswith("version") or (len(path) >= 2 and path[-2].endswith("version")):
+            continue
+        if _IPV4.search(text) or _IPV6.search(text):
+            raise ValueError(
+                f"{location} carries an IP-address-shaped value; an advisory or "
+                "proposal names an opaque scope, never an address"
+            )
+
+
+def assert_no_command_text(texts: Any, *, field: str) -> None:
+    """Refuse command-shaped free text: a closed token denylist plus shell metacharacters."""
+
+    if isinstance(texts, str):
+        texts = (texts,)
+    for text in texts:
+        token = _COMMAND_TOKEN.search(text)
+        if token is not None:
+            raise ValueError(
+                f"{field} contains the command token {token.group(0)!r}; advisory and "
+                "proposal text describes, it never carries a command"
+            )
+        for sequence in SHELL_METACHARACTER_SEQUENCES:
+            if sequence in text:
+                raise ValueError(
+                    f"{field} contains the shell metacharacter sequence {sequence!r}"
+                )
 
 
 def _get(obj: Any, name: str) -> Any:
@@ -665,6 +849,15 @@ def assert_device_observation_within_proposal(proposal: Any, observation: Any) -
             f"observation at {_get(observation, 'observed_at')} reports {status!r} "
             "outside the proposal window; a stale observation cannot extend an exposure"
         )
+    window = _get(observation, "observation_window")
+    if window is not None:
+        start = parse_timestamp(_get(window, "start"), field="observation_window.start")
+        end = parse_timestamp(_get(window, "end"), field="observation_window.end")
+        if start < not_before or end > expires:
+            raise ValueError(
+                f"observation window reports {status!r} outside the proposal window; "
+                "a stale observation cannot extend an exposure"
+            )
 
 
 #: Device statuses that report a change as being in place. None of them is a
@@ -675,14 +868,17 @@ IN_PLACE_DEVICE_STATUSES = frozenset({"accepted_by_device", "applied", "observed
 __all__ = [
     "BANNED_EXTERNAL_SECURITY_FIELDS",
     "BANNED_TARGET_LOCATOR_FIELDS",
+    "COMMAND_TEXT_TOKENS",
     "CREDENTIAL_LOCATOR_KINDS",
     "FACT_PROJECTION_MAX_BYTES",
     "FACT_PROJECTION_MAX_DEPTH",
     "FACT_PROJECTION_MAX_ITEMS",
     "IN_PLACE_DEVICE_STATUSES",
+    "LOCATOR_REF_KINDS",
     "PRIVACY_CLASSES",
     "RESERVED_EXTENSION_KEYS",
     "SECRET_MATERIAL_MARKERS",
+    "SHELL_METACHARACTER_SEQUENCES",
     "VENDOR_EXTENSION_MAX_BYTES",
     "VENDOR_EXTENSION_MAX_COUNT",
     "VENDOR_EXTENSION_MAX_DEPTH",
@@ -690,7 +886,9 @@ __all__ = [
     "VENDOR_EXTENSION_MAX_STRING",
     "assert_bounded_opaque",
     "assert_device_observation_within_proposal",
+    "assert_no_command_text",
     "assert_no_external_security_directives",
+    "assert_no_locator_values",
     "assert_no_replay_extension",
     "assert_no_secret_material",
     "assert_no_target_locators",
@@ -700,6 +898,7 @@ __all__ = [
     "canonical_digest",
     "canonical_external_security_json",
     "contains_external_security_directive",
+    "is_reserved_key",
     "is_sha256_digest",
     "normalized_key",
     "parse_ref",

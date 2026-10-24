@@ -94,7 +94,7 @@ def golden_external_observation() -> dict[str, Any]:
         observed_at=_T0,
         received_at=_T0A,
         fact_class="endpoint_process",
-        subject_refs=("host:golden-workstation-17", "process:golden-17-4242"),
+        subject_refs=("asset:golden-workstation-17", "process:golden-17-4242"),
         event_window=EventWindow(start=_T0, end=_T0),
         payload_digest=_RAW_DIGEST,
         normalized_fact={
@@ -140,7 +140,7 @@ def golden_advisory_context() -> dict[str, Any]:
         producer_version="0.0.0-golden",
         tenant_ref=_TENANT,
         trace_ref=_TRACE,
-        subject_refs=("host:golden-workstation-17",),
+        subject_refs=("asset:golden-workstation-17",),
         generated_at=_T1,
         expires_at=_T4,
         source_fact_refs=(_OBSERVATION,),
@@ -154,7 +154,7 @@ def golden_advisory_context() -> dict[str, Any]:
         recommended_observations=(
             RecommendedObservation(
                 observation_class="verify_coverage",
-                subject_refs=("host:golden-workstation-17",),
+                subject_refs=("asset:golden-workstation-17",),
                 rationale="two sensors were offline during the event window",
                 evidence_refs=("evidence:edr-golden-raw-17",),
             ),

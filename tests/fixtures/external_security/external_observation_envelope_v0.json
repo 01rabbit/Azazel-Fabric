@@ -65,7 +65,7 @@
   "source_product_version": "7.12.3",
   "source_system": "edr",
   "subject_refs": [
-    "host:golden-workstation-17",
+    "asset:golden-workstation-17",
     "process:golden-17-4242"
   ],
   "telemetry_coverage": {
