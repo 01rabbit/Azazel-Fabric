@@ -177,9 +177,39 @@ raw value at the source, put its digest in `payload_digest` or behind an
 | `Foo::Bar`, `0.5`, `cmd.exe`, `ssh brute force` in advisory text | `:` is unrepresentable; a dot must be followed by a space; `ssh` is a command word |
 | hostnames as refs (`asset:db01.corp`) | dots are outside the ref body allowlist; mint an opaque id instead |
 
+| any `*_status` key (`patch_status`, `http_status`) | `status` is envelope-owned |
+| `payload_bytes`, `rule_id`, `firewall_zone`, `run_as`, `policy_name` | `payload`, `rule`, `firewall`, `run`, `policy` are deny tokens |
+| SIEM case titles containing `:` (`Suspicious login: admin`) | `:` is outside the value allowlist |
+| Windows and POSIX paths (`C:\\Windows\\x.exe`, `/etc/shadow`) | `:`, `\\` and `/` are outside the value allowlist |
+| file hashes as fact values (`sha256` of 64 hex) | the long-token shape rule; put the digest behind an `evidence:` ref |
+| any 32+ character token in a value, label or free text | the shape rule (keys, secrets, blobs) |
+
 Intended allowances: `10.1` in a version field (a valid version); a dotted
-IPv4 address or hostname as an observation fact value (observing one is a
-fact). Plain-words prose inside the allowlist is representable and is still
+IPv4 address, hostname or e-mail address as an observation fact value
+(observing one is a fact); an observed command described in observation or
+device free text (`iptables -F` — a fact, still without metacharacters, paths
+or long tokens); opaque ref bodies that happen to spell a dashed hostname or
+address (`asset:db01-corp-example-com`) — the grammar cannot tell an opaque id
+from one; short secrets below the 32-character shape threshold that match no
+known format (a 16-character base32 seed); spaced digits or prose such as
+`10 0 0 1` in advisory text.
+
+**Owner decision pending: fact vocabulary vs. deny tokens.** Under the
+opaque-key deny tokens, `network_policy_event` and `endpoint_process` lose
+their natural vocabulary: `rule_id`, `policy_name`, `acl_entry`,
+`firewall_zone`, `*_status`, `run_as`, `payload_bytes` and `cmdline` are all
+refused, so a firewall policy event can say little more than `action` and a
+matched entry, and a process fact cannot carry its command line. Two options,
+**neither applied here**:
+
+1. **Keep it closed** (current). Such detail goes digest-only behind an
+   `evidence:` ref. Simple and leak-proof; the projection stays thin.
+2. **A per-`fact_class` key allowlist** that admits named opaque identifiers
+   for that class only — e.g. `rule_id` / `policy_name` / `firewall_zone` for
+   `network_policy_event`, still with the value allowlist and long-token rule
+   applied. More useful facts, at the cost of a vocabulary to maintain per
+   class and a review whenever it grows.
+ Plain-words prose inside the allowlist is representable and is still
 only advice.
 
 ## 10. Not in scope

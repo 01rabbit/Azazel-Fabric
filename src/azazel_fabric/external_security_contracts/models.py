@@ -48,6 +48,7 @@ from azazel_fabric.external_security_contracts.validation import (
     VENDOR_EXTENSION_MAX_ITEMS,
     assert_bounded_opaque,
     assert_free_text,
+    assert_no_long_token,
     assert_identity_name,
     assert_no_external_security_directives,
     assert_no_locator_values,
@@ -227,15 +228,28 @@ CORRELATION_REF_KINDS = frozenset(
     {"external_observation", "advisory", "proposal", "device_observation", "evidence", "trace"}
 )
 
-_LABEL = re.compile(r"[A-Za-z0-9_.-]{1,128}")
+#: A source label: dash/underscore words, at most two dots (``process.create``),
+#: and never digit-dot-digit -- so neither an FQDN nor an address is a label.
+_LABEL = re.compile(r"(?!.*\d\.\d)[A-Za-z0-9_-]{1,64}(?:\.[A-Za-z0-9_-]{1,64}){0,2}")
 
 
 def _label(raw: object) -> str:
     """The source's own label, kept only if it is representable as one."""
 
-    if isinstance(raw, str) and _LABEL.fullmatch(raw[:128]):
+    if isinstance(raw, str) and _label_ok(raw[:128]):
         return raw[:128]
     return "unrepresentable"
+
+
+def _label_ok(label: str) -> bool:
+    if _LABEL.fullmatch(label) is None:
+        return False
+    try:
+        assert_no_long_token(label, field="label")
+        assert_no_secret_material(label)
+    except ValueError:
+        return False
+    return True
 
 
 def _require_typed(values: tuple[str, ...], *, field: str, kinds: frozenset[str]) -> None:
@@ -580,8 +594,8 @@ class ExternalObservationEnvelope(_Envelope):
         assert_opaque_map(self.normalized_fact, what="normalized_fact")
         assert_version(self.source_product_version, field="source_product_version")
         _free_texts(self.limitations, field="limitations")
-        if self.source_fact_label is not None and _LABEL.fullmatch(self.source_fact_label) is None:
-            raise ValueError("source_fact_label must match [A-Za-z0-9_.-]{1,128}")
+        if self.source_fact_label is not None and not _label_ok(self.source_fact_label):
+            raise ValueError("source_fact_label must be a representable label (word[.word[.word]], no address, no long token)")
         _check_extensions(self.vendor_extensions)
         return self
 
@@ -604,6 +618,7 @@ class RecommendedObservation(_Descriptive):
 
     @model_validator(mode="after")
     def _validate(self) -> "RecommendedObservation":
+        _free_texts(self.rationale, field="rationale", command_words=True)
         _require_typed(self.subject_refs, field="subject_refs", kinds=SUBJECT_REF_KINDS)
         _require_typed(self.evidence_refs, field="evidence_refs", kinds=EVIDENCE_REF_KINDS)
         return self
@@ -627,6 +642,8 @@ class RecommendedAction(_Descriptive):
 
     @model_validator(mode="after")
     def _validate(self) -> "RecommendedAction":
+        _free_texts(self.rationale, field="rationale", command_words=True)
+        _free_texts(self.constraints, field="constraints", command_words=True)
         _require_typed(self.evidence_refs, field="evidence_refs", kinds=EVIDENCE_REF_KINDS)
         return self
 
@@ -849,8 +866,8 @@ class DeviceChangeObservation(_Envelope):
         _free_texts(self.limitations, field="limitations")
         if self.failure_reason is not None:
             _free_texts(self.failure_reason, field="failure_reason")
-        if self.source_status_label is not None and _LABEL.fullmatch(self.source_status_label) is None:
-            raise ValueError("source_status_label must match [A-Za-z0-9_.-]{1,128}")
+        if self.source_status_label is not None and not _label_ok(self.source_status_label):
+            raise ValueError("source_status_label must be a representable label (word[.word[.word]], no address, no long token)")
         if self.status == "failed" and not self.failure_reason:
             raise ValueError("a failed change must say why; an unexplained failure reads as a lost report")
         if self.status != "failed" and self.failure_reason is not None:

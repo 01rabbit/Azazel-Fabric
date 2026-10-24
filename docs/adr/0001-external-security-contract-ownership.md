@@ -114,6 +114,20 @@ advisory text (`COMMAND_TEXT_TOKENS`). `canonical_external_security_json`,
 its python dump first, so a record mutated after construction (or made with
 `model_copy(update=...)`) cannot be canonicalized or digested.
 
+Recognizable secret formats (PEM, `AKIA`, `ghp_`/`gho_`/`ghs_`/`github_pat_`,
+`glpat-`, `xox?-`, `AIza…`, `sk-…`) are refused in every string. A closed
+**shape rule** refuses any single run of `[A-Za-z0-9+/_-]` of 32+ characters
+in opaque values, labels and free text, and a ref body is at most 64
+characters and never a 32+ character hex blob. Digests keep their own typed
+fields (`payload_digest`, `body_digest`) and are unaffected.
+
+**Command fields vs. command text.** No record has a command *field*
+anywhere. Advisory and proposal records carry no command *text* (character
+allowlist plus command-word list). Observation and device free text is held to
+the character allowlist only: it may describe an observed command
+(`iptables -F` seen on a host), because that is a fact — but it still cannot
+hold a pipeline, a path, a URL or a long token.
+
 **Not checked:** the meaning of prose that stays inside the allowlist. A
 plain-words instruction ("please block that machine") is representable; it is
 still advice, and the consumer's own authority decides.
@@ -158,6 +172,22 @@ therefore:
   collection, strings ≤ 1024 characters, ≤ 8 KiB canonical, ≤ 4 per record;
   fact projection depth ≤ 4, ≤ 64 items, ≤ 16 KiB. These are contract limits,
   not policy recommendations; a product may impose tighter ones.
+**Owner decision pending: fact vocabulary vs. deny tokens.** Under the
+opaque-key deny tokens, `network_policy_event` and `endpoint_process` lose
+their natural vocabulary: `rule_id`, `policy_name`, `acl_entry`,
+`firewall_zone`, `*_status`, `run_as`, `payload_bytes` and `cmdline` are all
+refused, so a firewall policy event can say little more than `action` and a
+matched entry, and a process fact cannot carry its command line. Two options,
+**neither applied here**:
+
+1. **Keep it closed** (current). Such detail goes digest-only behind an
+   `evidence:` ref. Simple and leak-proof; the projection stays thin.
+2. **A per-`fact_class` key allowlist** that admits named opaque identifiers
+   for that class only — e.g. `rule_id` / `policy_name` / `firewall_zone` for
+   `network_policy_event`, still with the value allowlist and long-token rule
+   applied. More useful facts, at the cost of a vocabulary to maintain per
+   class and a review whenever it grows.
+
 - The closed checks have **known false positives**, accepted rather than
   loosened: see [`external-security-contracts.md`](../external-security-contracts.md) §9.
 

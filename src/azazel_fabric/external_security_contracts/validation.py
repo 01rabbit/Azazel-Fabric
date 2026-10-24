@@ -3,13 +3,21 @@
 Every record in this family travels between products that do not trust each
 other's authority: an external EDR/firewall/DNS/SIEM feed, Knowledge's
 advisory output, Deception's exposure proposal, and a device adapter's report.
-What these checks guarantee is structural, not semantic:
+What these checks guarantee is structural, not semantic, and is stated as
+narrowly as it is enforced:
 
-* no record carries a command, a route/firewall/DNS rule body, an executor, a
-  token/credential/credential locator, an authority override, or an execute
-  flag -- at any depth, including inside lists and tuples;
+* no record has a command, route/firewall/DNS rule-body, executor,
+  token/credential/credential-locator, override or execute-flag **field** --
+  at any depth, including inside lists and tuples;
+* advisory and proposal records carry no command **text**: their free text is
+  a closed character allowlist plus a command-word denylist. Observation and
+  device free text is held to the same character allowlist but **not** to the
+  command-word list, because it may describe an observed command -- which is
+  a fact, not an instruction;
 * no advisory or proposal carries a concrete target locator (hostname, IP,
   device-specific object id) -- those stay with the owning product's adapter;
+* recognizable secret formats are refused in every string, and long opaque
+  tokens are refused in opaque values, labels, free text and ref bodies;
 * vendor-specific material is confined to a namespaced, digest-bound,
   size/depth/cardinality-limited opaque extension;
 * the walk is **bounded**: a payload too deep to inspect is refused with a
@@ -225,7 +233,43 @@ SECRET_MATERIAL_MARKERS = (
     "AKIA",
     "xoxb-",
     "ghp_",
+    "gho_",
+    "ghs_",
+    "ghu_",
+    "ghr_",
+    "github_pat_",
+    "glpat-",
+    "xoxp-",
+    "xoxa-",
+    "xoxs-",
+    "xoxr-",
 )
+
+#: Secret formats needing more context than a substring (``sk-`` alone would
+#: match ``risk-based``). Searched in every string of every record.
+SECRET_TOKEN_PATTERNS = (
+    re.compile(r"(?<![A-Za-z0-9])sk-(?:proj-)?[A-Za-z0-9_-]{16,}"),
+    re.compile(r"AIza[0-9A-Za-z_-]{20,}"),
+)
+
+#: The closed shape rule: a single run of token characters this long is
+#: refused in opaque values, labels, free text and ref bodies, whatever it
+#: is -- an API key, an AWS secret, a hex or base32 blob. Digests have their
+#: own typed fields (``payload_digest``, ``body_digest``: ``sha256:<hex>``)
+#: and are unaffected.
+LONG_TOKEN_MIN = 32
+_LONG_TOKEN = re.compile(r"[A-Za-z0-9+/_-]{%d,}" % LONG_TOKEN_MIN)
+_PURE_HEX_32 = re.compile(r"[0-9a-f]{32,}")
+
+
+def assert_no_long_token(text: object, *, field: str) -> None:
+    """Refuse a run of ``[A-Za-z0-9+/_-]`` of 32 or more characters."""
+
+    if isinstance(text, str) and _LONG_TOKEN.search(text):
+        raise ValueError(
+            f"{field} contains a token of {LONG_TOKEN_MIN}+ characters; keys, secrets "
+            "and blobs are not carried inline -- digests have their own typed fields"
+        )
 
 #: Ref kinds that are, by their kind alone, a credential locator. A typed ref
 #: of one of these kinds anywhere in a record is refused: the record would be
@@ -281,7 +325,7 @@ RESERVED_EXTENSION_KEYS = frozenset(
 #: colon, slash, ``%`` or upper case -- so an FQDN, an IP address, a URL, a
 #: path or a percent-encoded form cannot be a ref at all. Each slot then
 #: allowlists the kinds it takes (``models.py``).
-_TYPED_REF = re.compile(r"(?P<kind>[a-z][a-z0-9_]{0,31}):(?P<body>[a-z0-9][a-z0-9_-]{0,127})")
+_TYPED_REF = re.compile(r"(?P<kind>[a-z][a-z0-9_]{0,31}):(?P<body>[a-z0-9][a-z0-9_-]{0,63})")
 _SHA256 = re.compile(r"sha256:[0-9a-f]{64}")
 
 #: A credential locator at the start of a string, in any letter case and with
@@ -314,6 +358,24 @@ _LOCATOR_REF_PREFIX = re.compile(
 #: an instruction. Such context belongs in an observation envelope's fact
 #: projection, cited by ref.
 COMMAND_TEXT_TOKENS = (
+    "taskkill",
+    "stop-process",
+    "start-process",
+    "conntrack",
+    "ebtables",
+    "arptables",
+    "launchctl",
+    "crontab",
+    "net user",
+    "net stop",
+    "net localgroup",
+    "reg add",
+    "reg delete",
+    "route delete",
+    "route change",
+    "mv",
+    "schtasks",
+    "wmic",
     "reboot",
     "shutdown",
     "halt",
@@ -588,6 +650,11 @@ def assert_no_secret_material(value: Any) -> None:
                     f"{'.'.join(path) or '<root>'} carries recognizable secret material "
                     f"({marker!r}); this family carries opaque references only"
                 )
+        for pattern in SECRET_TOKEN_PATTERNS:
+            if pattern.search(text):
+                raise ValueError(
+                    f"{'.'.join(path) or '<root>'} carries a recognizable secret token format"
+                )
         if _CREDENTIAL_LOCATOR_PREFIX.search(text) or _CREDENTIAL_LOCATOR_INLINE.search(text):
             raise ValueError(
                 f"{'.'.join(path) or '<root>'} carries a credential locator; a "
@@ -719,7 +786,9 @@ def require_ref_kind(raw: object, kind: str | frozenset[str], *, field: str) -> 
     """
 
     allowed = frozenset({kind}) if isinstance(kind, str) else kind
-    parsed_kind, _ = parse_ref(raw)
+    parsed_kind, body = parse_ref(raw)
+    if parsed_kind in allowed and _PURE_HEX_32.fullmatch(body):
+        raise ValueError(f"{field} body is a {len(body)}-character hex blob, not an opaque id")
     if parsed_kind not in allowed:
         raise ValueError(
             f"{field} must be an opaque typed reference of kind "
@@ -806,6 +875,7 @@ def assert_free_text(text: object, *, field: str, command_words: bool = False) -
             f"{field} contains a dotted token, a long digit run or a hex literal; "
             "addresses and file names cannot be written in free text"
         )
+    assert_no_long_token(text, field=field)
     if command_words:
         assert_no_command_text(text, field=field)
 
@@ -866,6 +936,7 @@ def assert_opaque_map(value: Any, *, what: str, depth: int = 0) -> None:
                 f"{what} value {value[:40]!r} must be <=256 characters of letters, "
                 "digits, space and . _ , ( ) ' @ + - only"
             )
+        assert_no_long_token(value, field=what)
         words = [w for w in re.split(r"[^A-Za-z0-9]+", value.lower()) if w]
         bad = sorted(set(words) & OPAQUE_VALUE_DENY_WORDS)
         if bad or any(w.startswith("eyj") for w in words):
@@ -980,6 +1051,31 @@ def assert_not_expired(record: Any, *, as_of: str) -> None:
         raise ValueError(f"record expired at {expires_at}; a stale record extends nothing")
 
 
+def as_record(value: Any) -> Any:
+    """Validate a mapping into its model (by ``schema_version``); re-validate a model.
+
+    The correlation helpers never compare unvalidated input: a dict that would
+    not construct a record is refused here rather than compared.
+    """
+
+    if isinstance(value, Mapping):
+        from azazel_fabric.external_security_contracts import models
+
+        by_schema = {
+            "external-observation-envelope/v0.1": models.ExternalObservationEnvelope,
+            "advisory-context-envelope/v0.1": models.AdvisoryContextEnvelope,
+            "exposure-change-proposal/v0.1": models.ExposureChangeProposal,
+            "device-change-observation/v0.1": models.DeviceChangeObservation,
+        }
+        model = by_schema.get(value.get("schema_version"))
+        if model is None:
+            raise ValueError(f"unknown schema_version {value.get('schema_version')!r}")
+        return model.model_validate(dict(value))
+    if hasattr(value, "model_validate") and hasattr(value, "model_dump"):
+        return revalidated(value)
+    raise ValueError(f"expected a record or a mapping, got {type(value).__name__}")
+
+
 def assert_no_replay_extension(original: Any, candidate: Any) -> None:
     """A replayed or re-sent proposal must not change what it proposes.
 
@@ -989,8 +1085,13 @@ def assert_no_replay_extension(original: Any, candidate: Any) -> None:
     renewal is the owning product's decision, never a replay's.
     """
 
+    original = as_record(original)
+    candidate = as_record(candidate)
     original_id = _get(original, "proposal_id")
-    if original_id is None or original_id != _get(candidate, "proposal_id"):
+    # Different ids are different proposals, not a replay of one: there is
+    # nothing to compare, so this returns. Whether a second proposal for the
+    # same environment is acceptable is the owning product's decision.
+    if original_id != _get(candidate, "proposal_id"):
         return
     if canonical_digest(original) != canonical_digest(candidate):
         raise ValueError(
@@ -1010,6 +1111,8 @@ def assert_device_observation_within_proposal(proposal: Any, observation: Any) -
     it is still in place. A stale observation cannot keep an exposure alive.
     """
 
+    proposal = as_record(proposal)
+    observation = as_record(observation)
     if _get(observation, "proposal_ref") != _get(proposal, "proposal_id"):
         raise ValueError("device observation reports on a different proposal")
     for field in ("tenant_ref", "trace_ref", "decision_ref"):
@@ -1065,7 +1168,11 @@ __all__ = [
     "OPAQUE_KEY_DENY_TOKENS",
     "OPAQUE_VALUE_DENY_WORDS",
     "assert_device_observation_within_proposal",
+    "LONG_TOKEN_MIN",
+    "SECRET_TOKEN_PATTERNS",
+    "as_record",
     "assert_free_text",
+    "assert_no_long_token",
     "assert_identity_name",
     "assert_opaque_map",
     "assert_version",

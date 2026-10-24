@@ -1228,3 +1228,145 @@ def test_an_unrepresentable_source_label_is_kept_as_a_marker_not_as_text():
     )
     assert record.status == "unknown"
     assert record.source_status_label == "unrepresentable"
+
+
+# ---------------------------------------------------------------------------
+# Third review: secret formats, the long-token shape rule, standalone parts
+# ---------------------------------------------------------------------------
+
+_SECRET_TOKENS = (
+    "xoxp-1234-5678-abcdefABCDEF",
+    "xoxa-1234-abcdef",
+    "xoxs-1234-abcdef",
+    "github_pat_11ABCDEFG0123456789_abcdefghijklmnop",
+    "gho_abcdefghijklmnop",
+    "ghs_abcdefghijklmnop",
+    "glpat-AbCdEfGhIjKlMnOpQrSt",
+    "AIzaSyA1234567890abcdefghijklmnopqrstu",
+    "sk-proj-abcdefghijklmnop1234567890",
+    "sk-abcdefghijklmnop1234",
+    "wJalrXUtnFEMI+K7MDENG+bPxRfiCYEXAMPLEKEY",
+    "AKIAIOSFODNN7EXAMPLE",
+    "deadbeefcafebabe1234deadbeefcafebabe1234",
+    "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP",
+)
+
+
+@pytest.mark.parametrize("token", _SECRET_TOKENS)
+def test_a_secret_shaped_token_is_refused_as_a_fact_value(token):
+    with pytest.raises(ValidationError):
+        ExternalObservationEnvelope.model_validate(
+            _with(golden_external_observation(), normalized_fact={"note": token})
+        )
+
+
+@pytest.mark.parametrize("token", _SECRET_TOKENS)
+def test_a_secret_shaped_token_is_refused_as_a_vendor_value(token):
+    payload = golden_device_change_applied()
+    payload["vendor_extensions"] = [_extension({"note": token})]
+    with pytest.raises(ValidationError):
+        DeviceChangeObservation.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    "label", ["xoxp-1234-5678-abcdefABCDEF", "a" * 40, "db01.corp.example.com", "10.0.0.1", "glpat-AbCdEfGhIjKlMn"]
+)
+def test_a_label_cannot_carry_a_token_an_fqdn_or_an_address(label):
+    with pytest.raises(ValidationError):
+        ExternalObservationEnvelope.model_validate(_with(golden_external_observation(), source_fact_label=label))
+    unknown = DeviceChangeObservation.model_validate(_with(golden_device_change_applied(), status=label))
+    assert unknown.source_status_label == "unrepresentable"
+
+
+def test_an_ordinary_dotted_label_is_kept():
+    record = ExternalObservationEnvelope.model_validate(
+        _with(golden_external_observation(), fact_class="process.create")
+    )
+    assert record.source_fact_label == "process.create"
+
+
+@pytest.mark.parametrize(
+    "ref", ["asset:" + "a1b2c3d4" * 8 + "x", "asset:" + "ab" * 16, "asset:glpat-abcdefghijklmnopqrst"]
+)
+def test_a_ref_body_cannot_be_long_hex_or_a_token(ref):
+    with pytest.raises(ValidationError):
+        AdvisoryContextEnvelope.model_validate(_with(golden_advisory_context(), subject_refs=[ref]))
+
+
+def test_digests_in_their_typed_fields_are_unaffected():
+    record = ExternalObservationEnvelope.model_validate(golden_external_observation())
+    assert record.payload_digest.startswith("sha256:")
+    assert record.vendor_extensions[0].body_digest.startswith("sha256:")
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "route delete default", "taskkill all", "Stop-Process lsass", "conntrack -F",
+        "ebtables -F", "launchctl unload agent", "crontab -r", "net user admin x", "reg add HKLM",
+    ],
+)
+def test_more_command_forms_are_refused_in_advisory_text(text):
+    with pytest.raises(ValidationError):
+        AdvisoryContextEnvelope.model_validate(_with(golden_advisory_context(), assessment_summary=text))
+
+
+@pytest.mark.parametrize("text", ["iptables -F", "sudo rm -rf (root)", "nft flush ruleset"])
+def test_observation_free_text_may_describe_an_observed_command(text):
+    """Intended: an observed command is a fact. Character allowlist still applies."""
+    ExternalObservationEnvelope.model_validate(_with(golden_external_observation(), limitations=[text]))
+    with pytest.raises(ValidationError):
+        ExternalObservationEnvelope.model_validate(
+            _with(golden_external_observation(), limitations=[text + " && reboot"])
+        )
+
+
+def test_recommended_parts_are_closed_when_built_alone():
+    with pytest.raises(ValidationError):
+        es_models.RecommendedAction(action_class="no_change", rationale="sudo rm -rf (root)")
+    with pytest.raises(ValidationError):
+        es_models.RecommendedAction(action_class="no_change", rationale="ok", constraints=("curl it",))
+    with pytest.raises(ValidationError):
+        es_models.RecommendedObservation(observation_class="watch_subject", rationale="https://evil.example/x")
+
+
+def test_the_correlation_helpers_validate_mapping_input():
+    bad = golden_exposure_proposal()
+    bad["executable"] = True
+    with pytest.raises(ValidationError):
+        assert_no_replay_extension(bad, copy.deepcopy(bad))
+    device = golden_device_change_applied()
+    device["executable"] = True
+    with pytest.raises(ValidationError):
+        assert_device_observation_within_proposal(golden_exposure_proposal(), device)
+    with pytest.raises(ValueError):
+        assert_no_replay_extension(["not", "a", "record"], golden_exposure_proposal())
+    # valid mappings are compared like models
+    assert_no_replay_extension(golden_exposure_proposal(), golden_exposure_proposal())
+    assert_device_observation_within_proposal(golden_exposure_proposal(), golden_device_change_applied())
+
+
+def test_a_different_proposal_id_is_not_a_replay():
+    """Documented early return: two ids are two proposals, nothing to compare."""
+    other = _with(golden_exposure_proposal(), proposal_id="proposal:other")
+    assert_no_replay_extension(golden_exposure_proposal(), other)
+
+
+@pytest.mark.parametrize(
+    "fact",
+    [
+        {"patch_status": "current"},
+        {"payload_bytes": 10},
+        {"rule_id": "r17"},
+        {"firewall_zone": "dmz"},
+        {"run_as": "system"},
+        {"case_title": "Suspicious login: admin"},
+        {"process_path": "C:\\\\Windows\\\\x.exe"},
+        {"sha256": "ab" * 32},
+    ],
+    ids=["status-key", "payload", "rule-id", "firewall-zone", "run-as", "siem-colon", "windows-path", "file-hash"],
+)
+def test_documented_refusals_stay_refused(fact):
+    """docs/external-security-contracts.md §9 lists each of these."""
+    with pytest.raises(ValidationError):
+        ExternalObservationEnvelope.model_validate(_with(golden_external_observation(), normalized_fact=fact))
