@@ -188,6 +188,7 @@ COVERED_FAMILIES = (
     "mio_contracts",
     "outcome_contracts",
     "effect_contracts",
+    "external_security_contracts",
 )
 
 
@@ -266,6 +267,23 @@ def _golden_effect_samples() -> list[BaseModel]:
     return samples
 
 
+def _golden_external_security_samples() -> list[BaseModel]:
+    """The published external-security vectors (Fabric#25), as models."""
+    from azazel_fabric.testing.external_security import GOLDEN_EXTERNAL_SECURITY_VECTORS
+
+    mapping = _model_by_schema_version()
+    samples: list[BaseModel] = []
+    for name, factory in sorted(GOLDEN_EXTERNAL_SECURITY_VECTORS.items()):
+        payload = factory()
+        model = mapping.get(payload.get("schema_version"))
+        assert model is not None, (
+            f"external-security vector {name!r} declares schema_version "
+            f"{payload.get('schema_version')!r}, which no contract model claims"
+        )
+        samples.append(model.model_validate(payload))
+    return samples
+
+
 def _outcome_samples() -> list[BaseModel]:
     """Outcome-as-Evidence records.
 
@@ -286,6 +304,7 @@ SAMPLES = (
     _samples()
     + _golden_provisioning_samples()
     + _golden_effect_samples()
+    + _golden_external_security_samples()
     + _outcome_samples()
 )
 

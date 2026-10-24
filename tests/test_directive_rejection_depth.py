@@ -8,7 +8,8 @@ depth two, in mappings only, for one of the six families.
 
 That gap matters in a specific way. These guards are the mechanism behind the
 one invariant Fabric cannot bend: a contract carries facts, never a directive.
-There are 258 banned names across eight guards, and a guard that stopped
+There are 391 banned names across ten guards (258 across eight until
+Fabric#25 added the external-security pair), and a guard that stopped
 covering one of them -- a predicate narrowed, a family's walker replaced with
 a shallower one -- would look exactly like a passing suite.
 
@@ -40,6 +41,14 @@ GUARDS: tuple[tuple[str, str, str], ...] = (
     ("deception_contracts", "assert_no_effectiveness_verdict", "BANNED_EFFECTIVENESS_VERDICT_FIELDS"),
     ("effect_contracts", "assert_no_effect_authority_fields", "BANNED_EFFECT_AUTHORITY_FIELDS"),
     ("engagement_contracts", "assert_no_engagement_directives", "BANNED_ENGAGEMENT_AUTHORITY_FIELDS"),
+    # Fabric#25 (experimental). Both guards walk every record of all four
+    # families -- observation, advisory, proposal, device observation.
+    (
+        "external_security_contracts",
+        "assert_no_external_security_directives",
+        "BANNED_EXTERNAL_SECURITY_FIELDS",
+    ),
+    ("external_security_contracts", "assert_no_target_locators", "BANNED_TARGET_LOCATOR_FIELDS"),
 )
 
 
@@ -80,6 +89,8 @@ BANNED_FIELD_COUNTS: dict[str, int] = {
     "deception_contracts.assert_no_effectiveness_verdict": 12,
     "effect_contracts.assert_no_effect_authority_fields": 36,
     "engagement_contracts.assert_no_engagement_directives": 19,
+    "external_security_contracts.assert_no_external_security_directives": 110,
+    "external_security_contracts.assert_no_target_locators": 23,
 }
 
 
@@ -184,6 +195,10 @@ BOUNDED_GUARDS = frozenset(
         "provisioning_contracts.assert_no_resource_tier_claim",
         "provisioning_contracts.assert_no_role_inference",
         "mio_contracts.assert_no_mio_directives",
+        # Bounded from the start (Fabric#25): a payload too deep to inspect is
+        # refused with a clean ValueError, never a RecursionError.
+        "external_security_contracts.assert_no_external_security_directives",
+        "external_security_contracts.assert_no_target_locators",
     }
 )
 

@@ -8,7 +8,43 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ## [Unreleased]
 
-Nothing yet. The entries below moved into the tags that shipped them.
+Toward `v0.9.0rc6` — **not cut, not signed.** `main` is `0.9.0rc6.dev0`.
+
+### Added
+
+- **Experimental external-security profile** (`external_security_contracts`,
+  Fabric#25): `ExternalObservationEnvelope/v0.1`, `AdvisoryContextEnvelope/v0.1`,
+  `ExposureChangeProposal/v0.1`, `DeviceChangeObservation/v0.1`, with
+  canonical serialization, golden vectors
+  (`azazel_fabric.testing.external_security`,
+  `tests/fixtures/external_security/`), and
+  [ADR-0001](docs/adr/0001-external-security-contract-ownership.md) assigning
+  each record's owner and authority meaning.
+
+  **Additive and optional.** No existing model changed, and no other Fabric
+  module imports the family — a test fails if one does.
+
+  **Experimental** under the Fabric#23 program decision: no real producer or
+  consumer exists yet, so it is outside the R1c stable gate, does not block
+  `v0.9.0`, and makes no compatibility promise. Descriptive only:
+  `executable` is pinned `False` everywhere, `authority_class` is pinned per
+  record (`observed_fact` / `advisory_only` / `proposal_only`), provenance
+  `confers_authority` is pinned `False`, and a device observation can never
+  claim a tactical outcome. Closed vocabularies land unknown input on the
+  weakest reading. Recursive, bounded directive / target-locator / secret /
+  cross-tenant rejection covers all four families, and the family is held to
+  the strict R1 boundary gate (no OS, network, subprocess, installer or
+  runtime-control import). The family is **closed by allowlist**: per-slot
+  ref kinds with a `[a-z0-9][a-z0-9_-]` body, a free-text character
+  allowlist, identity/version grammars, snake_case opaque-map keys with a
+  deny-token set, and a value allowlist; the denylist guards stay on as a
+  belt. What is and is not checked, and the accepted false positives, are in
+  `docs/external-security-contracts.md` §4 and §9.
+
+### Changed
+
+- `version.py` moves to `0.9.0rc6.dev0`: the first source change after
+  `v0.9.0rc5`. The release-digest tests skip on a `.dev` version by design.
 
 ## [0.9.0rc5] — A terrain can bind to an effect that has no decision (Fabric#51)
 

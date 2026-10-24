@@ -1,0 +1,97 @@
+{
+  "authority_class": "observed_fact",
+  "event_window": {
+    "end": "2026-10-01T00:00:00+00:00",
+    "schema_version": "external-event-window/v0.1",
+    "start": "2026-10-01T00:00:00+00:00"
+  },
+  "evidence_refs": [
+    "evidence:edr-golden-raw-17"
+  ],
+  "executable": false,
+  "fact_class": "endpoint_process",
+  "freshness": {
+    "as_of": "2026-10-01T00:00:05+00:00",
+    "schema_version": "external-freshness/v0.1",
+    "stale_after": "2026-10-01T01:00:00+00:00",
+    "state": "fresh"
+  },
+  "limitations": [
+    "process lineage truncated at depth 2 by the source"
+  ],
+  "normalized_fact": {
+    "parent_process_name": "office_sim",
+    "process_name": "lsass_reader_sim",
+    "severity_band": "high"
+  },
+  "observation_id": "external_observation:golden-edr-1",
+  "observed_at": "2026-10-01T00:00:00+00:00",
+  "payload_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "privacy_class": "internal",
+  "producer_node_ref": "node:edge-golden-1",
+  "producer_product": "edge",
+  "producer_version": "0.0.0-golden",
+  "provenance": {
+    "chain": [
+      {
+        "at": "2026-10-01T00:00:00+00:00",
+        "node_ref": "node:edr-cloud-golden",
+        "product": "edr-vendor",
+        "product_version": "7.12.3",
+        "role": "observed",
+        "schema_version": "external-provenance-hop/v0.1",
+        "tenant_ref": "tenant:golden-site-1",
+        "transport_identity_ref": "transport:edr-vendor-mtls-golden"
+      },
+      {
+        "at": "2026-10-01T00:00:05+00:00",
+        "node_ref": "node:edge-golden-1",
+        "product": "edge",
+        "product_version": "0.0.0-golden",
+        "role": "normalized",
+        "schema_version": "external-provenance-hop/v0.1",
+        "tenant_ref": "tenant:golden-site-1",
+        "transport_identity_ref": "transport:edge-mtls-golden"
+      }
+    ],
+    "confers_authority": false,
+    "schema_version": "external-provenance/v0.1",
+    "signature_ref": "signature:edge-golden-external-1"
+  },
+  "received_at": "2026-10-01T00:00:05+00:00",
+  "schema_version": "external-observation-envelope/v0.1",
+  "source_event_ref": "source_event:edr-golden-000017",
+  "source_fact_label": null,
+  "source_product_version": "7.12.3",
+  "source_system": "edr",
+  "subject_refs": [
+    "asset:golden-workstation-17",
+    "process:golden-17-4242"
+  ],
+  "telemetry_coverage": {
+    "coverage_complete": false,
+    "gaps": [
+      "edr sensor offline on 2 of 40 endpoints"
+    ],
+    "schema_version": "external-telemetry-coverage/v0.1",
+    "sources_expected": 40,
+    "sources_reporting": 38
+  },
+  "tenant_ref": "tenant:golden-site-1",
+  "trace_ref": "trace:golden-external-1",
+  "vendor_extensions": [
+    {
+      "body": {
+        "detection_family": "discovery_sim",
+        "sensor_build": "7.12.3",
+        "tactic_ids": [
+          "TA0006"
+        ]
+      },
+      "body_digest": "sha256:a84c1ffc83ec7d16ed85d062402f8927f98f6ddddbf5c9af65dff69abad8e598",
+      "evidence_ref": "evidence:edr-golden-raw-17",
+      "namespace": "vendor.edr-sim",
+      "schema_version": "external-vendor-extension/v0.1"
+    }
+  ]
+}

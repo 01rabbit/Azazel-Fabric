@@ -22,7 +22,8 @@ across every phase, before touching `cti_contracts`, `audit`, or `view`.
 
 scope: `schema` / `cti-contracts` / `view` / `paths` / `audit` / `api` /
 `notify` / `testing` / `docs` / `deception-contracts` / `engagement-contracts` /
-`outcome-contracts` / `provisioning-contracts` / `mio-contracts`
+`outcome-contracts` / `provisioning-contracts` / `mio-contracts` /
+`external-security-contracts`
 
 ## Pull request rules
 

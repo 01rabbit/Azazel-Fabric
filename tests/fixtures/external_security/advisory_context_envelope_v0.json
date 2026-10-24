@@ -1,0 +1,91 @@
+{
+  "advisory_id": "advisory:golden-knowledge-1",
+  "assessment_summary": "Process behaviour matches simulated credential access, lineage is partial and two sensors were offline.",
+  "authority_class": "advisory_only",
+  "confidence_band": "moderate",
+  "executable": false,
+  "expires_at": "2026-10-01T01:00:00+00:00",
+  "freshness": {
+    "as_of": "2026-10-01T00:01:00+00:00",
+    "schema_version": "external-freshness/v0.1",
+    "stale_after": "2026-10-01T01:00:00+00:00",
+    "state": "fresh"
+  },
+  "generated_at": "2026-10-01T00:01:00+00:00",
+  "inference_refs": [
+    "inference:golden-credential-access-1"
+  ],
+  "limitations": [
+    "no network telemetry correlated"
+  ],
+  "normalized_fact_refs": [
+    "fact:golden-credential-access-1"
+  ],
+  "privacy_class": "internal",
+  "producer_node_ref": "node:knowledge-golden-1",
+  "producer_product": "knowledge",
+  "producer_version": "0.0.0-golden",
+  "provenance": {
+    "chain": [
+      {
+        "at": "2026-10-01T00:01:00+00:00",
+        "node_ref": "node:knowledge-golden-1",
+        "product": "knowledge",
+        "product_version": "0.0.0-golden",
+        "role": "inferred",
+        "schema_version": "external-provenance-hop/v0.1",
+        "tenant_ref": "tenant:golden-site-1",
+        "transport_identity_ref": "transport:knowledge-mtls-golden"
+      }
+    ],
+    "confers_authority": false,
+    "schema_version": "external-provenance/v0.1",
+    "signature_ref": null
+  },
+  "recommended_actions": [
+    {
+      "action_class": "review_deception_redirect",
+      "constraints": [
+        "operator review required",
+        "bounded duration"
+      ],
+      "evidence_refs": [
+        "evidence:edr-golden-raw-17"
+      ],
+      "rationale": "credential-access behaviour is a fit for a decoy share",
+      "schema_version": "external-recommended-action/v0.1"
+    },
+    {
+      "action_class": "notify_operator",
+      "constraints": [],
+      "evidence_refs": [],
+      "rationale": "moderate confidence with named coverage gaps",
+      "schema_version": "external-recommended-action/v0.1"
+    }
+  ],
+  "recommended_observations": [
+    {
+      "evidence_refs": [
+        "evidence:edr-golden-raw-17"
+      ],
+      "observation_class": "verify_coverage",
+      "rationale": "two sensors were offline during the event window",
+      "schema_version": "external-recommended-observation/v0.1",
+      "subject_refs": [
+        "asset:golden-workstation-17"
+      ]
+    }
+  ],
+  "schema_version": "advisory-context-envelope/v0.1",
+  "source_fact_refs": [
+    "external_observation:golden-edr-1"
+  ],
+  "subject_refs": [
+    "asset:golden-workstation-17"
+  ],
+  "tenant_ref": "tenant:golden-site-1",
+  "trace_ref": "trace:golden-external-1",
+  "unknowns": [
+    "whether the process was operator-initiated"
+  ]
+}

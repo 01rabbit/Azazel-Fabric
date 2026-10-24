@@ -68,7 +68,13 @@ def test_the_sweep_is_not_empty_and_reaches_every_family():
     assert len(FILES) > 20, f"only {len(FILES)} modules found under {PACKAGE_ROOT}"
 
     swept = {path.relative_to(PACKAGE_ROOT).parts[0] for path in FILES}
-    for family in ("provisioning_contracts", "effect_contracts", "schema", "view"):
+    for family in (
+        "provisioning_contracts",
+        "effect_contracts",
+        "external_security_contracts",
+        "schema",
+        "view",
+    ):
         assert family in swept, f"{family} is not in the purity sweep"
 
 
