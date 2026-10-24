@@ -913,10 +913,13 @@ def test_a_cross_tenant_reference_is_refused_in_any_case_and_inside_text(value):
         )
 
 
-def test_the_records_own_tenant_inside_text_is_accepted():
-    ExternalObservationEnvelope.model_validate(
-        _with(golden_external_observation(), limitations=["scoped to tenant:golden-site-1 only"])
-    )
+def test_no_tenant_can_be_named_in_free_text_at_all():
+    """Allowlist, not a comparison: free text takes no ``:``, so even the
+    record's own tenant cannot be written there. The tenant lives in one field."""
+    with pytest.raises(ValidationError):
+        ExternalObservationEnvelope.model_validate(
+            _with(golden_external_observation(), limitations=["scoped to tenant:golden-site-1 only"])
+        )
 
 
 @pytest.mark.parametrize(
@@ -931,15 +934,24 @@ def test_an_advisory_subject_cannot_be_a_locator(ref):
     "scope", ["scope:10.0.0.5", "scope:fe80::1", "scope:2001:db8:0:0:0:0:0:1"]
 )
 def test_a_proposal_scope_cannot_be_an_address(scope):
-    with pytest.raises(ValidationError, match="IP-address-shaped"):
+    with pytest.raises(ValidationError, match="target_scope_ref must be an opaque typed reference"):
         ExposureChangeProposal.model_validate(_with(golden_exposure_proposal(), target_scope_ref=scope))
 
 
-def test_an_observation_may_still_carry_addresses_as_facts():
-    """Observing a flow between two addresses is a fact; only advice/proposals are closed."""
+def test_an_observation_may_carry_ipv4_and_hostnames_as_fact_values():
+    """Observing a flow between two addresses is a fact; only advice/proposals are closed.
+
+    The fact-value allowlist has no ``:`` or ``/``, so IPv6 addresses, URLs and
+    paths cannot be inline facts: they go digest-only (documented allowance).
+    """
     ExternalObservationEnvelope.model_validate(
-        _with(golden_external_observation(), normalized_fact={"src": "10.0.0.5", "dst": "fe80::1"})
+        _with(golden_external_observation(), normalized_fact={"src": "10.0.0.5", "dst": "db01.corp.example"})
     )
+    for value in ("fe80::1", "https://db01/x", "/etc/passwd"):
+        with pytest.raises(ValidationError):
+            ExternalObservationEnvelope.model_validate(
+                _with(golden_external_observation(), normalized_fact={"dst": value})
+            )
 
 
 @pytest.mark.parametrize(
@@ -961,7 +973,7 @@ def test_an_observation_may_still_carry_addresses_as_facts():
 def test_a_recommended_action_cannot_carry_command_text(text, field):
     payload = golden_advisory_context()
     payload["recommended_actions"][0][field] = text if field == "rationale" else [text]
-    with pytest.raises(ValidationError, match="command token|metacharacter|IP-address"):
+    with pytest.raises(ValidationError):
         AdvisoryContextEnvelope.model_validate(payload)
 
 
@@ -1042,3 +1054,177 @@ def test_known_false_positives_stay_refused(fact):
         ExternalObservationEnvelope.model_validate(
             _with(golden_external_observation(), normalized_fact=fact)
         )
+
+
+# ---------------------------------------------------------------------------
+# Allowlists: the contract is closed by construction (second review)
+# ---------------------------------------------------------------------------
+
+_DENIED_OPAQUE_KEYS = (
+    "cmd_1", "cmd1", "Cmd", "c-m-d", "shell_cmd", "shellCmd", "cmd_line", "cmdline", "exec_now",
+    "autoExec", "argv0", "run", "script_body", "scripts", "pwd", "pass", "passphrase", "bearer",
+    "jwt", "sshkey", "ssh_key", "privkey", "priv_key", "signing_key", "api_key", "key", "cookie",
+    "session_cookie", "auth_header", "otp", "firewall_rule_v2", "rule2", "nft_rules_list",
+    "iptables", "nftables", "acls", "acl_entries", "is_approved", "approved_by", "is_authorized",
+    "succeeded_at", "force_apply", "authority_level", "authorityClass2", "tenant_id", "-", "  ", "",
+    "x" * 65,
+)
+
+
+@pytest.mark.parametrize("key", _DENIED_OPAQUE_KEYS)
+@pytest.mark.parametrize("where", ["normalized_fact", "vendor_extension"])
+def test_an_opaque_map_key_outside_the_allowlist_is_refused(key, where):
+    payload = golden_external_observation()
+    if where == "normalized_fact":
+        payload["normalized_fact"] = {key: "v"}
+    else:
+        payload["vendor_extensions"] = [_extension({key: "v"})]
+    with pytest.raises(ValidationError):
+        ExternalObservationEnvelope.model_validate(payload)
+
+
+def test_an_opaque_map_still_takes_ordinary_snake_case_keys():
+    ExternalObservationEnvelope.model_validate(
+        _with(golden_external_observation(), normalized_fact={"parent_pid": 1, "image_hash_band": "x", "key_count": 2})
+    )
+
+
+_DENIED_OPAQUE_VALUES = (
+    "vault : x", "vault%3Asecret/db", "secret_ref:db", "credential_ref:x", "apikey:abcd",
+    "env:DB_PASSWORD", "keyvault:prod", "op://Private/db", "kv:prod/db", "Bearer eyJhbGciOi.x.y",
+    "eyJhbGciOiJIUzI1NiJ9", "tenant:other", "tenant%3Aother", "tenants:other", "Tenant : other",
+    "line\nbreak", "x" * 257,
+)
+
+
+@pytest.mark.parametrize("value", _DENIED_OPAQUE_VALUES)
+def test_an_opaque_map_value_outside_the_allowlist_is_refused(value):
+    with pytest.raises(ValidationError):
+        ExternalObservationEnvelope.model_validate(
+            _with(golden_external_observation(), normalized_fact={"k": value})
+        )
+
+
+_DENIED_FREE_TEXT = (
+    "/sbin/iptables -F", "IPTABLES", "sudo\tx", "pfctl -f /etc/pf.conf", "ipset add blk x",
+    "ip link set eth0 down", "reboot now", "x; reboot", "a|b", "echo x > /etc/hosts",
+    "python3 -c 'import os'", "Invoke-Expression x", "New-NetFirewallRule -Action Block",
+    "ｓｕｄｏ rm", "su​do", "isolate host:db01", "see https://db01.corp.example.com/x",
+    "db01.corp.example.com", "10.0.0.1", "010.000.000.001", "167772161", "0x0a000001", "10.1",
+    "10%2E0%2E0%2E1", "FE80::1", "[::FFFF:a00:1]", "host%3Adb01", "host：db01", "secret_ref:db",
+    "tenant:other", "Foo::Bar resolution path", "a = b", "",
+)
+
+
+@pytest.mark.parametrize("text", _DENIED_FREE_TEXT)
+@pytest.mark.parametrize("field", ["assessment_summary", "limitations", "unknowns", "rationale", "constraints"])
+def test_advisory_free_text_outside_the_allowlist_is_refused(field, text):
+    payload = golden_advisory_context()
+    if field == "assessment_summary":
+        payload[field] = text
+    elif field in ("limitations", "unknowns"):
+        payload[field] = [text]
+    elif field == "rationale":
+        payload["recommended_actions"][0]["rationale"] = text
+    else:
+        payload["recommended_actions"][0]["constraints"] = [text]
+    with pytest.raises(ValidationError):
+        AdvisoryContextEnvelope.model_validate(payload)
+
+
+_DENIED_REFS = (
+    "asset:db01.corp.example.com", "asset:10.0.0.1", "asset:DB01", "Host:db01", "dns:evil",
+    "endpoint:db01", "vault_path:x", "credential_locator:x", "keychain_ref:x", "secret-ref:x",
+    "SECRET_REF:x", "password_file:x", "asset:a/b", "asset:a%2Fb", "asset:a:b", "asset:",
+)
+
+
+@pytest.mark.parametrize("ref", _DENIED_REFS)
+@pytest.mark.parametrize("family", ["observation", "advisory"])
+def test_a_subject_ref_outside_the_kind_and_body_allowlist_is_refused(family, ref):
+    build, model = FAMILIES[family]
+    with pytest.raises(ValidationError):
+        model.model_validate(_with(build(), subject_refs=[ref]))
+
+
+@pytest.mark.parametrize("ref", ["evidence:db01.corp.example.com", "scope:x", "evidence:a:b"])
+def test_an_evidence_ref_outside_the_allowlist_is_refused(ref):
+    with pytest.raises(ValidationError):
+        ExposureChangeProposal.model_validate(_with(golden_exposure_proposal(), evidence_refs=[ref]))
+
+
+@pytest.mark.parametrize(
+    "value", ["sudo iptables -F && reboot", "db01.corp.example.com", "10.0.0.1", "1.2.3.4", "v1", ""]
+)
+@pytest.mark.parametrize("field", ["producer_version", "hop.product_version"])
+@pytest.mark.parametrize("family", sorted(FAMILIES))
+def test_a_version_field_takes_only_a_version(family, field, value):
+    build, model = FAMILIES[family]
+    payload = build()
+    if field == "producer_version":
+        payload["producer_version"] = value
+    else:
+        payload["provenance"]["chain"][-1]["product_version"] = value
+    with pytest.raises(ValidationError):
+        model.model_validate(payload)
+
+
+@pytest.mark.parametrize("value", ["sudo rm -rf / && x", "Edge", "edge.corp", "e" * 65])
+def test_a_product_name_takes_only_an_identity_name(value):
+    payload = golden_advisory_context()
+    payload["producer_product"] = value
+    payload["provenance"]["chain"][-1]["product"] = value
+    with pytest.raises(ValidationError):
+        AdvisoryContextEnvelope.model_validate(payload)
+
+
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda r: r.normalized_fact.__setitem__("command", "x"),
+        lambda r: r.normalized_fact.__setitem__("x", float("nan")),
+        lambda r: r.vendor_extensions[0].body.__setitem__("x", 1),
+    ],
+    ids=["directive", "nan", "extension-digest"],
+)
+def test_a_mutated_record_cannot_be_canonicalized_digested_or_replay_compared(mutate):
+    record = ExternalObservationEnvelope.model_validate(golden_external_observation())
+    mutate(record)
+    with pytest.raises(ValidationError):
+        canonical_external_security_json(record)
+    with pytest.raises(ValidationError):
+        canonical_digest(record)
+
+
+def test_model_copy_cannot_bypass_validation_into_a_digest():
+    record = ExposureChangeProposal.model_validate(golden_exposure_proposal())
+    copied = record.model_copy(update={"decision_ref": "environment:golden-decoy-1"})
+    with pytest.raises(ValidationError):
+        assert_no_replay_extension(record, copied)
+
+
+@pytest.mark.parametrize("value", [True, "60", 60.0])
+def test_max_rollback_seconds_is_a_strict_int(value):
+    payload = golden_exposure_proposal()
+    payload["rollback_requirement"]["max_rollback_seconds"] = value
+    with pytest.raises(ValidationError):
+        ExposureChangeProposal.model_validate(payload)
+
+
+@pytest.mark.parametrize("gaps", [("",), ("a\nb",), ("see host:db01",)])
+def test_a_coverage_gap_must_be_non_empty_free_text(gaps):
+    with pytest.raises(ValidationError):
+        TelemetryCoverage(coverage_complete=False, gaps=gaps)
+
+
+def test_counts_cannot_be_bools():
+    with pytest.raises(ValidationError):
+        TelemetryCoverage(coverage_complete=True, sources_expected=True, sources_reporting=True)
+
+
+def test_an_unrepresentable_source_label_is_kept_as_a_marker_not_as_text():
+    record = DeviceChangeObservation.model_validate(
+        _with(golden_device_change_applied(), status="rm -rf /; contained")
+    )
+    assert record.status == "unknown"
+    assert record.source_status_label == "unrepresentable"

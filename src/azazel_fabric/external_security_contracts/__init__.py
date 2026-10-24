@@ -26,6 +26,10 @@ See ``docs/external-security-contracts.md`` and
 """
 
 from azazel_fabric.external_security_contracts.models import (
+    CORRELATION_REF_KINDS,
+    EVIDENCE_REF_KINDS,
+    FACT_REF_KINDS,
+    SUBJECT_REF_KINDS,
     DEVICE_CHANGE_STATUSES,
     EXPOSURE_EFFECTS,
     FACT_CLASSES,
@@ -63,7 +67,11 @@ from azazel_fabric.external_security_contracts.validation import (
     BANNED_EXTERNAL_SECURITY_FIELDS,
     BANNED_TARGET_LOCATOR_FIELDS,
     CREDENTIAL_LOCATOR_KINDS,
+    OPAQUE_KEY_DENY_TOKENS,
+    OPAQUE_VALUE_DENY_WORDS,
     PRIVACY_CLASSES,
+    assert_free_text,
+    assert_opaque_map,
     assert_device_observation_within_proposal,
     assert_no_external_security_directives,
     assert_no_replay_extension,
@@ -84,6 +92,10 @@ MATURITY = "experimental"
 __all__ = [
     "MATURITY",
     # models
+    "CORRELATION_REF_KINDS",
+    "EVIDENCE_REF_KINDS",
+    "FACT_REF_KINDS",
+    "SUBJECT_REF_KINDS",
     "AdvisoryActionClass",
     "AdvisoryContextEnvelope",
     "ConfidenceBand",
@@ -120,7 +132,11 @@ __all__ = [
     "BANNED_EXTERNAL_SECURITY_FIELDS",
     "BANNED_TARGET_LOCATOR_FIELDS",
     "CREDENTIAL_LOCATOR_KINDS",
+    "OPAQUE_KEY_DENY_TOKENS",
+    "OPAQUE_VALUE_DENY_WORDS",
     "PRIVACY_CLASSES",
+    "assert_free_text",
+    "assert_opaque_map",
     "assert_device_observation_within_proposal",
     "assert_no_external_security_directives",
     "assert_no_replay_extension",

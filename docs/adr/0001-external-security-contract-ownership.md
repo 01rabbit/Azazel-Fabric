@@ -87,48 +87,41 @@ altered**. It never tells the consumer that anyone may act on them:
   A consumer rejects or sanitizes a class it is not admitted to receive
   (`assert_privacy_admitted`, with the admission set supplied by the consumer).
 
-### What is checked, and how
+### What is checked: allowlists first, denylists as a belt
 
-Every check walks the whole record — mappings, lists and tuples — with a
-bounded walk that fails closed past its limit. What each one looks at matters,
-so it is stated precisely; the full table is in
-[`external-security-contracts.md`](../external-security-contracts.md) §4.
+The family is **closed by construction**, the same way its vocabularies are:
+what may be written is listed, and everything else is unrepresentable. Two
+rounds of review showed that denylists over open strings keep leaking
+(abbreviations, suffixed kinds, encodings, lookalikes); allowlists do not.
 
-- **Keys**, in every record: command and provider syntax, route / firewall /
-  DNS rule bodies, executors, tokens / credentials / credential locators,
-  authority overrides, approvals/verdicts, success verdicts, and execute
-  flags. Keys are normalized (camelCase split, separators folded, and compared
-  with separators removed), and a key that is not printable ASCII is refused
-  outright — fullwidth, lookalike and zero-width spellings are not mapped,
-  they are refused.
-- **Keys**, advisory and proposal only: concrete target locators (hostname,
-  IP, MAC, FQDN, interface/port/VLAN, device-/vendor-object ids).
-- **Reserved keys** (`authority_class`, `executable`, `decision_ref`,
-  `tenant_ref`, `status`, ...) in any ASCII spelling, inside
-  `normalized_fact` and `VendorExtension.body`.
-- **String values**, every record: recognizable secret material; any string
-  *beginning* with a credential-locator kind (`credential`, `secret`, `token`,
-  `key`, `vault`, `password`, `keychain`) and a colon, in any case and with
-  any body; the same kinds (without bare `key`) followed by `:` *inside* text;
-  and any `tenant:` reference, in any case, anywhere inside a string, that is
-  not the record's own tenant.
-- **String values**, advisory and proposal only: locator-kind refs (`ip:`,
-  `host:`, `hostname:`, `mac:`, `fqdn:`, `url:`, `uri:`, `domain:`) and
-  IPv4/IPv6-shaped values (fields named `*version` are exempt from the
-  address-shape scan only).
-- **Free text**, advisory only (summary, limitations, unknowns, rationale,
-  constraints): a closed denylist of command tokens (`iptables`, `nft`,
-  `ufw`, `firewall-cmd`, `ip route`, `ssh`, `curl`, `sudo`, `systemctl`,
-  `rm`, ...) and shell metacharacter sequences (`&&`, `||`, backtick, `$(`,
-  `${`, ` | `, `>>`).
+| Surface | Allowlist |
+| --- | --- |
+| Every ref slot (`*_ref`, `*_refs`, ids) | a per-slot set of kinds (e.g. `subject_refs`: `asset` `account` `user` `identity` `process` `file` `flow` `service` `vulnerability` `case`; `evidence_refs`: `evidence` `artifact`; `decision_ref`: `decision`; `environment_ref`: `environment`; `target_scope_ref`: `scope`; ...) and a body of `[a-z0-9][a-z0-9_-]{0,127}` — no dot, colon, slash, `%` or upper case, so FQDNs, IPs, URLs, paths and encoded forms cannot be refs |
+| Free text (advisory summary/limitations/unknowns/rationale/constraints; observation and device limitations, gaps, confounders, failure reason) | ASCII letters, digits, space and `. , ( ) ' -`, 1–2048 characters; a dot must be followed by a space or the end; no run of 7+ digits; no hex literal. `: ; \| & > < $ / \\ = %`, backtick, tab, newline and non-ASCII are unrepresentable |
+| Product names | `[a-z][a-z0-9-]{0,63}` |
+| Versions | `1`, `1.2`, `1.2.3`, optionally `-tag` / `+build` (`[0-9a-z]` identifiers) |
+| `normalized_fact` and vendor-extension **keys** | `[a-z][a-z0-9_]{0,63}`, and no `_`-separated token (trailing digits dropped) in `OPAQUE_KEY_DENY_TOKENS` (execution, secrets/sessions, rules/routes/DNS, authority/verdict, envelope-owned words); `key` alone or next to `priv`/`private`/`ssh`/`signing`/`api`/`secret`/`access`/`auth` |
+| `normalized_fact` and vendor-extension **values** | `None`, strict bool, int, finite float, or ≤256 characters of letters, digits, space and `. _ , ( ) ' @ + -` without a word in `OPAQUE_VALUE_DENY_WORDS` or a JWT-like `eyJ...` word |
+| Tenancy | `tenant_ref` is the only place a tenant can be written; refs elsewhere cannot be `tenant:` kinds and free text/values cannot hold `:` |
+| Numbers | strict ints and bools for counts, flags and bounds; NaN/Inf refused |
 
-**Not checked:** the *meaning* of prose. An instruction written in plain words
-without a denylisted token passes, and so does a command token spelled with
-non-ASCII lookalikes inside a value (values are not confusable-mapped; only
-keys are closed to ASCII). Observation and device records may carry addresses
-and command lines as *values* of non-banned keys, because observing them is a
-fact. The checks catch the machine-actionable shapes; a consumer must still
-treat every field as input to its own authority.
+The denylist guards from the first version stay on as a belt over the whole
+record: directive/secret key names (normalized, ASCII-only keys), target
+locator key names in advisory/proposal records, secret markers, credential
+locator prefixes, inline `tenant:` mentions, and a command-word list for
+advisory text (`COMMAND_TEXT_TOKENS`). `canonical_external_security_json`,
+`canonical_digest` and `assert_no_replay_extension` re-validate a model from
+its python dump first, so a record mutated after construction (or made with
+`model_copy(update=...)`) cannot be canonicalized or digested.
+
+**Not checked:** the meaning of prose that stays inside the allowlist. A
+plain-words instruction ("please block that machine") is representable; it is
+still advice, and the consumer's own authority decides.
+
+**Intended allowances:** a version field accepts `10.1` (it is a valid
+version); an observation's `normalized_fact` may carry a dotted IPv4 address
+or hostname as a value, because observing one is a fact. Anything with `:` or
+`/` (IPv6, URLs, paths) must go digest-only.
 
 Vendor-specific material is confined to `VendorExtension`: a dotted namespace,
 depth ≤ 4, ≤ 32 items per collection, ≤ 1024-character strings, ≤ 8 KiB

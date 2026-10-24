@@ -60,7 +60,7 @@ _SCOPE = "scope:golden-decoy-segment-1"
 _RAW_DIGEST = "sha256:" + "c" * 64
 
 _EDR_EXTENSION_BODY: dict[str, Any] = {
-    "detection_family": "credential_access",
+    "detection_family": "discovery_sim",
     "sensor_build": "7.12.3",
     "tactic_ids": ["TA0006"],
 }
@@ -98,7 +98,7 @@ def golden_external_observation() -> dict[str, Any]:
         event_window=EventWindow(start=_T0, end=_T0),
         payload_digest=_RAW_DIGEST,
         normalized_fact={
-            "process_name": "credential_dumper_sim",
+            "process_name": "lsass_reader_sim",
             "parent_process_name": "office_sim",
             "severity_band": "high",
         },
@@ -147,7 +147,7 @@ def golden_advisory_context() -> dict[str, Any]:
         normalized_fact_refs=("fact:golden-credential-access-1",),
         inference_refs=("inference:golden-credential-access-1",),
         assessment_summary=(
-            "Process behaviour matches simulated credential access; lineage is "
+            "Process behaviour matches simulated credential access, lineage is "
             "partial and two sensors were offline."
         ),
         confidence_band="moderate",
@@ -250,7 +250,7 @@ def golden_device_change_applied() -> dict[str, Any]:
             gaps=("no flow telemetry from the decoy segment yet",),
         ),
         confounders=("scheduled maintenance window overlapped",),
-        limitations=("device reported config acceptance; traffic not yet observed",),
+        limitations=("device reported config acceptance, traffic not yet observed",),
         privacy_class="internal",
         provenance=_device_provenance(_T3),
     ).model_dump(mode="json")

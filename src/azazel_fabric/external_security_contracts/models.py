@@ -47,12 +47,15 @@ from azazel_fabric.external_security_contracts.validation import (
     VENDOR_EXTENSION_MAX_DEPTH,
     VENDOR_EXTENSION_MAX_ITEMS,
     assert_bounded_opaque,
-    assert_no_command_text,
+    assert_free_text,
+    assert_identity_name,
     assert_no_external_security_directives,
     assert_no_locator_values,
     assert_no_secret_material,
     assert_no_target_locators,
+    assert_opaque_map,
     assert_tenant_confined,
+    assert_version,
     canonical_digest,
     is_reserved_key,
     is_sha256_digest,
@@ -212,12 +215,39 @@ def coerce_exposure_effect(raw: object) -> tuple[str, bool]:
     return _coerce(raw, EXPOSURE_EFFECTS, WEAKEST_EXPOSURE_EFFECT)
 
 
-def _require_typed(values: tuple[str, ...], *, field: str, kind: str | None = None) -> None:
+# Per-slot ref-kind allowlists. A ref's kind must be one of its slot's kinds,
+# and its body is ``[a-z0-9][a-z0-9_-]*`` (validation._TYPED_REF): hostnames,
+# addresses, URLs, paths and encoded forms cannot be refs at all.
+SUBJECT_REF_KINDS = frozenset(
+    {"asset", "account", "user", "identity", "process", "file", "flow", "service", "vulnerability", "case"}
+)
+EVIDENCE_REF_KINDS = frozenset({"evidence", "artifact"})
+FACT_REF_KINDS = frozenset({"fact"})
+CORRELATION_REF_KINDS = frozenset(
+    {"external_observation", "advisory", "proposal", "device_observation", "evidence", "trace"}
+)
+
+_LABEL = re.compile(r"[A-Za-z0-9_.-]{1,128}")
+
+
+def _label(raw: object) -> str:
+    """The source's own label, kept only if it is representable as one."""
+
+    if isinstance(raw, str) and _LABEL.fullmatch(raw[:128]):
+        return raw[:128]
+    return "unrepresentable"
+
+
+def _require_typed(values: tuple[str, ...], *, field: str, kinds: frozenset[str]) -> None:
     for value in values:
-        if kind is not None:
-            require_ref_kind(value, kind, field=field)
-        elif parse_ref(value)[0] is None:
-            raise ValueError(f"{field} entries must be opaque typed references, got {value!r}")
+        require_ref_kind(value, kinds, field=field)
+
+
+def _free_texts(values: Any, *, field: str, command_words: bool = False) -> None:
+    if isinstance(values, str):
+        values = (values,)
+    for index, text in enumerate(values):
+        assert_free_text(text, field=f"{field}.{index}", command_words=command_words)
 
 
 def _require_unique(values: tuple[str, ...], *, field: str) -> None:
@@ -293,6 +323,7 @@ class TelemetryCoverage(_Descriptive):
 
     @model_validator(mode="after")
     def _validate(self) -> "TelemetryCoverage":
+        _free_texts(self.gaps, field="gaps")
         if not self.coverage_complete and not self.gaps:
             raise ValueError(
                 "incomplete coverage must name its gaps; unnamed telemetry loss is how "
@@ -345,6 +376,8 @@ class ProvenanceHop(_Descriptive):
 
     @model_validator(mode="after")
     def _validate(self) -> "ProvenanceHop":
+        assert_identity_name(self.product, field="product")
+        assert_version(self.product_version, field="product_version")
         require_ref_kind(self.node_ref, "node", field="node_ref")
         require_ref_kind(self.tenant_ref, "tenant", field="tenant_ref")
         if self.transport_identity_ref is not None:
@@ -408,6 +441,7 @@ class VendorExtension(_Descriptive):
             what=f"vendor extension {self.namespace!r}",
         )
         _reject_reserved_keys(self.body, namespace=f"vendor extension {self.namespace!r}")
+        assert_opaque_map(self.body, what=f"vendor extension {self.namespace!r}")
         if not is_sha256_digest(self.body_digest):
             raise ValueError("body_digest must be a sha256:<64 hex> digest")
         if canonical_digest(self.body) != self.body_digest:
@@ -415,7 +449,7 @@ class VendorExtension(_Descriptive):
                 f"vendor extension {self.namespace!r} body does not match body_digest"
             )
         if self.evidence_ref is not None:
-            require_ref_kind(self.evidence_ref, "evidence", field="evidence_ref")
+            require_ref_kind(self.evidence_ref, EVIDENCE_REF_KINDS, field="evidence_ref")
         return self
 
 
@@ -456,6 +490,8 @@ class _Envelope(_Descriptive):
         if forbid_target_locators:
             assert_no_target_locators(payload)
             assert_no_locator_values(payload)
+        assert_identity_name(self.producer_product, field="producer_product")
+        assert_version(self.producer_version, field="producer_version")
         require_ref_kind(self.producer_node_ref, "node", field="producer_node_ref")
         require_ref_kind(self.tenant_ref, "tenant", field="tenant_ref")
         assert_tenant_confined(payload, self.tenant_ref)
@@ -512,8 +548,8 @@ class ExternalObservationEnvelope(_Envelope):
                 data = dict(data)
                 raw = data["fact_class"]
                 data["fact_class"] = fact_class
-                if data.get("source_fact_label") is None and isinstance(raw, str):
-                    data["source_fact_label"] = raw[:128]
+                if data.get("source_fact_label") is None:
+                    data["source_fact_label"] = _label(raw)
         return data
 
     @model_validator(mode="after")
@@ -523,9 +559,9 @@ class ExternalObservationEnvelope(_Envelope):
         require_ref_kind(self.source_event_ref, "source_event", field="source_event_ref")
         if self.trace_ref is not None:
             require_ref_kind(self.trace_ref, "trace", field="trace_ref")
-        _require_typed(self.subject_refs, field="subject_refs")
+        _require_typed(self.subject_refs, field="subject_refs", kinds=SUBJECT_REF_KINDS)
         _require_unique(self.subject_refs, field="subject_refs")
-        _require_typed(self.evidence_refs, field="evidence_refs", kind="evidence")
+        _require_typed(self.evidence_refs, field="evidence_refs", kinds=EVIDENCE_REF_KINDS)
         if not is_sha256_digest(self.payload_digest):
             raise ValueError("payload_digest must be a sha256:<64 hex> digest")
         _window(self.observed_at, self.received_at, start_field="observed_at", end_field="received_at", strict=False)
@@ -541,6 +577,11 @@ class ExternalObservationEnvelope(_Envelope):
             what="normalized_fact",
         )
         _reject_reserved_keys(self.normalized_fact, namespace="normalized_fact")
+        assert_opaque_map(self.normalized_fact, what="normalized_fact")
+        assert_version(self.source_product_version, field="source_product_version")
+        _free_texts(self.limitations, field="limitations")
+        if self.source_fact_label is not None and _LABEL.fullmatch(self.source_fact_label) is None:
+            raise ValueError("source_fact_label must match [A-Za-z0-9_.-]{1,128}")
         _check_extensions(self.vendor_extensions)
         return self
 
@@ -563,8 +604,8 @@ class RecommendedObservation(_Descriptive):
 
     @model_validator(mode="after")
     def _validate(self) -> "RecommendedObservation":
-        _require_typed(self.subject_refs, field="subject_refs")
-        _require_typed(self.evidence_refs, field="evidence_refs", kind="evidence")
+        _require_typed(self.subject_refs, field="subject_refs", kinds=SUBJECT_REF_KINDS)
+        _require_typed(self.evidence_refs, field="evidence_refs", kinds=EVIDENCE_REF_KINDS)
         return self
 
 
@@ -586,7 +627,7 @@ class RecommendedAction(_Descriptive):
 
     @model_validator(mode="after")
     def _validate(self) -> "RecommendedAction":
-        _require_typed(self.evidence_refs, field="evidence_refs", kind="evidence")
+        _require_typed(self.evidence_refs, field="evidence_refs", kinds=EVIDENCE_REF_KINDS)
         return self
 
 
@@ -625,25 +666,25 @@ class AdvisoryContextEnvelope(_Envelope):
         require_ref_kind(self.advisory_id, "advisory", field="advisory_id")
         if self.trace_ref is not None:
             require_ref_kind(self.trace_ref, "trace", field="trace_ref")
-        _require_typed(self.subject_refs, field="subject_refs")
-        _require_typed(self.source_fact_refs, field="source_fact_refs", kind="external_observation")
-        _require_typed(self.normalized_fact_refs, field="normalized_fact_refs")
-        _require_typed(self.inference_refs, field="inference_refs", kind="inference")
+        _require_typed(self.subject_refs, field="subject_refs", kinds=SUBJECT_REF_KINDS)
+        _require_typed(self.source_fact_refs, field="source_fact_refs", kinds=frozenset({"external_observation"}))
+        _require_typed(self.normalized_fact_refs, field="normalized_fact_refs", kinds=FACT_REF_KINDS)
+        _require_typed(self.inference_refs, field="inference_refs", kinds=frozenset({"inference"}))
         if not self.source_fact_refs and not self.normalized_fact_refs:
             raise ValueError(
                 "an advisory must cite the facts it is about; advice grounded in "
                 "nothing is indistinguishable from an instruction"
             )
         _window(self.generated_at, self.expires_at, start_field="generated_at", end_field="expires_at", strict=True)
-        assert_no_command_text(self.assessment_summary, field="assessment_summary")
-        assert_no_command_text(self.limitations, field="limitations")
-        assert_no_command_text(self.unknowns, field="unknowns")
+        _free_texts(self.assessment_summary, field="assessment_summary", command_words=True)
+        _free_texts(self.limitations, field="limitations", command_words=True)
+        _free_texts(self.unknowns, field="unknowns", command_words=True)
         for index, action in enumerate(self.recommended_actions):
-            assert_no_command_text(action.rationale, field=f"recommended_actions.{index}.rationale")
-            assert_no_command_text(action.constraints, field=f"recommended_actions.{index}.constraints")
+            _free_texts(action.rationale, field=f"recommended_actions.{index}.rationale", command_words=True)
+            _free_texts(action.constraints, field=f"recommended_actions.{index}.constraints", command_words=True)
         for index, observation in enumerate(self.recommended_observations):
-            assert_no_command_text(
-                observation.rationale, field=f"recommended_observations.{index}.rationale"
+            _free_texts(
+                observation.rationale, field=f"recommended_observations.{index}.rationale", command_words=True
             )
         return self
 
@@ -661,7 +702,7 @@ class RollbackRequirement(_Descriptive):
     )
     required: StrictBool
     triggers: tuple[RollbackTrigger, ...] = Field(default_factory=tuple, max_length=4)
-    max_rollback_seconds: int | None = Field(default=None, ge=1, le=86400)
+    max_rollback_seconds: StrictInt | None = Field(default=None, ge=1, le=86400)
 
     @model_validator(mode="after")
     def _validate(self) -> "RollbackRequirement":
@@ -715,7 +756,7 @@ class ExposureChangeProposal(_Envelope):
         require_ref_kind(self.decision_ref, "decision", field="decision_ref")
         require_ref_kind(self.target_scope_ref, "scope", field="target_scope_ref")
         require_ref_kind(self.adapter_capability_ref, "capability", field="adapter_capability_ref")
-        _require_typed(self.evidence_refs, field="evidence_refs", kind="evidence")
+        _require_typed(self.evidence_refs, field="evidence_refs", kinds=EVIDENCE_REF_KINDS)
         _require_unique(tuple(self.safety_constraints), field="safety_constraints")
         duration = _window(self.not_before, self.expires_at, start_field="not_before", end_field="expires_at", strict=True)
         if duration > MAX_PROPOSAL_WINDOW_SECONDS:
@@ -779,8 +820,8 @@ class DeviceChangeObservation(_Envelope):
                 data = dict(data)
                 raw = data["status"]
                 data["status"] = status
-                if data.get("source_status_label") is None and isinstance(raw, str):
-                    data["source_status_label"] = raw[:128]
+                if data.get("source_status_label") is None:
+                    data["source_status_label"] = _label(raw)
         return data
 
     @model_validator(mode="after")
@@ -796,14 +837,20 @@ class DeviceChangeObservation(_Envelope):
             require_ref_kind(self.proposal_ref, "proposal", field="proposal_ref")
         require_ref_kind(self.adapter_ref, "adapter", field="adapter_ref")
         require_ref_kind(self.target_scope_ref, "scope", field="target_scope_ref")
-        _require_typed(self.evidence_refs, field="evidence_refs", kind="evidence")
-        _require_typed(self.correlation_refs, field="correlation_refs")
+        _require_typed(self.evidence_refs, field="evidence_refs", kinds=EVIDENCE_REF_KINDS)
+        _require_typed(self.correlation_refs, field="correlation_refs", kinds=CORRELATION_REF_KINDS)
         parse_timestamp(self.observed_at, field="observed_at")
         if parse_timestamp(self.observation_window.end, field="observation_window.end") > parse_timestamp(
             self.observed_at, field="observed_at"
         ):
             raise ValueError("observation_window ends after the observation was made")
 
+        _free_texts(self.confounders, field="confounders")
+        _free_texts(self.limitations, field="limitations")
+        if self.failure_reason is not None:
+            _free_texts(self.failure_reason, field="failure_reason")
+        if self.source_status_label is not None and _LABEL.fullmatch(self.source_status_label) is None:
+            raise ValueError("source_status_label must match [A-Za-z0-9_.-]{1,128}")
         if self.status == "failed" and not self.failure_reason:
             raise ValueError("a failed change must say why; an unexplained failure reads as a lost report")
         if self.status != "failed" and self.failure_reason is not None:
@@ -819,6 +866,10 @@ class DeviceChangeObservation(_Envelope):
 __all__ = [
     "AdvisoryActionClass",
     "AdvisoryContextEnvelope",
+    "CORRELATION_REF_KINDS",
+    "EVIDENCE_REF_KINDS",
+    "FACT_REF_KINDS",
+    "SUBJECT_REF_KINDS",
     "ConfidenceBand",
     "DEVICE_CHANGE_STATUSES",
     "DeviceChangeObservation",

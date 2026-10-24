@@ -34,10 +34,11 @@ Toward `v0.9.0rc6` — **not cut, not signed.** `main` is `0.9.0rc6.dev0`.
   weakest reading. Recursive, bounded directive / target-locator / secret /
   cross-tenant rejection covers all four families, and the family is held to
   the strict R1 boundary gate (no OS, network, subprocess, installer or
-  runtime-control import). Keys are normalized (camelCase, separators) and
-  must be printable ASCII; advisory and proposal records also refuse
-  locator-kind refs, IP-shaped values and command-shaped text. What is and is
-  not checked, and the accepted false positives, are listed in
+  runtime-control import). The family is **closed by allowlist**: per-slot
+  ref kinds with a `[a-z0-9][a-z0-9_-]` body, a free-text character
+  allowlist, identity/version grammars, snake_case opaque-map keys with a
+  deny-token set, and a value allowlist; the denylist guards stay on as a
+  belt. What is and is not checked, and the accepted false positives, are in
   `docs/external-security-contracts.md` §4 and §9.
 
 ### Changed

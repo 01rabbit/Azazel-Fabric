@@ -15,7 +15,7 @@
   "executable": false,
   "failure_reason": null,
   "limitations": [
-    "device reported config acceptance; traffic not yet observed"
+    "device reported config acceptance, traffic not yet observed"
   ],
   "observation_id": "device_observation:golden-applied-1",
   "observation_window": {

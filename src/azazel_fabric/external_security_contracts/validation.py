@@ -277,7 +277,11 @@ RESERVED_EXTENSION_KEYS = frozenset(
 )
 
 # Used with ``fullmatch`` only: ``$`` would also accept a trailing newline.
-_TYPED_REF = re.compile(r"(?P<kind>[a-z][a-z0-9_]{0,31}):(?P<body>[A-Za-z0-9._~@=+:-]{1,200})")
+#: Ref body: lower-case ASCII letters, digits, ``_`` and ``-`` only. No dot,
+#: colon, slash, ``%`` or upper case -- so an FQDN, an IP address, a URL, a
+#: path or a percent-encoded form cannot be a ref at all. Each slot then
+#: allowlists the kinds it takes (``models.py``).
+_TYPED_REF = re.compile(r"(?P<kind>[a-z][a-z0-9_]{0,31}):(?P<body>[a-z0-9][a-z0-9_-]{0,127})")
 _SHA256 = re.compile(r"sha256:[0-9a-f]{64}")
 
 #: A credential locator at the start of a string, in any letter case and with
@@ -303,16 +307,6 @@ LOCATOR_REF_KINDS = frozenset(
 _LOCATOR_REF_PREFIX = re.compile(
     r"^\s*(?:ip|ipv4|ipv6|host|hostname|mac|fqdn|url|uri|domain)\s*:", re.IGNORECASE
 )
-_IPV4 = re.compile(r"(?<![0-9.])(?:\d{1,3}\.){3}\d{1,3}(?![0-9])")
-#: Compressed (``::``) or full eight-group IPv6. Timestamps (``00:05:00``) have
-#: neither shape, which is why a looser pattern is not used.
-_IPV6 = re.compile(
-    r"(?i)(?<![0-9a-f])(?:"
-    r"(?:[0-9a-f]{1,4}:){7}[0-9a-f]{1,4}"
-    r"|(?:[0-9a-f]{1,4}(?::[0-9a-f]{1,4}){0,6})?::(?:[0-9a-f]{1,4}(?::[0-9a-f]{1,4}){0,6})?"
-    r")(?![0-9a-f:])"
-)
-
 #: Command tokens refused in advisory/proposal free text (rationale,
 #: constraints, summary, limitations, unknowns). A closed denylist: it will
 #: refuse prose that merely *mentions* one of these words (``ssh brute force``),
@@ -320,6 +314,34 @@ _IPV6 = re.compile(
 #: an instruction. Such context belongs in an observation envelope's fact
 #: projection, cited by ref.
 COMMAND_TEXT_TOKENS = (
+    "reboot",
+    "shutdown",
+    "halt",
+    "kill",
+    "pkill",
+    "pfctl",
+    "ipset",
+    "ip link",
+    "ip addr",
+    "ifconfig",
+    "python",
+    "python3",
+    "perl",
+    "ruby",
+    "echo",
+    "eval",
+    "exec",
+    "invoke-expression",
+    "iex",
+    "new-netfirewallrule",
+    "set-netfirewallrule",
+    "remove-netfirewallrule",
+    "nc",
+    "ncat",
+    "telnet",
+    "chown",
+    "mkfs",
+    "dd",
     "iptables",
     "ip6tables",
     "nft",
@@ -626,10 +648,7 @@ def canonical_external_security_json(value: Any) -> str:
     directive and secret guards run first: nothing refused here gets a digest.
     """
 
-    if hasattr(value, "model_validate") and hasattr(value, "model_dump"):
-        # Frozen records still hold mutable dicts. Re-validating the dump means
-        # a record mutated after construction cannot canonicalize.
-        value = type(value).model_validate(value.model_dump(mode="json"))
+    value = revalidated(value)
     payload = _as_payload(value)
     assert_no_external_security_directives(payload)
     assert_no_secret_material(payload)
@@ -645,6 +664,20 @@ def canonical_external_security_json(value: Any) -> str:
     return encoded
 
 
+def revalidated(value: Any) -> Any:
+    """Re-run a model's validation from its *python* dump.
+
+    Frozen records still hold mutable dicts, and ``model_copy(update=...)``
+    skips validation. The python dump keeps raw values (a NaN stays a NaN
+    rather than becoming ``null``), so whatever was changed after
+    construction is checked again before it is canonicalized or digested.
+    """
+
+    if hasattr(value, "model_validate") and hasattr(value, "model_dump"):
+        return type(value).model_validate(value.model_dump())
+    return value
+
+
 def canonical_digest(value: Any) -> str:
     """``sha256:<hex>`` of the canonical JSON of ``value`` (no guard run).
 
@@ -653,7 +686,7 @@ def canonical_digest(value: Any) -> str:
     """
 
     encoded = json.dumps(
-        _as_payload(value),
+        _as_payload(revalidated(value)),
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
@@ -677,17 +710,168 @@ def parse_ref(raw: object) -> tuple[str | None, str]:
     return match.group("kind"), match.group("body")
 
 
-def require_ref_kind(raw: object, kind: str, *, field: str) -> str:
-    """Require an opaque typed ref of exactly ``kind``.
+def require_ref_kind(raw: object, kind: str | frozenset[str], *, field: str) -> str:
+    """Require an opaque typed ref whose kind is ``kind`` (or one of a set).
 
-    The body grammar admits no slash, whitespace, quote or newline, so a path,
-    a URL, a PEM block or a command fragment cannot occupy a ref slot.
+    The kind is allowlisted per slot and the body grammar admits only
+    ``[a-z0-9][a-z0-9_-]*``, so a hostname, address, URL, path, encoded form
+    or command fragment cannot occupy a ref slot.
     """
 
+    allowed = frozenset({kind}) if isinstance(kind, str) else kind
     parsed_kind, _ = parse_ref(raw)
-    if parsed_kind != kind:
-        raise ValueError(f"{field} must be an opaque typed reference of kind {kind!r}, got {raw!r}")
+    if parsed_kind not in allowed:
+        raise ValueError(
+            f"{field} must be an opaque typed reference of kind "
+            f"{sorted(allowed)} with body [a-z0-9][a-z0-9_-]*, got {raw!r}"
+        )
     return str(raw)
+
+
+# ---------------------------------------------------------------------------
+# Allowlists: free text, identity, and opaque maps (closed by construction)
+# ---------------------------------------------------------------------------
+
+#: Free text: ASCII letters, digits, space, and ``. , ( ) ' -``. No ``:``
+#: ``;`` ``|`` ``&`` ``>`` ``<`` backtick ``$`` ``/`` ``\\`` ``=`` ``%``, tab,
+#: newline, or non-ASCII -- so a ref, a URL, a path, a shell pipeline, an
+#: IPv6 address or an assignment cannot be written in it.
+_FREE_TEXT = re.compile(r"[A-Za-z0-9 .,()'-]{1,2048}")
+#: A dot followed by anything but a space or the end (``db01.corp``,
+#: ``10.0``, ``cmd.exe``), a run of 7+ digits (an integer IPv4), and a hex
+#: literal (``0x0a000001``) are refused inside free text.
+_FREE_TEXT_FORBIDDEN = re.compile(r"\.(?=[^ ])|\d{7,}|0[xX][0-9a-fA-F]")
+_IDENTITY_NAME = re.compile(r"[a-z][a-z0-9-]{0,63}")
+#: ``1``, ``1.2``, ``1.2.3``, optionally ``-tag`` / ``+build`` of
+#: ``[0-9a-z]`` dot-separated identifiers. Four numeric components (an
+#: address) are not a version here.
+_VERSION = re.compile(r"\d{1,6}(?:\.\d{1,6}){0,2}(?:[-+][0-9a-z]{1,32}(?:\.[0-9a-z]{1,32}){0,3})?")
+#: Opaque-map keys: snake_case ASCII only, so two spellings of one key cannot
+#: coexist and no normalization is needed to compare them.
+_OPAQUE_KEY = re.compile(r"[a-z][a-z0-9_]{0,63}")
+#: Opaque-map string values: letters, digits, space and ``. _ , ( ) ' @ + -``.
+#: No ``:`` ``/`` ``%`` ``=`` -- refs, URLs, paths, IPv6 and encoded forms go
+#: digest-only (``payload_digest`` / an ``evidence:`` ref), never inline.
+_OPAQUE_VALUE = re.compile(r"[A-Za-z0-9 ._,()'@+-]{0,256}")
+
+#: Key tokens refused in ``normalized_fact`` and vendor-extension keys. A key
+#: is split on ``_`` and trailing digits are dropped from each token
+#: (``cmd1`` -> ``cmd``); any token in this set refuses the key.
+OPAQUE_KEY_DENY_TOKENS = frozenset(
+    {
+        # execution
+        "cmd", "cmdline", "command", "commands", "exec", "execute", "executable",
+        "executor", "shell", "script", "scripts", "argv", "args", "run", "invoke",
+        "entrypoint", "payload",
+        # secrets and sessions
+        "pwd", "pass", "passwd", "password", "passphrase", "secret", "secrets",
+        "token", "tokens", "bearer", "jwt", "cookie", "cookies", "session",
+        "auth", "otp", "credential", "credentials", "cred", "creds", "apikey",
+        "sshkey", "privkey", "privatekey", "vault", "keychain", "keyvault",
+        # rules and routes
+        "rule", "rules", "iptables", "nftables", "nft", "acl", "acls",
+        "firewall", "route", "routes", "dns", "policy",
+        # authority and verdicts
+        "approve", "approved", "approval", "authorize", "authorized",
+        "authorization", "authority", "override", "force", "apply", "applied",
+        "succeeded", "success", "successful", "decision", "verdict", "admit",
+        "admitted", "grant", "granted", "contained", "containment",
+        # envelope-owned
+        "tenant", "status", "provenance", "privacy",
+    }
+)
+#: ``key`` is refused alone and next to any of these.
+_KEY_QUALIFIERS = frozenset({"priv", "private", "ssh", "signing", "api", "secret", "access", "auth"})
+#: Words refused inside opaque-map string values (split on non-alphanumerics,
+#: case-folded), plus anything that starts like a JWT (``eyJ``).
+OPAQUE_VALUE_DENY_WORDS = frozenset(
+    {
+        "bearer", "password", "passwd", "passphrase", "secret", "secrets", "token",
+        "apikey", "credential", "credentials", "vault", "keyvault", "keychain",
+        "privkey", "tenant", "tenants", "sudo", "iptables", "nft", "nftables",
+    }
+)
+
+
+def assert_free_text(text: object, *, field: str, command_words: bool = False) -> None:
+    """Free text must match the closed character allowlist (see ``_FREE_TEXT``)."""
+
+    if not isinstance(text, str) or _FREE_TEXT.fullmatch(text) is None:
+        raise ValueError(
+            f"{field} must be 1-2048 characters of ASCII letters, digits, space "
+            "and . , ( ) ' - only"
+        )
+    if _FREE_TEXT_FORBIDDEN.search(text):
+        raise ValueError(
+            f"{field} contains a dotted token, a long digit run or a hex literal; "
+            "addresses and file names cannot be written in free text"
+        )
+    if command_words:
+        assert_no_command_text(text, field=field)
+
+
+def assert_identity_name(raw: object, *, field: str) -> None:
+    if not isinstance(raw, str) or _IDENTITY_NAME.fullmatch(raw) is None:
+        raise ValueError(f"{field} must match [a-z][a-z0-9-]{{0,63}}, got {raw!r}")
+
+
+def assert_version(raw: object, *, field: str) -> None:
+    if not isinstance(raw, str) or _VERSION.fullmatch(raw) is None:
+        raise ValueError(f"{field} must be a version (1, 1.2, 1.2.3, optional -tag/+build), got {raw!r}")
+
+
+def _key_tokens(key: str) -> list[str]:
+    return [token.rstrip("0123456789") for token in key.split("_")]
+
+
+def assert_opaque_map(value: Any, *, what: str, depth: int = 0) -> None:
+    """Closed check for ``normalized_fact`` and vendor-extension bodies.
+
+    Keys: ``[a-z][a-z0-9_]{0,63}`` and no token in ``OPAQUE_KEY_DENY_TOKENS``
+    (``key`` alone or next to a qualifier also refused). Values: ``None``,
+    strict bools, ints, finite floats, strings matching ``_OPAQUE_VALUE``
+    without a denied word or a JWT-like word, and nested lists/maps of those.
+    """
+
+    if depth > _MAX_DEPTH:
+        raise ValueError(f"{what} exceeds maximum nesting depth")
+    if isinstance(value, Mapping):
+        for key, child in value.items():
+            if not isinstance(key, str) or _OPAQUE_KEY.fullmatch(key) is None:
+                raise ValueError(f"{what} key {key!r} must match [a-z][a-z0-9_]{{0,63}}")
+            tokens = _key_tokens(key)
+            denied = sorted(set(tokens) & OPAQUE_KEY_DENY_TOKENS)
+            if "key" in tokens and (tokens == ["key"] or set(tokens) & _KEY_QUALIFIERS):
+                denied.append("key")
+            if denied:
+                raise ValueError(
+                    f"{what} key {key!r} carries the refused token(s) {denied}; such "
+                    "data goes digest-only (payload_digest / an evidence: ref)"
+                )
+            assert_opaque_map(child, what=what, depth=depth + 1)
+        return
+    if isinstance(value, (list, tuple)):
+        for child in value:
+            assert_opaque_map(child, what=what, depth=depth + 1)
+        return
+    if value is None or isinstance(value, (bool, int)):
+        return
+    if isinstance(value, float):
+        if not _is_finite(value):
+            raise ValueError(f"{what} contains a non-finite number")
+        return
+    if isinstance(value, str):
+        if _OPAQUE_VALUE.fullmatch(value) is None:
+            raise ValueError(
+                f"{what} value {value[:40]!r} must be <=256 characters of letters, "
+                "digits, space and . _ , ( ) ' @ + - only"
+            )
+        words = [w for w in re.split(r"[^A-Za-z0-9]+", value.lower()) if w]
+        bad = sorted(set(words) & OPAQUE_VALUE_DENY_WORDS)
+        if bad or any(w.startswith("eyj") for w in words):
+            raise ValueError(f"{what} value {value[:40]!r} carries a refused word {bad or ['eyJ...']}")
+        return
+    raise ValueError(f"{what} has unsupported type {type(value).__name__}")
 
 
 def parse_timestamp(raw: str, *, field: str) -> datetime:
@@ -722,10 +906,11 @@ def assert_tenant_confined(value: Any, tenant_ref: str) -> None:
 def assert_no_locator_values(value: Any) -> None:
     """Refuse concrete target locators carried as *values* (advisory, proposal).
 
-    A locator-kind ref (``ip:``, ``host:``, ``hostname:``, ``mac:``, ``fqdn:``,
-    ``url:``, ``uri:``, ``domain:``, any case) or an IPv4/IPv6-shaped value,
-    anywhere in the record. Fields named ``*version`` are exempt from the
-    address-shape scan only: ``1.2.3.4`` is a plausible version string.
+    A belt behind the allowlists: a string starting with a locator kind
+    (``ip:``, ``host:``, ``hostname:``, ``mac:``, ``fqdn:``, ``url:``, ``uri:``,
+    ``domain:``, any case) anywhere in the record. Addresses themselves cannot
+    be represented in these records: refs take no dots or colons, and free
+    text takes neither ``:`` nor a dot followed by a non-space.
     """
 
     for path, text in _strings(_as_payload(value)):
@@ -733,14 +918,6 @@ def assert_no_locator_values(value: Any) -> None:
         if _LOCATOR_REF_PREFIX.search(text):
             raise ValueError(
                 f"{location} is a concrete target locator ({text!r}); an advisory or "
-                "proposal names an opaque scope, never an address"
-            )
-        field = path[-1] if path else ""
-        if field.endswith("version") or (len(path) >= 2 and path[-2].endswith("version")):
-            continue
-        if _IPV4.search(text) or _IPV6.search(text):
-            raise ValueError(
-                f"{location} carries an IP-address-shaped value; an advisory or "
                 "proposal names an opaque scope, never an address"
             )
 
@@ -885,7 +1062,14 @@ __all__ = [
     "VENDOR_EXTENSION_MAX_ITEMS",
     "VENDOR_EXTENSION_MAX_STRING",
     "assert_bounded_opaque",
+    "OPAQUE_KEY_DENY_TOKENS",
+    "OPAQUE_VALUE_DENY_WORDS",
     "assert_device_observation_within_proposal",
+    "assert_free_text",
+    "assert_identity_name",
+    "assert_opaque_map",
+    "assert_version",
+    "revalidated",
     "assert_no_command_text",
     "assert_no_external_security_directives",
     "assert_no_locator_values",

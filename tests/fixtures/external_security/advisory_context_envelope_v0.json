@@ -1,6 +1,6 @@
 {
   "advisory_id": "advisory:golden-knowledge-1",
-  "assessment_summary": "Process behaviour matches simulated credential access; lineage is partial and two sensors were offline.",
+  "assessment_summary": "Process behaviour matches simulated credential access, lineage is partial and two sensors were offline.",
   "authority_class": "advisory_only",
   "confidence_band": "moderate",
   "executable": false,

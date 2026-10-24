@@ -21,7 +21,7 @@
   ],
   "normalized_fact": {
     "parent_process_name": "office_sim",
-    "process_name": "credential_dumper_sim",
+    "process_name": "lsass_reader_sim",
     "severity_band": "high"
   },
   "observation_id": "external_observation:golden-edr-1",
@@ -82,13 +82,13 @@
   "vendor_extensions": [
     {
       "body": {
-        "detection_family": "credential_access",
+        "detection_family": "discovery_sim",
         "sensor_build": "7.12.3",
         "tactic_ids": [
           "TA0006"
         ]
       },
-      "body_digest": "sha256:effbae66c7a3f4b42c5454797da3526a146e4beb602ec2e2be2ab0179449ab67",
+      "body_digest": "sha256:a84c1ffc83ec7d16ed85d062402f8927f98f6ddddbf5c9af65dff69abad8e598",
       "evidence_ref": "evidence:edr-golden-raw-17",
       "namespace": "vendor.edr-sim",
       "schema_version": "external-vendor-extension/v0.1"
