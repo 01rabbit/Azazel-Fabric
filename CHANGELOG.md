@@ -10,6 +10,9 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 Toward `v0.9.0rc6` — **not cut, not signed.** `main` is `0.9.0rc6.dev0`.
 
+**Not additive** (Fabric#65): a typed reference, a provisioning digest or a
+MAC that ends in a newline, and validated under `v0.9.0rc5`, is refused here.
+
 ### Added
 
 - **Experimental external-security profile** (`external_security_contracts`,
@@ -45,6 +48,30 @@ Toward `v0.9.0rc6` — **not cut, not signed.** `main` is `0.9.0rc6.dev0`.
 
 - `version.py` moves to `0.9.0rc6.dev0`: the first source change after
   `v0.9.0rc5`. The release-digest tests skip on a `.dev` version by design.
+- **A typed reference, a digest or a MAC may not end in a newline**
+  (`effect_contracts/refs.py`, `provisioning_contracts/models.py`, Fabric#65).
+  **This is not additive: a value that validated under `v0.9.0rc5` is
+  refused.**
+
+  `OPAQUE_REF_PATTERN`, the provisioning `sha256:<64 hex>` pattern and the MAC
+  pattern were closed with `$` and applied with `.match`. Python's `$` also
+  matches just before one trailing newline, so `effect:x\n` was returned as an
+  effect ref and `sha256:<64 hex>\n` was accepted as a digest -- contradicting
+  the "no newline" opacity claim the typed-ref body class is documented to
+  make. All three now close with `\Z` and are applied with `fullmatch`; `\Z`
+  keeps the exported `OPAQUE_REF_PATTERN` safe for a consumer that still calls
+  `.match` on it. Only a single trailing `\n` changes: `\r\n`, a space, a tab
+  and NUL were already refused by the character classes, and tests now pin all
+  five.
+
+  `reject_ref_kinds` looks through that one trailing newline, so the guard does
+  not narrow: `advisory:x\n` in a `trace_id` was refused as an advisory ref
+  under `$`, and is still refused. The MAC fields already carried
+  `max_length=17`, so no MAC payload changes in practice; the digest fields had
+  no such bound.
+
+  The `external_security_contracts` family already used `fullmatch` (Fabric#64)
+  and is unchanged.
 
 ## [0.9.0rc5] — A terrain can bind to an effect that has no decision (Fabric#51)
 

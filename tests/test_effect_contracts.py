@@ -23,6 +23,7 @@ from azazel_fabric.effect_contracts import (
     EffectClass,
     EffectObservation,
     OBSERVABLE_AUTHORITY_CLASSES,
+    OPAQUE_REF_PATTERN,
     OutcomeObservationEnvelope,
     PresentedTerrainRef,
     RefKind,
@@ -34,6 +35,7 @@ from azazel_fabric.effect_contracts import (
     coerce_effect_class,
     is_authoritative_decision_reference,
     parse_ref,
+    reject_ref_kinds,
     require_ref_kind,
 )
 from azazel_fabric.schema.defensive_state import DefensiveState
@@ -409,6 +411,53 @@ def test_an_opaque_ref_cannot_be_a_path_a_url_or_a_pem_block():
     ):
         with pytest.raises(ValueError):
             require_ref_kind(hostile, RefKind.ARTIFACT, field="artifact")
+
+
+#: Trailing bytes a typed ref must never carry (Fabric#65). ``\n`` is the one
+#: Python's ``$`` forgave; the others are listed so the next anchor edit has
+#: to keep refusing all of them, not just the one that slipped through.
+TRAILING_JUNK = ("\n", "\r\n", " ", "\t", "\x00")
+
+
+@pytest.mark.parametrize("suffix", TRAILING_JUNK, ids=repr)
+def test_a_typed_ref_with_trailing_junk_is_not_a_typed_ref(suffix):
+    """``effect:x\n`` used to be returned as an effect ref (Fabric#65).
+
+    The body class claims "no newline"; a ``$`` anchor under ``.match`` let
+    exactly one trailing newline through, so the claim was false at the end of
+    the string. The exported pattern is checked under ``.match`` too, because a
+    consumer that imports it may still call that.
+    """
+
+    raw = "effect:x" + suffix
+    assert parse_ref(raw) == (None, raw)
+    assert OPAQUE_REF_PATTERN.match(raw) is None
+    with pytest.raises(ValueError, match="effect_id"):
+        require_ref_kind(raw, RefKind.EFFECT, field="effect_id")
+    with pytest.raises(ValidationError, match="effect_id"):
+        effect_ref(effect_id=raw)
+
+
+@pytest.mark.parametrize("suffix", TRAILING_JUNK, ids=repr)
+def test_a_trailing_newline_does_not_smuggle_a_forbidden_kind_past_the_guard(suffix):
+    """Tightening the grammar must not loosen ``reject_ref_kinds``.
+
+    Under ``$``, ``advisory:x\n`` parsed as an advisory ref and was refused
+    from ``trace_id``. Once it parses as untyped, the guard would have let it
+    in -- the fix for Fabric#65 would have opened the hole it was closing in
+    the other direction. Each suffix is checked: none of them may turn a
+    forbidden kind into an acceptable inherited id.
+    """
+
+    raw = "advisory:x" + suffix
+    if suffix == "\n":
+        with pytest.raises(ValidationError, match="advisory"):
+            effect_ref(trace_id=raw)
+        with pytest.raises(ValueError, match="advisory"):
+            reject_ref_kinds(raw, frozenset({RefKind.ADVISORY}), field="trace_id")
+    else:
+        # Never parsed as typed, before or after the fix: unchanged behaviour.
+        assert parse_ref(raw)[0] is None
 
 
 def test_an_untyped_inherited_id_is_still_accepted():
