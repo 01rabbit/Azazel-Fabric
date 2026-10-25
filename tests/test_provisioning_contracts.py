@@ -472,3 +472,35 @@ def test_extra_fields_fail_closed_on_every_provisioning_model():
     payload["activate_now"] = True
     with pytest.raises(ValidationError):
         TopologyProfile.model_validate(payload)
+
+
+#: Trailing bytes a digest or a MAC must never carry (Fabric#65).
+TRAILING_JUNK = ("\n", "\r\n", " ", "\t", "\x00")
+
+
+@pytest.mark.parametrize("suffix", TRAILING_JUNK, ids=repr)
+def test_a_digest_with_trailing_junk_is_refused(suffix):
+    """``sha256:<64 hex>\n`` was accepted: ``$`` under ``.match`` forgives one
+    trailing newline, and digest fields carry no length bound to catch it."""
+
+    payload = load_golden_provisioning("hardware_inventory")
+    payload["inventory_digest"] = payload["inventory_digest"] + suffix
+    with pytest.raises(ValidationError, match="sha256"):
+        HardwareInventory.model_validate(payload)
+
+
+@pytest.mark.parametrize("suffix", TRAILING_JUNK, ids=repr)
+def test_a_mac_with_trailing_junk_is_refused(suffix):
+    """The field's ``max_length=17`` already refuses this at the model; the
+    pattern is checked directly so it does not rely on that bound."""
+
+    from azazel_fabric.provisioning_contracts import models
+
+    assert models._MAC.match("02:00:00:00:00:0a" + suffix) is None
+    assert models._SHA256.match("sha256:" + "a" * 64 + suffix) is None
+    with pytest.raises(ValidationError):
+        InterfaceIdentitySelector(
+            bus_path="pci-0000:02:00.0",
+            permanent_mac="02:00:00:00:00:0a" + suffix,
+            pci_id="8086:15b8",
+        )

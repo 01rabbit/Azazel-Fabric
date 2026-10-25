@@ -67,12 +67,15 @@ InterfaceRole = Literal[
     "unassigned",
 ]
 
-_SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
-_MAC = re.compile(r"^([0-9a-f]{2}:){5}[0-9a-f]{2}$")
+# Closed with ``\Z`` and applied with ``fullmatch`` (Fabric#65): Python's ``$``
+# also matches just before one trailing newline, which let ``sha256:<64 hex>\n``
+# through as a digest.
+_SHA256 = re.compile(r"^sha256:[0-9a-f]{64}\Z")
+_MAC = re.compile(r"^([0-9a-f]{2}:){5}[0-9a-f]{2}\Z")
 
 
 def _valid_sha256(value: str) -> str:
-    if not _SHA256.match(value):
+    if not _SHA256.fullmatch(value):
         raise ValueError("digest must be a lowercase 'sha256:<64 hex>' string")
     return value
 
@@ -118,7 +121,7 @@ class InterfaceIdentity(_Descriptive):
     @field_validator("permanent_mac")
     @classmethod
     def _normalized_mac(cls, value: str) -> str:
-        if not _MAC.match(value):
+        if not _MAC.fullmatch(value):
             raise ValueError("permanent_mac must be lowercase colon-separated (aa:bb:cc:dd:ee:ff)")
         return value
 
@@ -306,7 +309,7 @@ class InterfaceIdentitySelector(_Descriptive):
     @field_validator("permanent_mac")
     @classmethod
     def _normalized_mac(cls, value: str) -> str:
-        if not _MAC.match(value):
+        if not _MAC.fullmatch(value):
             raise ValueError("permanent_mac must be lowercase colon-separated (aa:bb:cc:dd:ee:ff)")
         return value
 

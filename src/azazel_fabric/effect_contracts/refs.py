@@ -96,7 +96,14 @@ class RefKind(str, Enum):
 #: only ever accepts more than it did. ``reject_ref_kinds`` only ever rejects
 #: more -- and exactly where it should, since a value like ``surface:http:8080``
 #: supplied as a ``trace_id`` was previously invisible to it.
-OPAQUE_REF_PATTERN = re.compile(r"^(?P<kind>[a-z][a-z0-9_]{0,31}):(?P<body>[A-Za-z0-9._~@=+:-]{1,200})$")
+#:
+#: The pattern is closed with ``\Z``, never ``$``, and is applied with
+#: ``fullmatch`` (Fabric#65). Python's ``$`` also matches just before one
+#: trailing newline, so ``effect:x\n`` used to be accepted as a typed ref --
+#: contradicting the "no newline" opacity claim above. ``\Z`` keeps the
+#: exported pattern safe for a caller that still uses ``.match`` on it, and
+#: ``fullmatch`` keeps ``parse_ref`` safe if the anchor is ever edited.
+OPAQUE_REF_PATTERN = re.compile(r"^(?P<kind>[a-z][a-z0-9_]{0,31}):(?P<body>[A-Za-z0-9._~@=+:-]{1,200})\Z")
 
 
 def parse_ref(raw: object) -> tuple[RefKind | None, str]:
@@ -108,7 +115,7 @@ def parse_ref(raw: object) -> tuple[RefKind | None, str]:
 
     if not isinstance(raw, str):
         return None, ""
-    match = OPAQUE_REF_PATTERN.match(raw)
+    match = OPAQUE_REF_PATTERN.fullmatch(raw)
     if match is None:
         return None, raw
     try:
@@ -138,6 +145,12 @@ def reject_ref_kinds(raw: object, forbidden: frozenset[RefKind], *, field: str) 
     if raw is None:
         return raw
     parsed_kind, _ = parse_ref(raw)
+    if parsed_kind is None and isinstance(raw, str) and raw.endswith("\n"):
+        # Closing the grammar with ``\Z`` (Fabric#65) must not *narrow* this
+        # guard. Under the old ``$`` anchor ``advisory:x\n`` parsed as an
+        # advisory ref and was refused here; it now parses as untyped, so the
+        # one trailing newline ``$`` used to forgive is looked through instead.
+        parsed_kind, _ = parse_ref(raw[:-1])
     if parsed_kind in forbidden:
         raise ValueError(
             f"{field} must not be a {parsed_kind.value!r} reference; "
