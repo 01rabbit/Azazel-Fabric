@@ -59,7 +59,7 @@ available. A `.devN` version is never a release.
 | `v0.9.0rc3` (candidate) | A typed cross-series reference may carry further colons in its body (`effect_contracts/refs.py`) | Additive for every consumer; **required for an `effect_contracts` adopter** — at `rc2` the grammar refused every hierarchical reference in the series, so the family had no possible producer |
 | `v0.9.0rc4` (candidate) | An `EffectObservation` may claim only `observed_fact` or `active_materialized` (`effect_contracts/models.py`, Fabric#52) | **Non-additive — the first in this series.** Input accepted at `rc3` is refused at `rc4`. Required before `v0.9.0` stable; a producer that emitted an observation under any other authority class must correct it, not re-pin around it |
 | `v0.9.0rc5` (candidate) | Presented-terrain provenance: `source_effect_ref`, `trace_id`, `synthetic_identity_refs`, `synthetic_credential_refs`; `activation_decision_ref` becomes optional (`effect_contracts`, Fabric#51) | **Additive.** Every `rc4` terrain payload still validates and still chains — checked by `test_an_rc4_terrain_payload_still_validates`. What changes is that a decision-less effect can be chained to a terrain **at all**, which `rc4` made structurally impossible |
-| `v0.9.0rc6` (candidate, **unpublished**) | **Experimental** `external_security_contracts` profile (Fabric#25): `ExternalObservationEnvelope`, `AdvisoryContextEnvelope`, `ExposureChangeProposal`, `DeviceChangeObservation` | **Additive** and optional — no existing model changed and no other module imports it. Not cut, not signed; `main` is `0.9.0rc6.dev0`. Experimental: no compatibility promise |
+| `v0.9.0rc6` (candidate, **unpublished**) | **Experimental** `external_security_contracts` profile (Fabric#25); a typed reference, a provisioning digest or a MAC may not end in a newline (`effect_contracts/refs.py`, `provisioning_contracts/models.py`, Fabric#65); the deception, engagement and effect directive walkers refuse a payload nested more than 32 levels deep (Fabric#23) | **Non-additive.** The `external_security_contracts` profile is additive and optional, but two other changes are not: a typed ref, `sha256:` digest or MAC ending in one `\n` that validated at `rc5` is refused (Fabric#65), and a payload deeper than 32 levels passed to a deception, engagement or effect directive guard is refused with a `ValueError` even when it carries no directive (Fabric#23; `rc5` accepted it up to the recursion limit). Neither should reach a well-formed producer: no MAC payload changes in practice (`max_length=17`), and the deepest payload any model or fixture here passes to those guards is 3 levels. Not cut, not signed; `main` is `0.9.0rc6.dev0`. The experimental profile carries no compatibility promise |
 
 All consumer deployments MUST pin an exact compatible Fabric tag or immutable
 image lock. They MUST NOT pin a branch. A product chooses when to adopt a newer
@@ -139,28 +139,42 @@ observation rather than as a table: the previous version of this document
 restated four products' pins as fact, and four of the five had moved by the
 time anyone read it.
 
-Observed 2026-09-20, each at that repository's `origin/main`:
+Observed 2026-10-25, each at that repository's `main` on GitHub, read from its
+dependency declaration (`requirements/fabric.txt`, `pyproject.toml` or
+`requirements.txt`). "Uses `effect_contracts`" counts the `.py` files, tests
+included, that name the module:
 
 | Product | Pin | Observed at | Uses `effect_contracts` |
 | --- | --- | --- | --- |
-| Azazel-Edge | `v0.9.0rc4` | `873f760` | yes — 4 files |
-| Azazel-Deception | `v0.9.0rc4` | `5ef49c9` | yes — 2 files |
-| Azazel-Nexus | `v0.9.0rc2` | `40f8984` | no |
-| Azazel-Knowledge | `v0.9.0rc2` | `f29c29d` | no |
-| Azazel-Boot | `v0.9.0rc1` | `1bd3e74` | no |
-| Azazel-Gadget | **unknown** | — | **unknown** |
+| Azazel-Edge | `v0.9.0rc4` | `4b5242c` | yes — 4 files |
+| Azazel-Deception | `v0.9.0rc5` | `9cd7987` | yes — 3 files |
+| Azazel-Nexus | `v0.9.0rc5` (the `fabric` extra, and `FABRIC_PIN` in `fabric_boundary.py`) | `94d70b1` | no |
+| Azazel-Knowledge | `v0.9.0rc2` | `2445c1b` | no |
+| Azazel-Boot | **no declaration** | `8c90965` | no |
+| Azazel-Gadget | `v0.8.0` | `7aeb923` | no |
 
-Azazel-Gadget is **not observed**. It was outside the access scope of the
-session that produced this table, and an entry stating otherwise would be
-exactly the kind of claim the row above exists to avoid. It is `unknown`
-rather than absent, so that a reader counting products notices the gap.
+Four rows moved since the 2026-09-20 observation. Deception and Nexus now pin
+`v0.9.0rc5`; Azazel-Boot no longer declares Fabric at all (its
+`pyproject.toml` has `dependencies = []` and no Fabric extra); and
+Azazel-Gadget was read this time rather than left `unknown`. Edge still pins
+`v0.9.0rc4`, so it skips `rc5`.
 
-**No product pins `v0.9.0rc5`, and none needs to.** `rc5` is additive over
-`rc4` (Fabric#51), so a consumer gains the presented-terrain provenance slots
-only when it has something to put in them. Azazel-Deception is the first that
-will: its own guards already report that `trace_id`,
-`synthetic_identity_refs` and `synthetic_credential_refs` now exist on
-`PresentedTerrainRef` and that its projection declares them unmapped.
+The *Observed consumer declarations* table above, and the consumer status in
+`README.md` that `tests/test_consumer_pin_tables_agree.py` holds it to, still
+record the 2026-09-20 reading — Nexus as a deliberate non-declaration
+included. They are re-read together once the products move to `v0.9.0rc6`,
+rather than twice in a row by hand.
+
+**Nexus, Deception and Edge each refuse any Fabric but the exact tag they
+pin.** Nexus's `fabric_boundary.py` refuses an installed Fabric whose
+`__version__` is not the pinned tag, and Deception's and Edge's pin tests do
+the same, so a `v0.9.0rc6` build is refused by all three until each moves its
+pin. That is the gate working, not an incompatibility. Run against `main`
+(`0.9.0rc6.dev0`) on 2026-10-25, every Nexus failure was that version gate and
+Edge's were its pin-integrity tests. The only contract-level failures were
+Deception's 12 cases of a test that asserts Fabric#65 is still *unfixed* —
+the non-additive change in the `rc6` row above, which that test was written to
+notice.
 
 ### `effect_contracts` across `rc4` and `rc5`
 
@@ -169,6 +183,7 @@ will: its own guards already report that `trace_id`,
 | `v0.9.0rc3` | A typed reference's body may carry further colons | **Required** for any adopter. Under `rc2` every hierarchical reference the series mints was refused, so the family had no possible producer |
 | `v0.9.0rc4` | An `EffectObservation` may claim only `observed_fact` or `active_materialized` | **Non-additive.** A producer that emitted any other authority class must correct it. Edge and Deception both moved; neither had to change code, because both already derived the class from the observation's status |
 | `v0.9.0rc5` | A terrain may bind to an effect that has no decision (`source_effect_ref` + `trace_id`); `synthetic_identity_refs` and `synthetic_credential_refs` added | **Additive.** Every `rc4` payload still validates and still chains. It makes reachable a path that `rc4` made structurally impossible: a `planned_shadow` effect could not be chained to a terrain at all |
+| `v0.9.0rc6` (unpublished) | A typed reference may not end in a newline (Fabric#65); `assert_no_effect_authority_fields`, `assert_no_secret_material` and the re-exported deception walkers refuse a payload nested more than 32 levels deep (Fabric#23) | **Non-additive.** `effect:x\n` was accepted as a ref at `rc5` and is refused at `rc6`. Deception's producer test asserts the old acceptance as a precondition and must drop it on re-pin; the same test checks that its producer never emits such a ref |
 
 Four families clear the gate, and each does so on a real round trip rather
 than a count. `deception_contracts`: Edge constructs and signs an
