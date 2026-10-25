@@ -185,10 +185,11 @@ def test_a_directive_is_rejected_at_every_depth(family, function, constant, dept
 #: catching `ValueError` will see as a rejection.
 #:
 #: Recorded as a fact rather than asserted as a requirement. Making the walk
-#: bounded in the other four families changes their public behaviour and is a
-#: decision to take deliberately, not a side effect of writing a test. What
-#: this pins is that the set does not change silently: a family that gains or
-#: loses a bound makes this list wrong, and someone looks.
+#: bounded in the other four families changed their public behaviour and was
+#: taken as its own change (see `tests/test_bounded_directive_walkers.py`);
+#: every guard here is now bounded. What this pins is that the set does not
+#: change silently: a family that gains or loses a bound makes this list
+#: wrong, and someone looks.
 BOUNDED_GUARDS = frozenset(
     {
         "provisioning_contracts.assert_no_provisioning_directives",
@@ -199,6 +200,13 @@ BOUNDED_GUARDS = frozenset(
         # refused with a clean ValueError, never a RecursionError.
         "external_security_contracts.assert_no_external_security_directives",
         "external_security_contracts.assert_no_target_locators",
+        # Bounded at 32 levels since Fabric#23 (`bounded-directive-walkers`):
+        # these four were the unbounded walkers described above, and raised
+        # RecursionError past ~1000 levels. They now refuse with ValueError.
+        "deception_contracts.assert_no_runtime_directives",
+        "deception_contracts.assert_no_effectiveness_verdict",
+        "effect_contracts.assert_no_effect_authority_fields",
+        "engagement_contracts.assert_no_engagement_directives",
     }
 )
 

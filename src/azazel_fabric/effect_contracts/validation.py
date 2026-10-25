@@ -110,7 +110,22 @@ def _normalized_key(raw: str) -> str:
     return normalized.strip("_")
 
 
-def _walk_keys(value: Any, path: tuple[str, ...] = ()) -> None:
+#: Same bound and reason as ``deception_contracts.MAX_DIRECTIVE_WALK_DEPTH``:
+#: past it a payload is refused with ``ValueError`` instead of overflowing the
+#: interpreter's recursion limit into ``RecursionError``.
+MAX_EFFECT_WALK_DEPTH = 32
+
+
+def _too_deep(what: str) -> ValueError:
+    return ValueError(
+        f"{what} exceeds maximum nesting depth {MAX_EFFECT_WALK_DEPTH}; "
+        "it is refused rather than inspected"
+    )
+
+
+def _walk_keys(value: Any, path: tuple[str, ...] = (), *, depth: int = 0) -> None:
+    if depth > MAX_EFFECT_WALK_DEPTH:
+        raise _too_deep("effect payload")
     if isinstance(value, dict):
         for raw_key, child in value.items():
             if isinstance(raw_key, str):
@@ -121,11 +136,11 @@ def _walk_keys(value: Any, path: tuple[str, ...] = ()) -> None:
                         f"product-owned authority concept is forbidden in a shared "
                         f"contract: {location}"
                     )
-            _walk_keys(child, (*path, str(raw_key)))
+            _walk_keys(child, (*path, str(raw_key)), depth=depth + 1)
         return
     if isinstance(value, (list, tuple)):
         for index, child in enumerate(value):
-            _walk_keys(child, (*path, str(index)))
+            _walk_keys(child, (*path, str(index)), depth=depth + 1)
 
 
 def assert_no_effect_authority_fields(value: Any) -> None:
@@ -140,8 +155,17 @@ def assert_no_effect_authority_fields(value: Any) -> None:
 
 
 def assert_no_secret_material(value: Any, *, field: str) -> None:
-    """Reject recognizable secret material in a reference-only field."""
+    """Reject recognizable secret material in a reference-only field.
 
+    A value nested deeper than :data:`MAX_EFFECT_WALK_DEPTH` is refused too.
+    """
+
+    _walk_secret_material(value, field=field, depth=0)
+
+
+def _walk_secret_material(value: Any, *, field: str, depth: int) -> None:
+    if depth > MAX_EFFECT_WALK_DEPTH:
+        raise _too_deep(field)
     if isinstance(value, str):
         for marker in SECRET_MATERIAL_MARKERS:
             if marker.lower() in value.lower():
@@ -152,12 +176,12 @@ def assert_no_secret_material(value: Any, *, field: str) -> None:
         return
     if isinstance(value, (list, tuple)):
         for item in value:
-            assert_no_secret_material(item, field=field)
+            _walk_secret_material(item, field=field, depth=depth + 1)
         return
     if isinstance(value, dict):
         for key, item in value.items():
-            assert_no_secret_material(key, field=field)
-            assert_no_secret_material(item, field=field)
+            _walk_secret_material(key, field=field, depth=depth + 1)
+            _walk_secret_material(item, field=field, depth=depth + 1)
 
 
 def assert_effect_chain_consistent(
