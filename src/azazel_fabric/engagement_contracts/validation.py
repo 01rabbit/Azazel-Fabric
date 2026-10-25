@@ -35,18 +35,29 @@ BANNED_ENGAGEMENT_AUTHORITY_FIELDS = frozenset(
 )
 
 
-def _contains_banned(value: Any) -> bool:
+#: Same bound and reason as ``deception_contracts.MAX_DIRECTIVE_WALK_DEPTH``:
+#: past it a payload is refused with ``ValueError`` instead of overflowing the
+#: interpreter's recursion limit into ``RecursionError``.
+MAX_DIRECTIVE_WALK_DEPTH = 32
+
+
+def _contains_banned(value: Any, *, depth: int = 0) -> bool:
     from collections.abc import Mapping, Sequence
 
+    if depth > MAX_DIRECTIVE_WALK_DEPTH:
+        raise ValueError(
+            "engagement payload exceeds maximum nesting depth "
+            f"{MAX_DIRECTIVE_WALK_DEPTH}; it is refused rather than inspected"
+        )
     if isinstance(value, Mapping):
         for key, nested in value.items():
             if str(key) in BANNED_ENGAGEMENT_AUTHORITY_FIELDS:
                 return True
-            if _contains_banned(nested):
+            if _contains_banned(nested, depth=depth + 1):
                 return True
         return False
     if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
-        return any(_contains_banned(item) for item in value)
+        return any(_contains_banned(item, depth=depth + 1) for item in value)
     return False
 
 
@@ -55,6 +66,8 @@ def assert_no_engagement_directives(value: Any) -> None:
 
     Covers both the canonical runtime-directive set and the engagement-specific
     authority-bearing fields. Use at an ingest/forwarding boundary before trust.
+    A payload nested deeper than :data:`MAX_DIRECTIVE_WALK_DEPTH` is refused
+    with ``ValueError`` too.
     """
 
     if _contains_banned(value):

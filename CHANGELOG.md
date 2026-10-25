@@ -13,6 +13,11 @@ Toward `v0.9.0rc6` — **not cut, not signed.** `main` is `0.9.0rc6.dev0`.
 **Not additive** (Fabric#65): a typed reference, a provisioning digest or a
 MAC that ends in a newline, and validated under `v0.9.0rc5`, is refused here.
 
+**Not additive** (Fabric#23): a payload nested more than 32 levels deep, and
+passed to a deception, engagement or effect directive guard, is refused here
+even when it carries no directive. Under `v0.9.0rc5` it was accepted up to the
+interpreter's recursion limit.
+
 ### Added
 
 - **Experimental external-security profile** (`external_security_contracts`,
@@ -72,6 +77,28 @@ MAC that ends in a newline, and validated under `v0.9.0rc5`, is refused here.
 
   The `external_security_contracts` family already used `fullmatch` (Fabric#64)
   and is unchanged.
+
+- **The deception, engagement and effect directive walkers are bounded**
+  (Fabric#23). `deception_contracts.assert_no_runtime_directives` /
+  `assert_no_effectiveness_verdict` (which `effect_contracts` re-exports and
+  applies to every effect record), `engagement_contracts.assert_no_engagement_directives`,
+  `effect_contracts.assert_no_effect_authority_fields` and
+  `effect_contracts.assert_no_secret_material` now refuse a payload nested
+  more than 32 levels deep with a `ValueError` naming the nesting depth.
+  **This is not additive: a clean payload deeper than 32 levels that validated
+  under `v0.9.0rc5` is refused.**
+
+  Before, these walked as deep as the payload went and, past the recursion
+  limit (~1000 levels), raised `RecursionError` -- a refusal, but not the
+  `ValueError` a caller catches, unlike the provisioning, M.I.O., outcome and
+  external-security walkers, which were bounded from the start. The deepest
+  payload any contract model or golden fixture here passes to these guards is
+  3 levels, so 32 leaves an order of magnitude of headroom. The boolean
+  predicates `contains_runtime_directive` / `contains_effectiveness_verdict`
+  keep their True/False contract and are unchanged. New constants:
+  `deception_contracts.validation.MAX_DIRECTIVE_WALK_DEPTH`,
+  `engagement_contracts.validation.MAX_DIRECTIVE_WALK_DEPTH`,
+  `effect_contracts.validation.MAX_EFFECT_WALK_DEPTH`.
 
 ## [0.9.0rc5] — A terrain can bind to an effect that has no decision (Fabric#51)
 
