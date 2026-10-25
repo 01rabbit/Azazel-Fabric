@@ -3,7 +3,7 @@
 Version management is tag-driven on GitHub. This version must match the
 release tag being cut; a ``.devN`` suffix is only present between releases.
 
-``v0.9.0rc1`` through ``v0.9.0rc4`` are published, and each ships a **signed
+``v0.9.0rc1`` through ``v0.9.0rc5`` are published, and each ships a **signed
 release digest** (``release/*.digest.json.sig``).
 
 **The git tag itself is not signed and is not a trust boundary.** Every
@@ -13,13 +13,13 @@ signed" — the difference decides what a consumer may conclude from an install
 succeeding, and it is what caught ``v0.9.0rc4`` being cut at the wrong commit
 twice. See ``docs/release-signing.md`` and Fabric#56.
 
-This is ``0.9.0rc6.dev0``: ``main`` has moved past ``v0.9.0rc5`` and is not
-itself any tag. The first source change after that tag -- the experimental
-``external_security_contracts`` profile (Fabric#25) -- is what forced the bump.
-The release-digest gate in ``tests/test_release_candidate_digest.py`` switches
-off for a ``.devN`` version precisely so that ``main`` cannot keep claiming to
-be the tree a published tag records. ``v0.9.0rc6`` is **not** cut and not
-signed; nothing here asserts that it will be.
+This is ``0.9.0rc6``, and it is the tree ``release/v0.9.0rc6.digest.json``
+records. It carries the experimental ``external_security_contracts`` profile
+(Fabric#25), which is additive, and two changes that are **not**: a typed
+reference, a provisioning digest or a MAC may no longer end in a newline
+(Fabric#65), and the deception, engagement and effect directive walkers refuse
+a payload nested more than 32 levels deep (Fabric#23). Input that was valid
+under ``rc5`` can be refused under ``rc6``.
 
 ``v0.9.0rc4`` carries one **non-additive** change: an ``EffectObservation``
 may claim only ``observed_fact`` or ``active_materialized`` (Fabric#52). The
@@ -39,4 +39,4 @@ one against a moved ``main`` would make it claim to be a digest of a tag it no
 longer matches, and would strand the signature that covers its current bytes.
 """
 
-__version__ = "0.9.0rc6.dev0"
+__version__ = "0.9.0rc6"

@@ -155,7 +155,14 @@ def test_the_trusted_key_set_is_exactly_what_it_should_be():
 
 #: Every candidate whose manifest is in the tree, written out rather than
 #: globbed. A candidate added without a signature has to be visible here.
-PUBLISHED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3", "v0.9.0rc4", "v0.9.0rc5")
+PUBLISHED_CANDIDATES = (
+    "v0.9.0rc1",
+    "v0.9.0rc2",
+    "v0.9.0rc3",
+    "v0.9.0rc4",
+    "v0.9.0rc5",
+    "v0.9.0rc6",
+)
 
 #: Those of them a release owner has signed.
 #:

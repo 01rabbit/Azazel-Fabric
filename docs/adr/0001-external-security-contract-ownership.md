@@ -4,7 +4,7 @@
 - **Date:** 2026-10-24
 - **Issue:** Fabric#25 (parent program Azazel#83; depends on Fabric#15, Fabric#23)
 - **Family:** `azazel_fabric.external_security_contracts`
-- **Minimum Fabric version:** `0.9.0rc6` — the next candidate, **unpublished**
+- **Minimum Fabric version:** `0.9.0rc6` (release candidate)
 
 This repository otherwise records contract ownership in each family's
 reference document (`effect-contracts.md` §2 says so). Fabric#25 asks for an
