@@ -406,9 +406,18 @@ def test_catalog_content_digest_stable_across_round_trip():
 # product that reads the answer has delegated a trust decision to a package
 # that describes rather than decides.
 
+#: One entry per projection the R1 exit gate names: audit checkpoint,
+#: security state, privacy, bounded artifact, structured claim set. The first
+#: three were listed from the start; bounded artifact and privacy were not,
+#: although both exist -- `AssetManifest` documents itself as the
+#: bounded-artifact projection, and `SanitizedRemoteFrame` is the privacy one
+#: (the only shape allowed to leave for a remote model: `privacy_class`
+#: narrowed, redactions recorded, `contains_raw_evidence` pinned `False`).
 PROJECTIONS = (
     ("provisioning_contracts", "AuditCheckpointProjection"),
     ("provisioning_contracts", "SecurityStateProjection"),
+    ("mio_contracts", "SanitizedRemoteFrame"),
+    ("provisioning_contracts", "AssetManifest"),
     ("mio_contracts", "ClaimSet"),
 )
 
@@ -577,12 +586,14 @@ def test_every_projection_in_the_package_is_under_these_guards():
         f"these projections ship without the descriptive-only guards: {missing}"
     )
 
-    # `ClaimSet` is listed although its name does not end in `Projection`: the
-    # program plan counts the structured claim set among the projections, and
-    # it carries the same `authority` field for the same reason. Pinned so the
-    # exemption cannot become a place to park anything else.
-    assert listed - found == {"ClaimSet"}, (
+    # Three entries are listed although their names do not end in
+    # `Projection`, because the program plan counts them among the projections
+    # the R1 gate names and each carries the same `authority` field for the
+    # same reason: `ClaimSet` (structured claim set), `AssetManifest` (bounded
+    # artifact) and `SanitizedRemoteFrame` (privacy). Pinned so the exemption
+    # cannot become a place to park anything else.
+    assert listed - found == {"ClaimSet", "AssetManifest", "SanitizedRemoteFrame"}, (
         f"PROJECTIONS lists {sorted(listed - found)} which the package does not "
-        "name a projection. ClaimSet is the one deliberate entry; anything else "
-        "needs its reason written down here."
+        "name a projection. The three named above are the deliberate entries; "
+        "anything else needs its reason written down here."
     )

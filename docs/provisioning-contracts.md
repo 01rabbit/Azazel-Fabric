@@ -69,7 +69,7 @@ from. It never says what to do about it.
 |---|---|
 | `SituationFrame` | the local situation a cognitive router assembled |
 | `AliasScope` / `RedactionRecord` | alias lifetime and per-field sanitizer actions |
-| `SanitizedRemoteFrame` | the only shape that may reach a remote model |
+| `SanitizedRemoteFrame` | privacy projection: the only shape that may reach a remote model |
 | `Claim` / `ClaimSet` | structured claims frozen with full provenance before any narrative text |
 | `Disagreement` | a contradiction, kept separate — `resolution` pinned `presented_separately` |
 | `AdvisoryResult` | one cognition path's answer; inert by construction |

@@ -100,6 +100,21 @@ interpreter's recursion limit.
   `engagement_contracts.validation.MAX_DIRECTIVE_WALK_DEPTH`,
   `effect_contracts.validation.MAX_EFFECT_WALK_DEPTH`.
 
+### Tests (Fabric#23 R1 residuals — no source change)
+
+- The directive-depth proof now covers `outcome_contracts`'
+  `assert_no_runtime_directives` / `assert_no_tactical_claim_fields`, the last
+  R1 walkers outside it, and proves that `CtiContextResponse` refuses a
+  directive nested in `matches[]` or `behavioral_cti` (it relies on every
+  nested model being `extra="forbid"`, which is now checked directly).
+- The projection guards cover all five projections the R1 gate names:
+  `AssetManifest` (bounded artifact) and `SanitizedRemoteFrame` (privacy)
+  join the audit-checkpoint, security-state and claim-set projections.
+- Every feature-minimum row is checked against release history: the
+  `CHANGELOG.md` headings, the `release/v*.digest.json` file lists, and the
+  git tags when the checkout has them. A minimum later or earlier than the
+  feature's first release fails.
+
 ## [0.9.0rc5] — A terrain can bind to an effect that has no decision (Fabric#51)
 
 **Additive.** Every `v0.9.0rc4` payload still validates and still chains.

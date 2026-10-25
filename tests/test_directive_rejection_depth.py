@@ -8,8 +8,9 @@ depth two, in mappings only, for one of the six families.
 
 That gap matters in a specific way. These guards are the mechanism behind the
 one invariant Fabric cannot bend: a contract carries facts, never a directive.
-There are 391 banned names across ten guards (258 across eight until
-Fabric#25 added the external-security pair), and a guard that stopped
+There are 411 banned names across twelve guards (258 across eight until
+Fabric#25 added the external-security pair; the outcome pair was the last
+R1 walker left outside this file), and a guard that stopped
 covering one of them -- a predicate narrowed, a family's walker replaced with
 a shallower one -- would look exactly like a passing suite.
 
@@ -49,6 +50,13 @@ GUARDS: tuple[tuple[str, str, str], ...] = (
         "BANNED_EXTERNAL_SECURITY_FIELDS",
     ),
     ("external_security_contracts", "assert_no_target_locators", "BANNED_TARGET_LOCATOR_FIELDS"),
+    # outcome_contracts (R1, 0.9.0rc1). Its key sets are module-private and
+    # its predicate also refuses *patterns* (`*_command`, `success_*`, ...);
+    # only the literal names are enumerated here, which is what the counts
+    # below pin. Until this entry the family was the one R1 walker outside
+    # this file, so nothing proved its rejection inside a collection.
+    ("outcome_contracts", "assert_no_runtime_directives", "_BANNED_KEYS"),
+    ("outcome_contracts", "assert_no_tactical_claim_fields", "_TACTICAL_CLAIM_KEYS"),
 )
 
 
@@ -91,6 +99,8 @@ BANNED_FIELD_COUNTS: dict[str, int] = {
     "engagement_contracts.assert_no_engagement_directives": 19,
     "external_security_contracts.assert_no_external_security_directives": 110,
     "external_security_contracts.assert_no_target_locators": 23,
+    "outcome_contracts.assert_no_runtime_directives": 16,
+    "outcome_contracts.assert_no_tactical_claim_fields": 4,
 }
 
 
@@ -157,10 +167,11 @@ def test_a_directive_is_rejected_in_every_nesting_shape(family, function, consta
 def test_a_directive_is_rejected_at_every_depth(family, function, constant, depth):
     """No level is a hole, whether or not the family bounds its walk.
 
-    Two families bound the walk and refuse anything past the bound; the other
-    four walk as far as the payload goes. Both refuse a directive at every
-    depth, which is the property that matters here -- the difference in *why*
-    is the subject of the two tests below.
+    Every guard now bounds its walk, at different depths (6, 8, 12 or 32), so
+    some of these cases are refused for the key and some for the depth. Either
+    way a directive is refused at every depth, which is the property that
+    matters here -- the difference in *why* is the subject of the two tests
+    below.
     """
 
     guard, fields = _load(family, function, constant)
@@ -177,15 +188,15 @@ def test_a_directive_is_rejected_at_every_depth(family, function, constant, dept
 #: Guards that refuse a payload too deep to inspect, cleanly, with a
 #: `ValueError` naming the bound -- whether or not it carries a directive.
 #:
-#: The other four walk as far as the payload goes. On an *ordinary* deep
-#: payload that is the more permissive and arguably more correct answer: depth
-#: alone is not a defect. What it costs is at the extreme -- past the
-#: interpreter's recursion limit (~1000 levels here, measured) they raise
-#: `RecursionError`, which refuses the payload but is not what a caller
+#: Until Fabric#68, four guards (deception x2, effect, engagement) walked as
+#: far as the payload went. On an *ordinary* deep payload that is the more
+#: permissive answer -- depth alone is not a defect -- but at the extreme,
+#: past the interpreter's recursion limit (~1000 levels, measured), they
+#: raised `RecursionError`, which refuses the payload but is not what a caller
 #: catching `ValueError` will see as a rejection.
 #:
 #: Recorded as a fact rather than asserted as a requirement. Making the walk
-#: bounded in the other four families changed their public behaviour and was
+#: bounded in those four families changed their public behaviour and was
 #: taken as its own change (see `tests/test_bounded_directive_walkers.py`);
 #: every guard here is now bounded. What this pins is that the set does not
 #: change silently: a family that gains or loses a bound makes this list
@@ -201,12 +212,16 @@ BOUNDED_GUARDS = frozenset(
         "external_security_contracts.assert_no_external_security_directives",
         "external_security_contracts.assert_no_target_locators",
         # Bounded at 32 levels since Fabric#23 (`bounded-directive-walkers`):
-        # these four were the unbounded walkers described above, and raised
-        # RecursionError past ~1000 levels. They now refuse with ValueError.
+        # these four were the previously unbounded walkers described above, and
+        # raised RecursionError past ~1000 levels. They now refuse with
+        # ValueError.
         "deception_contracts.assert_no_runtime_directives",
         "deception_contracts.assert_no_effectiveness_verdict",
         "effect_contracts.assert_no_effect_authority_fields",
         "engagement_contracts.assert_no_engagement_directives",
+        # Bounded at six levels since 0.9.0rc1 (`_MAX_DEPTH`).
+        "outcome_contracts.assert_no_runtime_directives",
+        "outcome_contracts.assert_no_tactical_claim_fields",
     }
 )
 
@@ -244,8 +259,9 @@ def test_a_directive_is_never_accepted_however_deep_it_is_buried(
 ):
     """The security property, stated so it holds for both designs.
 
-    Past the interpreter's recursion limit an unbounded walker raises
-    `RecursionError` rather than a clean `ValueError`. That is a refusal, not
+    Past the interpreter's recursion limit an unbounded walker -- as four of
+    these were until Fabric#68 -- raises `RecursionError` rather than a clean
+    `ValueError`. That is a refusal, not
     an acceptance -- the payload does not get through -- so the property to
     assert here is that the guard never *returns* on a directive, whatever
     depth it is at. How cleanly each family refuses is the subject of
@@ -295,3 +311,271 @@ def test_an_ordinary_payload_still_passes(family, function, constant):
 
     assert not (set(payload) & fields), "the benign payload accidentally uses a banned name"
     guard(payload)
+
+
+# ---------------------------------------------------------------------------
+# CTI: a closed schema, not a walker
+# ---------------------------------------------------------------------------
+#
+# `cti_contracts` has no recursive walker. `assert_advisory_only` inspects the
+# top level only, and that is sufficient *because* every model under
+# `CtiContextResponse` is `extra="forbid"`: a directive one level down is an
+# unknown field and the schema refuses it. That reasoning holds exactly as long
+# as no nested model opens up, so it is proved here rather than assumed. A
+# nested model loosened to `extra="allow"` -- or a free-form `dict[str, Any]`
+# field added to the response -- turns these cases red.
+
+_CTI_SHAPES: dict[str, Callable[[str], dict[str, Any]]] = {
+    "top_level": lambda field: {field: "x"},
+    "inside_a_match": lambda field: {
+        "matches": [{"indicator": "198.51.100.7", "confidence": 0.5, field: "x"}]
+    },
+    "inside_a_later_match": lambda field: {
+        "matches": [
+            {"indicator": "198.51.100.7", "confidence": 0.5},
+            {"indicator": "198.51.100.8", "confidence": 0.5, field: "x"},
+        ]
+    },
+    "inside_behavioral_cti": lambda field: {"behavioral_cti": {"summary": "s", field: "x"}},
+}
+
+
+def _cti_response(extra: dict[str, Any]) -> dict[str, Any]:
+    return {"request_id": "req-1", "generated_at": "2026-01-01T00:00:00+00:00", **extra}
+
+
+@pytest.mark.parametrize("shape", sorted(_CTI_SHAPES), ids=sorted(_CTI_SHAPES))
+def test_a_cti_response_refuses_a_directive_wherever_it_is_nested(shape):
+    from azazel_fabric.cti_contracts import BANNED_DIRECTIVE_FIELDS, CtiContextResponse
+
+    survivors = []
+    for field in BANNED_DIRECTIVE_FIELDS:
+        try:
+            CtiContextResponse.model_validate(_cti_response(_CTI_SHAPES[shape](field)))
+        except ValueError:
+            continue
+        survivors.append(field)
+
+    assert survivors == [], (
+        f"CtiContextResponse accepted {survivors} placed {shape}. The CTI "
+        "boundary refuses nested directives only because every nested model "
+        "forbids unknown fields; one of them no longer does."
+    )
+
+
+def _open_annotation(annotation: Any) -> str | None:
+    """Name the reason an annotation admits arbitrary keys, or None.
+
+    `Any` and `object` admit anything. A `dict` / `Mapping` admits any key,
+    whatever its value type -- a directive is a *key*, so `dict[str, str]` is
+    as open as `dict[str, Any]`. `JsonValue` is a recursive alias that admits
+    objects. `typing.get_origin` is what sees through `dict[str, X]`,
+    `Mapping[...]` and `Annotated[...]`; comparing the annotation itself to
+    `dict` only catches the bare form.
+    """
+
+    import collections.abc
+    import typing
+
+    if annotation is Any or annotation is object:
+        return repr(annotation)
+    if getattr(annotation, "__name__", None) == "JsonValue":
+        return "JsonValue"
+    for candidate in (annotation, typing.get_origin(annotation)):
+        if isinstance(candidate, type) and issubclass(candidate, collections.abc.Mapping):
+            return f"a mapping ({annotation!r})"
+    return None
+
+
+def _nested_annotations(annotation: Any) -> list[Any]:
+    """The annotations inside one, through unions, containers and Annotated."""
+    import typing
+
+    if typing.get_origin(annotation) is typing.Annotated:
+        return [typing.get_args(annotation)[0]]
+    return list(typing.get_args(annotation))
+
+
+def test_every_model_under_a_cti_response_is_closed():
+    """The premise of the case above, checked directly."""
+    from pydantic import BaseModel
+
+    from azazel_fabric.cti_contracts import CtiContextResponse
+
+    open_models: list[str] = []
+    seen: set[type] = set()
+    pending: list[type] = [CtiContextResponse]
+    while pending:
+        model = pending.pop()
+        if model in seen:
+            continue
+        seen.add(model)
+        if model.model_config.get("extra") != "forbid":
+            open_models.append(model.__name__)
+        for name, field in model.model_fields.items():
+            stack = [field.annotation]
+            while stack:
+                annotation = stack.pop()
+                reason = _open_annotation(annotation)
+                if reason is not None:
+                    open_models.append(f"{model.__name__}.{name} ({reason})")
+                    continue
+                if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+                    pending.append(annotation)
+                    continue
+                stack.extend(_nested_annotations(annotation))
+
+    assert len(seen) > 1, "the walk found no nested model, so it proved nothing"
+    assert open_models == [], (
+        f"models reachable from CtiContextResponse that accept unknown content: "
+        f"{open_models}. A directive nested there would not be refused."
+    )
+
+
+@pytest.mark.parametrize(
+    "annotation",
+    ["Any", "object", "dict", "dict[str, str]", "Mapping[str, int]", "JsonValue",
+     "Optional[dict[str, Any]]", "list[dict[str, int]]", "Annotated[dict, 'x']"],
+)
+def test_the_closed_schema_walk_sees_an_open_annotation(annotation):
+    """Non-vacuity for the walk above: each of these must be caught somewhere."""
+    import typing
+    from collections.abc import Mapping
+    from typing import Annotated, Optional
+
+    from pydantic import JsonValue
+
+    resolved = eval(  # noqa: S307 -- fixed literals above, test-only
+        annotation,
+        {"Any": Any, "Mapping": Mapping, "JsonValue": JsonValue, "Optional": Optional,
+         "Annotated": Annotated, "typing": typing},
+    )
+    stack, found = [resolved], False
+    while stack and not found:
+        current = stack.pop()
+        found = _open_annotation(current) is not None
+        stack.extend(_nested_annotations(current))
+    assert found, f"{annotation} was not recognised as admitting arbitrary keys"
+
+
+def test_the_closed_schema_walk_leaves_closed_annotations_alone():
+    from azazel_fabric.cti_contracts import BehavioralCtiBlock
+
+    for annotation in (str, int, float, list[str], tuple[str, ...], BehavioralCtiBlock | None):
+        assert _open_annotation(annotation) is None, annotation
+
+
+def test_a_clean_cti_response_still_validates():
+    from azazel_fabric.cti_contracts import CtiContextResponse
+
+    CtiContextResponse.model_validate(
+        _cti_response(
+            {
+                "matches": [{"indicator": "198.51.100.7", "confidence": 0.5}],
+                "behavioral_cti": {"summary": "s", "recommended_action": "watch"},
+            }
+        )
+    )
+
+
+def test_one_level_past_the_outcome_bound_is_refused_for_depth_not_key():
+    """The edge of `_outcome_depths`, so the cases above really are inside it."""
+    validation = _outcome_validation()
+    deepest = max(_outcome_depths(in_list=False))
+    validation.assert_no_runtime_directives(_nest_within("observed_note", deepest, in_list=False))
+    with pytest.raises(ValueError, match="nesting depth"):
+        validation.assert_no_runtime_directives(
+            _nest_within("observed_note", deepest + 1, in_list=False)
+        )
+
+
+# ---------------------------------------------------------------------------
+# outcome_contracts: the patterns, inside the bound
+# ---------------------------------------------------------------------------
+#
+# The outcome walker refuses anything nested more than `_MAX_DEPTH` levels, so
+# a depth case past the bound passes whether or not the key was recognised.
+# The generic cases above at depth 8+ prove nothing about outcome's predicate.
+# These keep every case *inside* the bound -- and check that the same payload
+# with a harmless key passes at that depth -- so a refusal here can only be the
+# key. They also cover what the literal-name cases cannot: the predicate's
+# patterns and its key normalisation.
+
+_OUTCOME_RUNTIME_PATTERN_KEYS = (
+    "deploy_command",  # *_command
+    "command_line",  # command_*
+    "Execute-Command",  # normalised to execute_command
+    "success_rate",  # success_*
+    "probe_success",  # *_success
+    "x_provider_command_y",  # contains provider_command
+    "prior_attacker_belief_score",  # contains attacker_belief
+    "local_model_recommendation_v2",  # contains model_recommendation
+)
+_OUTCOME_TACTICAL_PATTERN_KEYS = (
+    "lure_effectiveness",  # *_effectiveness
+    "observed_effect_class",  # contains effect_class
+    "primary_tactical_effect",  # contains tactical_effect
+    "initiative_score_v2",  # initiative_score*
+)
+
+
+def _outcome_validation():
+    return importlib.import_module("azazel_fabric.outcome_contracts.validation")
+
+
+def _nest_within(key: str, levels: int, *, in_list: bool) -> Any:
+    payload: Any = {key: "x"}
+    for _ in range(levels):
+        payload = {"n": [payload]} if in_list else {"n": payload}
+    return payload
+
+
+def _outcome_depths(*, in_list: bool) -> list[int]:
+    """Every wrapper count whose payload stays inside the walker's bound.
+
+    The leaf *value* counts as a level of its own, and a list wrapper adds two
+    (the mapping and the list), so the deepest payload the walker accepts has
+    `_MAX_DEPTH - 1` mapping wrappers.
+    """
+    bound = _outcome_validation()._MAX_DEPTH
+    per_wrapper = 2 if in_list else 1
+    return [levels for levels in range(bound + 1) if per_wrapper * levels + 1 <= bound]
+
+
+@pytest.mark.parametrize("in_list", [False, True], ids=["mapping", "list"])
+@pytest.mark.parametrize("key", _OUTCOME_RUNTIME_PATTERN_KEYS)
+def test_outcome_refuses_a_runtime_pattern_at_every_depth_inside_its_bound(key, in_list):
+    validation = _outcome_validation()
+    depths = _outcome_depths(in_list=in_list)
+    assert len(depths) >= 3, depths
+    for levels in depths:
+        harmless = _nest_within("observed_note", levels, in_list=in_list)
+        validation.assert_no_runtime_directives(harmless)  # depth alone is fine
+        with pytest.raises(ValueError, match="runtime/authority field is forbidden"):
+            validation.assert_no_runtime_directives(_nest_within(key, levels, in_list=in_list))
+
+
+@pytest.mark.parametrize("in_list", [False, True], ids=["mapping", "list"])
+@pytest.mark.parametrize("key", _OUTCOME_TACTICAL_PATTERN_KEYS)
+def test_outcome_refuses_a_tactical_pattern_at_every_depth_inside_its_bound(key, in_list):
+    validation = _outcome_validation()
+    depths = _outcome_depths(in_list=in_list)
+    assert len(depths) >= 3, depths
+    for levels in depths:
+        harmless = _nest_within("observed_note", levels, in_list=in_list)
+        validation.assert_no_tactical_claim_fields(harmless)
+        with pytest.raises(ValueError, match="tactical claim field is forbidden"):
+            validation.assert_no_tactical_claim_fields(
+                _nest_within(key, levels, in_list=in_list)
+            )
+
+
+def test_the_outcome_pattern_keys_are_not_literal_names():
+    """They must exercise the patterns, not repeat the literal-name cases."""
+    validation = _outcome_validation()
+    literals = validation._BANNED_KEYS | validation._TACTICAL_CLAIM_KEYS
+    normalised = {
+        validation._normalized_key(k)
+        for k in _OUTCOME_RUNTIME_PATTERN_KEYS + _OUTCOME_TACTICAL_PATTERN_KEYS
+    }
+    assert normalised.isdisjoint(literals), normalised & literals
