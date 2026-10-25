@@ -363,10 +363,41 @@ def test_a_cti_response_refuses_a_directive_wherever_it_is_nested(shape):
     )
 
 
-def test_every_model_under_a_cti_response_is_closed():
-    """The premise of the case above, checked directly."""
+def _open_annotation(annotation: Any) -> str | None:
+    """Name the reason an annotation admits arbitrary keys, or None.
+
+    `Any` and `object` admit anything. A `dict` / `Mapping` admits any key,
+    whatever its value type -- a directive is a *key*, so `dict[str, str]` is
+    as open as `dict[str, Any]`. `JsonValue` is a recursive alias that admits
+    objects. `typing.get_origin` is what sees through `dict[str, X]`,
+    `Mapping[...]` and `Annotated[...]`; comparing the annotation itself to
+    `dict` only catches the bare form.
+    """
+
+    import collections.abc
     import typing
 
+    if annotation is Any or annotation is object:
+        return repr(annotation)
+    if getattr(annotation, "__name__", None) == "JsonValue":
+        return "JsonValue"
+    for candidate in (annotation, typing.get_origin(annotation)):
+        if isinstance(candidate, type) and issubclass(candidate, collections.abc.Mapping):
+            return f"a mapping ({annotation!r})"
+    return None
+
+
+def _nested_annotations(annotation: Any) -> list[Any]:
+    """The annotations inside one, through unions, containers and Annotated."""
+    import typing
+
+    if typing.get_origin(annotation) is typing.Annotated:
+        return [typing.get_args(annotation)[0]]
+    return list(typing.get_args(annotation))
+
+
+def test_every_model_under_a_cti_response_is_closed():
+    """The premise of the case above, checked directly."""
     from pydantic import BaseModel
 
     from azazel_fabric.cti_contracts import CtiContextResponse
@@ -381,21 +412,57 @@ def test_every_model_under_a_cti_response_is_closed():
         seen.add(model)
         if model.model_config.get("extra") != "forbid":
             open_models.append(model.__name__)
-        for field in model.model_fields.values():
+        for name, field in model.model_fields.items():
             stack = [field.annotation]
             while stack:
                 annotation = stack.pop()
-                if annotation is Any:
-                    open_models.append(f"{model.__name__} (an Any-typed field)")
+                reason = _open_annotation(annotation)
+                if reason is not None:
+                    open_models.append(f"{model.__name__}.{name} ({reason})")
+                    continue
                 if isinstance(annotation, type) and issubclass(annotation, BaseModel):
                     pending.append(annotation)
-                stack.extend(typing.get_args(annotation))
+                    continue
+                stack.extend(_nested_annotations(annotation))
 
     assert len(seen) > 1, "the walk found no nested model, so it proved nothing"
     assert open_models == [], (
         f"models reachable from CtiContextResponse that accept unknown content: "
         f"{open_models}. A directive nested there would not be refused."
     )
+
+
+@pytest.mark.parametrize(
+    "annotation",
+    ["Any", "object", "dict", "dict[str, str]", "Mapping[str, int]", "JsonValue",
+     "Optional[dict[str, Any]]", "list[dict[str, int]]", "Annotated[dict, 'x']"],
+)
+def test_the_closed_schema_walk_sees_an_open_annotation(annotation):
+    """Non-vacuity for the walk above: each of these must be caught somewhere."""
+    import typing
+    from collections.abc import Mapping
+    from typing import Annotated, Optional
+
+    from pydantic import JsonValue
+
+    resolved = eval(  # noqa: S307 -- fixed literals above, test-only
+        annotation,
+        {"Any": Any, "Mapping": Mapping, "JsonValue": JsonValue, "Optional": Optional,
+         "Annotated": Annotated, "typing": typing},
+    )
+    stack, found = [resolved], False
+    while stack and not found:
+        current = stack.pop()
+        found = _open_annotation(current) is not None
+        stack.extend(_nested_annotations(current))
+    assert found, f"{annotation} was not recognised as admitting arbitrary keys"
+
+
+def test_the_closed_schema_walk_leaves_closed_annotations_alone():
+    from azazel_fabric.cti_contracts import BehavioralCtiBlock
+
+    for annotation in (str, int, float, list[str], tuple[str, ...], BehavioralCtiBlock | None):
+        assert _open_annotation(annotation) is None, annotation
 
 
 def test_a_clean_cti_response_still_validates():
@@ -409,3 +476,106 @@ def test_a_clean_cti_response_still_validates():
             }
         )
     )
+
+
+def test_one_level_past_the_outcome_bound_is_refused_for_depth_not_key():
+    """The edge of `_outcome_depths`, so the cases above really are inside it."""
+    validation = _outcome_validation()
+    deepest = max(_outcome_depths(in_list=False))
+    validation.assert_no_runtime_directives(_nest_within("observed_note", deepest, in_list=False))
+    with pytest.raises(ValueError, match="nesting depth"):
+        validation.assert_no_runtime_directives(
+            _nest_within("observed_note", deepest + 1, in_list=False)
+        )
+
+
+# ---------------------------------------------------------------------------
+# outcome_contracts: the patterns, inside the bound
+# ---------------------------------------------------------------------------
+#
+# The outcome walker refuses anything nested more than `_MAX_DEPTH` levels, so
+# a depth case past the bound passes whether or not the key was recognised.
+# The generic cases above at depth 8+ prove nothing about outcome's predicate.
+# These keep every case *inside* the bound -- and check that the same payload
+# with a harmless key passes at that depth -- so a refusal here can only be the
+# key. They also cover what the literal-name cases cannot: the predicate's
+# patterns and its key normalisation.
+
+_OUTCOME_RUNTIME_PATTERN_KEYS = (
+    "deploy_command",  # *_command
+    "command_line",  # command_*
+    "Execute-Command",  # normalised to execute_command
+    "success_rate",  # success_*
+    "probe_success",  # *_success
+    "x_provider_command_y",  # contains provider_command
+    "prior_attacker_belief_score",  # contains attacker_belief
+    "local_model_recommendation_v2",  # contains model_recommendation
+)
+_OUTCOME_TACTICAL_PATTERN_KEYS = (
+    "lure_effectiveness",  # *_effectiveness
+    "observed_effect_class",  # contains effect_class
+    "primary_tactical_effect",  # contains tactical_effect
+    "initiative_score_v2",  # initiative_score*
+)
+
+
+def _outcome_validation():
+    return importlib.import_module("azazel_fabric.outcome_contracts.validation")
+
+
+def _nest_within(key: str, levels: int, *, in_list: bool) -> Any:
+    payload: Any = {key: "x"}
+    for _ in range(levels):
+        payload = {"n": [payload]} if in_list else {"n": payload}
+    return payload
+
+
+def _outcome_depths(*, in_list: bool) -> list[int]:
+    """Every wrapper count whose payload stays inside the walker's bound.
+
+    The leaf *value* counts as a level of its own, and a list wrapper adds two
+    (the mapping and the list), so the deepest payload the walker accepts has
+    `_MAX_DEPTH - 1` mapping wrappers.
+    """
+    bound = _outcome_validation()._MAX_DEPTH
+    per_wrapper = 2 if in_list else 1
+    return [levels for levels in range(bound + 1) if per_wrapper * levels + 1 <= bound]
+
+
+@pytest.mark.parametrize("in_list", [False, True], ids=["mapping", "list"])
+@pytest.mark.parametrize("key", _OUTCOME_RUNTIME_PATTERN_KEYS)
+def test_outcome_refuses_a_runtime_pattern_at_every_depth_inside_its_bound(key, in_list):
+    validation = _outcome_validation()
+    depths = _outcome_depths(in_list=in_list)
+    assert len(depths) >= 3, depths
+    for levels in depths:
+        harmless = _nest_within("observed_note", levels, in_list=in_list)
+        validation.assert_no_runtime_directives(harmless)  # depth alone is fine
+        with pytest.raises(ValueError, match="runtime/authority field is forbidden"):
+            validation.assert_no_runtime_directives(_nest_within(key, levels, in_list=in_list))
+
+
+@pytest.mark.parametrize("in_list", [False, True], ids=["mapping", "list"])
+@pytest.mark.parametrize("key", _OUTCOME_TACTICAL_PATTERN_KEYS)
+def test_outcome_refuses_a_tactical_pattern_at_every_depth_inside_its_bound(key, in_list):
+    validation = _outcome_validation()
+    depths = _outcome_depths(in_list=in_list)
+    assert len(depths) >= 3, depths
+    for levels in depths:
+        harmless = _nest_within("observed_note", levels, in_list=in_list)
+        validation.assert_no_tactical_claim_fields(harmless)
+        with pytest.raises(ValueError, match="tactical claim field is forbidden"):
+            validation.assert_no_tactical_claim_fields(
+                _nest_within(key, levels, in_list=in_list)
+            )
+
+
+def test_the_outcome_pattern_keys_are_not_literal_names():
+    """They must exercise the patterns, not repeat the literal-name cases."""
+    validation = _outcome_validation()
+    literals = validation._BANNED_KEYS | validation._TACTICAL_CLAIM_KEYS
+    normalised = {
+        validation._normalized_key(k)
+        for k in _OUTCOME_RUNTIME_PATTERN_KEYS + _OUTCOME_TACTICAL_PATTERN_KEYS
+    }
+    assert normalised.isdisjoint(literals), normalised & literals

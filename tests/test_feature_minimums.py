@@ -19,6 +19,7 @@ check is not the table restating itself.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -367,12 +368,21 @@ def _tag_has(tag: str, module: str) -> bool:
 def test_every_minimum_is_the_first_tag_carrying_its_feature(rows):
     """The tags are the history; the digests above cover only the `rc` line.
 
-    Skipped, not passed, when the checkout has no tags (a shallow clone or a
-    source tarball): absence of history is not agreement with it.
+    Skipped, not passed, when the checkout has no tags (a source tarball, a
+    shallow local clone): absence of history is not agreement with it. Under
+    CI (`CI` set) a missing tag set is a misconfigured checkout instead --
+    `actions/checkout` defaults to a depth-1 clone with no tags -- and a skip
+    there would report success for a check that never ran, so it fails.
     """
 
     tags = _tags()
     if not tags:
+        if os.environ.get("CI"):
+            pytest.fail(
+                "CI is set but the checkout has no release tags, so the "
+                "feature minimums were not checked against history. Check out "
+                "with full history and tags (fetch-depth: 0, fetch-tags: true)."
+            )
         pytest.skip("no release tags in this checkout")
 
     released = _released_versions()
