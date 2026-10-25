@@ -8,7 +8,9 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ## [Unreleased]
 
-Toward `v0.9.0rc6` — **not cut, not signed.** `main` is `0.9.0rc6.dev0`.
+Nothing yet. The entries below moved into the tags that shipped them.
+
+## [0.9.0rc6] — Experimental external-security profile; trailing newlines and deep nesting refused (Fabric#25, Fabric#65, Fabric#23)
 
 **Not additive** (Fabric#65): a typed reference, a provisioning digest or a
 MAC that ends in a newline, and validated under `v0.9.0rc5`, is refused here.
@@ -51,8 +53,9 @@ interpreter's recursion limit.
 
 ### Changed
 
-- `version.py` moves to `0.9.0rc6.dev0`: the first source change after
-  `v0.9.0rc5`. The release-digest tests skip on a `.dev` version by design.
+- `version.py` is `0.9.0rc6`, and `release/v0.9.0rc6.digest.json` records
+  the tree. Between `v0.9.0rc5` and this tag `main` was `0.9.0rc6.dev0`, on
+  which the release-digest tests skip by design.
 - **A typed reference, a digest or a MAC may not end in a newline**
   (`effect_contracts/refs.py`, `provisioning_contracts/models.py`, Fabric#65).
   **This is not additive: a value that validated under `v0.9.0rc5` is

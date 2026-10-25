@@ -407,8 +407,8 @@ Three boundaries are worth restating here:
 
 ## 9. External-security profile (`azazel_fabric.external_security_contracts`)
 
-**Status: experimental** (Fabric#25). Minimum version `0.9.0rc6`, the next
-candidate, **unpublished** — on `main` only. No producer, no consumer, no
+**Status: experimental** (Fabric#25). Minimum version `0.9.0rc6`, a
+release candidate. No producer, no consumer, no
 compatibility promise; outside the R1c stable gate by the Fabric#23 program
 decision. Optional: nothing else in Fabric imports it.
 
