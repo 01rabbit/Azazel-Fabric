@@ -422,3 +422,12 @@ Ownership: [ADR-0001](adr/0001-external-security-contract-ownership.md).
 Reference, vocabularies, and the mapping to `DefensiveState` (§1, Fabric#14)
 and the effect/outcome/terrain family (§8, Fabric#15) — which these types sit
 beside without merging: [`external-security-contracts.md`](external-security-contracts.md).
+
+
+## 10. M.I.O. learning provenance addendum (experimental proposal)
+
+Fabric #72 proposes an optional, descriptive extension to the existing
+`mio_contracts` family. The proposal is not owner-approved and does not claim a
+Knowledge producer, usable training data, or a model-admission path. Its full
+reuse/gap table, authority boundaries, compatibility note, and owner decisions
+are in [M.I.O. learning contracts](mio-learning-contracts.md).

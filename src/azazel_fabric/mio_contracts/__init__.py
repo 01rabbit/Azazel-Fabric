@@ -22,6 +22,16 @@ from azazel_fabric.mio_contracts.models import (
     SanitizedRemoteFrame,
     SituationFrame,
 )
+from azazel_fabric.mio_contracts.learning import (
+    DatasetExampleLineageV0,
+    IndependentOutcomeRefV0,
+    KnowledgeSnapshotRefV0,
+    LearningProvenanceBundleV0,
+    OfflineDatasetLineageV0,
+    OfflineModelLineageV0,
+    TeacherLabelCandidateV0,
+    TeacherReviewDispositionV0,
+)
 from azazel_fabric.mio_contracts.validation import (
     BANNED_MIO_DIRECTIVE_FIELDS,
     NON_EGRESSIBLE_PRIVACY_CLASSES,
@@ -48,6 +58,15 @@ __all__ = [
     "RedactionRecord",
     "SanitizedRemoteFrame",
     "SituationFrame",
+    # learning provenance (experimental addendum)
+    "DatasetExampleLineageV0",
+    "IndependentOutcomeRefV0",
+    "KnowledgeSnapshotRefV0",
+    "LearningProvenanceBundleV0",
+    "OfflineDatasetLineageV0",
+    "OfflineModelLineageV0",
+    "TeacherLabelCandidateV0",
+    "TeacherReviewDispositionV0",
     # validation
     "BANNED_MIO_DIRECTIVE_FIELDS",
     "NON_EGRESSIBLE_PRIVACY_CLASSES",

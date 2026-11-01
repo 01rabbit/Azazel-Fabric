@@ -75,6 +75,12 @@ from. It never says what to do about it.
 | `AdvisoryResult` | one cognition path's answer; inert by construction |
 | `MergedAdvisory` | provenance-preserving merge output |
 
+The optional [M.I.O. learning provenance addendum](mio-learning-contracts.md)
+adds snapshot references, teacher candidates, review dispositions, independent
+outcome references, and offline dataset/model lineage within the existing
+`mio_contracts` family. It is an experimental proposal at `0.9.0rc7`, not an
+accepted label or model-admission path.
+
 ## Required invariants
 
 ### A resource envelope is not a capability, and not a tier
@@ -224,7 +230,8 @@ simultaneous untested pin change.
 | `mio-contracts/v0.1` | `0.9.0rc1` | M.I.O. cognition family (candidate) |
 | `defensive-state/v0.1` | `0.9.0rc2` | canonical `DefensiveState` vocabulary and `coerce_defensive_state` (candidate) |
 | `effect-contracts/v0.1` | `0.9.0rc2` | cross-series effect / outcome / presented-terrain family (candidate) |
-| `external-security-contracts/v0.1` | `0.9.0rc6` | **experimental** external-security observation / advisory / exposure-proposal / device-observation profile (Fabric#25). Next candidate, **unpublished** — on `main` as `0.9.0rc6.dev0` only. No compatibility promise (candidate) |
+| `external-security-contracts/v0.1` | `0.9.0rc7` | **experimental** external-security profile (Fabric#25); next candidate **unpublished** on `main` as `0.9.0rc7.dev0`. No compatibility promise |
+| `mio-learning-provenance/v0.1` | `0.9.0rc7` | **experimental proposal** within `mio_contracts` (Fabric#72); additive, optional, next candidate **unpublished** on `main` as `0.9.0rc7.dev0`. No compatibility promise and no producer/consumer adoption claimed |
 
 A minimum version is a compatibility claim, not an admission decision.
 
@@ -235,11 +242,13 @@ marked `(candidate)` until `v0.9.0` is cut, at which point each one's minimum
 becomes `0.9.0` — a consumer already on a candidate needs no code change for
 that, only a re-pin.
 
-`external-security-contracts/v0.1` is the one row naming a candidate that does
-not exist yet. It is on `main` (`0.9.0rc6.dev0`) and nowhere else; a consumer
-cannot pin it until `v0.9.0rc6` is cut, and the family is **experimental** —
-Fabric#23 excludes it from the R1c gate and promises nothing about its shape.
-See [external-security contracts](external-security-contracts.md).
+`external-security-contracts/v0.1` and `mio-learning-provenance/v0.1` name
+candidates that do not exist as tags yet. The learning addendum is on `main`
+(`0.9.0rc7.dev0`) and nowhere else; a consumer cannot pin it until a candidate
+is cut. Both profiles are **experimental**; the learning proposal stays within
+the already-experimental M.I.O. family. Neither has a compatibility promise.
+See [external-security contracts](external-security-contracts.md) and the
+[proposed M.I.O. learning profile](mio-learning-contracts.md).
 
 Completeness is enforced: `tests/test_feature_minimums.py` fails if a
 `*_contracts` family ships without a row here. A family with no stated minimum

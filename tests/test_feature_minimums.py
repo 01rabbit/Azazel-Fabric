@@ -215,6 +215,7 @@ FEATURE_MODULES: dict[str, str] = {
     "defensive-state/v0.1": "schema/defensive_state.py",
     "effect-contracts/v0.1": "effect_contracts/__init__.py",
     "external-security-contracts/v0.1": "external_security_contracts/__init__.py",
+    "mio-learning-provenance/v0.1": "mio_contracts/learning.py",
 }
 
 #: The package directory has had two names. `v0.1.0` and `v0.2.0` shipped as

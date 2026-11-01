@@ -1,0 +1,163 @@
+{
+  "schema_version": "mio-learning-provenance-bundle/v0.1",
+  "bundle_ref": "bundle-1",
+  "snapshots": [
+    {
+      "schema_version": "mio-knowledge-snapshot-ref/v0.1",
+      "snapshot_ref": "snapshot-1",
+      "source_ref": "knowledge-node-1",
+      "generation_ref": "generation-7",
+      "content_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "as_of": "2026-10-30T00:00:00Z",
+      "observed_at": "2026-10-30T00:05:00Z",
+      "reported_state": "reported_current",
+      "revocation_ref": null,
+      "evidence_refs": ["evidence:snapshot-signature-1"],
+      "authority_class": "descriptive_snapshot_reference"
+    }
+  ],
+  "candidates": [
+    {
+      "schema_version": "mio-teacher-label-candidate/v0.1",
+      "candidate_ref": "candidate-1",
+      "trace_ref": "trace-1",
+      "task_ref": "task-priority-ordering",
+      "proposed_label": "priority-high",
+      "teacher_model_ref": "model-teacher-1",
+      "teacher_model_version": "1.0",
+      "prompt_version_ref": "prompt-4",
+      "snapshot_ref": "snapshot-1",
+      "evidence_refs": ["evidence:alert-1"],
+      "proposed_at": "2026-10-30T00:06:00Z",
+      "authority_class": "teacher_candidate_only"
+    },
+    {
+      "schema_version": "mio-teacher-label-candidate/v0.1",
+      "candidate_ref": "candidate-2",
+      "trace_ref": "trace-2",
+      "task_ref": "task-priority-ordering",
+      "proposed_label": "priority-low",
+      "teacher_model_ref": "model-teacher-1",
+      "teacher_model_version": "1.0",
+      "prompt_version_ref": "prompt-4",
+      "snapshot_ref": "snapshot-1",
+      "evidence_refs": ["evidence:alert-2"],
+      "proposed_at": "2026-10-30T00:07:00Z",
+      "authority_class": "teacher_candidate_only"
+    }
+  ],
+  "reviews": [
+    {
+      "schema_version": "mio-teacher-review-disposition/v0.1",
+      "disposition_ref": "review-1",
+      "candidate_ref": "candidate-1",
+      "state": "retained_for_evaluation",
+      "reviewer_ref": "reviewer-1",
+      "reviewed_at": "2026-10-30T00:08:00Z",
+      "evidence_refs": ["evidence:review-1"],
+      "authority_class": "review_record_only"
+    },
+    {
+      "schema_version": "mio-teacher-review-disposition/v0.1",
+      "disposition_ref": "review-2",
+      "candidate_ref": "candidate-2",
+      "state": "retained_for_evaluation",
+      "reviewer_ref": "reviewer-1",
+      "reviewed_at": "2026-10-30T00:09:00Z",
+      "evidence_refs": ["evidence:review-2"],
+      "authority_class": "review_record_only"
+    }
+  ],
+  "outcomes": [
+    {
+      "schema_version": "mio-independent-outcome-ref/v0.1",
+      "outcome_ref": "outcome-1",
+      "candidate_ref": "candidate-1",
+      "observation_ref": "outcome-observation-1",
+      "observer_ref": "observer-edge-1",
+      "observed_state": "observed",
+      "observed_at": "2026-10-30T00:10:00Z",
+      "evidence_refs": ["evidence:observation-1"],
+      "limitations": ["synthetic-fixture"],
+      "authority_class": "independent_observation_reference"
+    },
+    {
+      "schema_version": "mio-independent-outcome-ref/v0.1",
+      "outcome_ref": "outcome-2",
+      "candidate_ref": "candidate-2",
+      "observation_ref": "outcome-observation-2",
+      "observer_ref": "observer-edge-1",
+      "observed_state": "unknown",
+      "observed_at": "2026-10-30T00:11:00Z",
+      "evidence_refs": ["evidence:observation-2"],
+      "limitations": ["synthetic-fixture", "telemetry-incomplete"],
+      "authority_class": "independent_observation_reference"
+    }
+  ],
+  "datasets": [
+    {
+      "schema_version": "mio-offline-dataset-lineage/v0.1",
+      "dataset_ref": "dataset-train-1",
+      "dataset_version": "1.0",
+      "content_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "task_ref": "task-priority-ordering",
+      "extraction_version_ref": "extractor-1",
+      "feature_schema_ref": "features-1",
+      "split_policy_ref": "split-by-incident-v1",
+      "examples": [
+        {
+          "schema_version": "mio-dataset-example-lineage/v0.1",
+          "candidate_ref": "candidate-1",
+          "disposition_ref": "review-1",
+          "outcome_ref": "outcome-1",
+          "feature_record_ref": "feature-record-1",
+          "split_group_ref": "incident-group-1",
+          "split": "train"
+        }
+      ],
+      "frozen_at": "2026-10-30T00:12:00Z",
+      "authority_class": "descriptive_dataset_lineage"
+    },
+    {
+      "schema_version": "mio-offline-dataset-lineage/v0.1",
+      "dataset_ref": "dataset-eval-1",
+      "dataset_version": "1.0",
+      "content_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "task_ref": "task-priority-ordering",
+      "extraction_version_ref": "extractor-1",
+      "feature_schema_ref": "features-1",
+      "split_policy_ref": "split-by-incident-v1",
+      "examples": [
+        {
+          "schema_version": "mio-dataset-example-lineage/v0.1",
+          "candidate_ref": "candidate-2",
+          "disposition_ref": "review-2",
+          "outcome_ref": "outcome-2",
+          "feature_record_ref": "feature-record-2",
+          "split_group_ref": "incident-group-2",
+          "split": "test"
+        }
+      ],
+      "frozen_at": "2026-10-30T00:13:00Z",
+      "authority_class": "descriptive_dataset_lineage"
+    }
+  ],
+  "models": [
+    {
+      "schema_version": "mio-offline-model-lineage/v0.1",
+      "model_ref": "model-ranker-1",
+      "artifact_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "trainer_version_ref": "trainer-1",
+      "feature_schema_ref": "features-1",
+      "training_dataset_ref": "dataset-train-1",
+      "evaluation_dataset_ref": "dataset-eval-1",
+      "baseline_model_ref": "baseline-rules-1",
+      "evaluation_report_ref": "report-1",
+      "rollback_parent_ref": null,
+      "recorded_at": "2026-10-30T00:14:00Z",
+      "authority_class": "descriptive_model_lineage"
+    }
+  ],
+  "recorded_at": "2026-10-30T00:15:00Z",
+  "authority_class": "descriptive_only"
+}

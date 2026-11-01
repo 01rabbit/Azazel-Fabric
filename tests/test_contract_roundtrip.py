@@ -284,6 +284,17 @@ def _golden_external_security_samples() -> list[BaseModel]:
     return samples
 
 
+def _learning_samples() -> list[BaseModel]:
+    """MIO learning-provenance proposal fixture, round-tripped as one join."""
+    import json
+    from pathlib import Path
+
+    from azazel_fabric.mio_contracts import LearningProvenanceBundleV0
+
+    fixture = Path(__file__).parent / "fixtures" / "learning" / "mio_learning_provenance_bundle_v0.json"
+    return [LearningProvenanceBundleV0.model_validate(json.loads(fixture.read_text(encoding="utf-8")))]
+
+
 def _outcome_samples() -> list[BaseModel]:
     """Outcome-as-Evidence records.
 
@@ -306,6 +317,7 @@ SAMPLES = (
     + _golden_effect_samples()
     + _golden_external_security_samples()
     + _outcome_samples()
+    + _learning_samples()
 )
 
 

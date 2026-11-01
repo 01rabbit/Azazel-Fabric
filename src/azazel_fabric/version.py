@@ -13,13 +13,13 @@ signed" — the difference decides what a consumer may conclude from an install
 succeeding, and it is what caught ``v0.9.0rc4`` being cut at the wrong commit
 twice. See ``docs/release-signing.md`` and Fabric#56.
 
-This is ``0.9.0rc6.dev0``: ``main`` has moved past ``v0.9.0rc5`` and is not
-itself any tag. The first source change after that tag -- the experimental
-``external_security_contracts`` profile (Fabric#25) -- is what forced the bump.
+This candidate tree advances ``main`` to ``0.9.0rc7.dev0``. The experimental
+M.I.O. learning-provenance addendum is the next source change after the
+unpublished ``v0.9.0rc6`` candidate. ``v0.9.0rc7`` is not cut or signed.
 The release-digest gate in ``tests/test_release_candidate_digest.py`` switches
 off for a ``.devN`` version precisely so that ``main`` cannot keep claiming to
-be the tree a published tag records. ``v0.9.0rc6`` is **not** cut and not
-signed; nothing here asserts that it will be.
+be the tree a published tag records. Neither ``v0.9.0rc6`` nor ``v0.9.0rc7`` is cut or signed; nothing here
+asserts that either will be.
 
 ``v0.9.0rc4`` carries one **non-additive** change: an ``EffectObservation``
 may claim only ``observed_fact`` or ``active_materialized`` (Fabric#52). The
@@ -39,4 +39,4 @@ one against a moved ``main`` would make it claim to be a digest of a tag it no
 longer matches, and would strand the signature that covers its current bytes.
 """
 
-__version__ = "0.9.0rc6.dev0"
+__version__ = "0.9.0rc7.dev0"

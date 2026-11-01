@@ -8,7 +8,7 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ## [Unreleased]
 
-Toward `v0.9.0rc6` — **not cut, not signed.** `main` is `0.9.0rc6.dev0`.
+Toward `v0.9.0rc7` — **not cut, not signed.** `main` is `0.9.0rc7.dev0`.
 
 **Not additive** (Fabric#65): a typed reference, a provisioning digest or a
 MAC that ends in a newline, and validated under `v0.9.0rc5`, is refused here.
@@ -19,6 +19,10 @@ even when it carries no directive. Under `v0.9.0rc5` it was accepted up to the
 interpreter's recursion limit.
 
 ### Added
+
+- **Experimental M.I.O. learning-provenance proposal** (`mio_contracts/learning.py`, Fabric#72): separate Knowledge snapshot references, LLM teacher-label candidates, reviewer dispositions, independently observed outcome references, dataset/feature lineage, and model/evaluation lineage. It adds no accepted-label, training-eligibility, installation, or admission field. Full design and unresolved owner decisions: [`docs/mio-learning-contracts.md`](docs/mio-learning-contracts.md).
+
+  This is an optional additive extension to the existing experimental `mio_contracts` family. No producer/consumer adoption, real Knowledge snapshot feed, training data, model training, or admission is claimed. The profile is descriptive only and makes no compatibility promise.
 
 - **Experimental external-security profile** (`external_security_contracts`,
   Fabric#25): `ExternalObservationEnvelope/v0.1`, `AdvisoryContextEnvelope/v0.1`,
@@ -51,8 +55,8 @@ interpreter's recursion limit.
 
 ### Changed
 
-- `version.py` moves to `0.9.0rc6.dev0`: the first source change after
-  `v0.9.0rc5`. The release-digest tests skip on a `.dev` version by design.
+- `version.py` moves to `0.9.0rc7.dev0`, the next candidate after the
+  unpublished `v0.9.0rc6`. No release digest or signature is generated.
 - **A typed reference, a digest or a MAC may not end in a newline**
   (`effect_contracts/refs.py`, `provisioning_contracts/models.py`, Fabric#65).
   **This is not additive: a value that validated under `v0.9.0rc5` is

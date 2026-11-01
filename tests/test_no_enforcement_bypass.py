@@ -203,6 +203,15 @@ _PINNED_LITERALS: dict[tuple[str, str], object] = {
     ("DeviceChangeObservation", "authority_class"): "observed_fact",
     ("DeviceChangeObservation", "executable"): False,
     ("DeviceChangeObservation", "tactical_outcome_claimed"): False,
+    # M.I.O. learning-provenance proposal (Fabric#72): every record remains
+    # descriptive, and the teacher/review/snapshot labels grant no authority.
+    ("KnowledgeSnapshotRefV0", "authority_class"): "descriptive_snapshot_reference",
+    ("TeacherLabelCandidateV0", "authority_class"): "teacher_candidate_only",
+    ("TeacherReviewDispositionV0", "authority_class"): "review_record_only",
+    ("IndependentOutcomeRefV0", "authority_class"): "independent_observation_reference",
+    ("OfflineDatasetLineageV0", "authority_class"): "descriptive_dataset_lineage",
+    ("OfflineModelLineageV0", "authority_class"): "descriptive_model_lineage",
+    ("LearningProvenanceBundleV0", "authority_class"): "descriptive_only",
     ("ExternalProvenance", "confers_authority"): False,
 }
 
