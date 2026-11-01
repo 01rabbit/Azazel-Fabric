@@ -239,7 +239,7 @@ class LearningProvenanceBundleV0(_LearningRecord):
         candidates = {item.candidate_ref: item for item in self.candidates}
         reviews = {item.disposition_ref: item for item in self.reviews}
         outcomes = {item.outcome_ref: item for item in self.outcomes}
-        snapshots = {item.snapshot_ref for item in self.snapshots}
+        snapshots = {item.snapshot_ref: item for item in self.snapshots}
         dataset_by_ref = {item.dataset_ref: item for item in self.datasets}
         if (
             len(snapshots) != len(self.snapshots)
@@ -253,8 +253,15 @@ class LearningProvenanceBundleV0(_LearningRecord):
         for item in self.candidates:
             proposed_at = _utc_timestamp(item.proposed_at, field="proposed_at")
             _require_not_before(bundle_recorded_at, proposed_at, field="bundle.recorded_at")
-            if item.snapshot_ref is not None and item.snapshot_ref not in snapshots:
-                raise ValueError("candidate references a snapshot outside the bundle")
+            if item.snapshot_ref is not None:
+                snapshot = snapshots.get(item.snapshot_ref)
+                if snapshot is None:
+                    raise ValueError("candidate references a snapshot outside the bundle")
+                _require_not_before(
+                    proposed_at,
+                    _utc_timestamp(snapshot.observed_at, field="snapshot.observed_at"),
+                    field="candidate.proposed_at",
+                )
         for item in self.reviews:
             candidate = candidates.get(item.candidate_ref)
             if candidate is None:

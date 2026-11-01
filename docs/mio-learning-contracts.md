@@ -51,12 +51,13 @@ All time fields use a bounded RFC3339 UTC subset: uppercase `Z`, whole seconds
 required, optional one-to-six fractional digits. Naive timestamps, offsets,
 leap seconds, invalid calendar values, and longer fractions are rejected.
 Checks are limited to directly linked record order: snapshot `as_of` is no
-later than its observation time; a completed review is no earlier than its
-proposal; a frozen dataset is no earlier than its referenced candidate, review,
-and outcome; a model record is no earlier than its train/evaluation dataset
-freeze; and the bundle record is no earlier than its contained records. No
-ordering between a teacher proposal and an outcome is assumed, and these
-timestamps do not define Knowledge freshness or expiry.
+later than its observation time; when a candidate references a snapshot, its
+proposal is no earlier than that snapshot's observation; a completed review is
+no earlier than its proposal; a frozen dataset is no earlier than its
+referenced candidate, review, and outcome; a model record is no earlier than
+its train/evaluation dataset freeze; and the bundle record is no earlier than
+its contained records. No ordering between a teacher proposal and an outcome
+is assumed, and these timestamps do not define Knowledge freshness or expiry.
 
 ## Compatibility
 

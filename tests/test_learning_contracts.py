@@ -66,6 +66,16 @@ def test_snapshot_state_is_recorded_as_report_not_verified_truth():
         LearningProvenanceBundleV0.model_validate(data)
 
 
+def test_candidate_cannot_precede_its_referenced_snapshot_observation():
+    data = payload()
+    data["candidates"][0]["proposed_at"] = "2026-10-29T23:59:00Z"
+    with pytest.raises(
+        ValidationError,
+        match="candidate.proposed_at precedes its referenced record",
+    ):
+        LearningProvenanceBundleV0.model_validate(data)
+
+
 def test_pending_review_cannot_be_given_a_completed_reviewer_or_time():
     with pytest.raises(ValidationError, match="pending review"):
         TeacherReviewDispositionV0(
