@@ -35,12 +35,28 @@ a revocation reference, but the reference is not verified here.
 A dataset example must link an existing candidate, a completed
 `retained_for_evaluation` review, and a separately referenced outcome. The
 outcome can still be `unknown` or `disputed`. `split_group_ref` cannot span the
-train/validation/test partitions within one dataset. The record stores no
-feature values or teacher chain-of-thought, only bounded provenance references.
+train/validation/test partitions across the bundle. Candidate, trace, review,
+outcome, observation, and feature-record identities also cannot cross
+partitions, so changing a split-group reference cannot duplicate the same
+candidate/outcome into train and test. The model lineage's task must match both
+datasets. The record stores no feature values or teacher chain-of-thought, only
+bounded provenance references.
 
 A model record must refer to distinct training and evaluation datasets and a
-baseline. It describes an artifact and evaluation report; it does not assert
-that a model is useful, calibrated, eligible, admitted, or deployed.
+baseline, and must match both datasets' task and feature schema. It describes
+an artifact and evaluation report; it does not assert that a model is useful,
+calibrated, eligible, admitted, or deployed.
+
+All time fields use a bounded RFC3339 UTC subset: uppercase `Z`, whole seconds
+required, optional one-to-six fractional digits. Naive timestamps, offsets,
+leap seconds, invalid calendar values, and longer fractions are rejected.
+Checks are limited to directly linked record order: snapshot `as_of` is no
+later than its observation time; a completed review is no earlier than its
+proposal; a frozen dataset is no earlier than its referenced candidate, review,
+and outcome; a model record is no earlier than its train/evaluation dataset
+freeze; and the bundle record is no earlier than its contained records. No
+ordering between a teacher proposal and an outcome is assumed, and these
+timestamps do not define Knowledge freshness or expiry.
 
 ## Compatibility
 

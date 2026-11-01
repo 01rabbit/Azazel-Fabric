@@ -31,6 +31,12 @@ The new feature ID is `mio-learning-provenance/v0.1`, with minimum
 `0.9.0rc7`. The local package version advances from `0.9.0rc6.dev0` to
 `0.9.0rc7.dev0`; the candidate is not cut, signed, published, or stable.
 
+Dataset joins must be task-consistent and must keep candidate, trace, review,
+outcome, observation, feature-record, and split-group identities within one
+partition across the bundle. Model lineage declares its task and must match
+both datasets. The timestamp syntax is a bounded RFC3339 UTC subset; chronology
+checks apply only to direct provenance links and do not infer outcome freshness.
+
 ## Consequences
 
 - Existing schemas remain unchanged; consumers can omit the addendum.

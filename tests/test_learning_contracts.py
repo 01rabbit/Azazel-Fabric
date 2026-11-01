@@ -123,6 +123,108 @@ def test_training_and_evaluation_datasets_must_differ():
         LearningProvenanceBundleV0.model_validate(data)
 
 
+def test_same_candidate_outcome_cannot_cross_train_and_test_with_new_group_ref():
+    data = payload()
+    train_example = data["datasets"][0]["examples"][0]
+    test_example = {
+        **train_example,
+        "split_group_ref": "attacker-changed-group",
+        "split": "test",
+    }
+    data["datasets"][1]["examples"] = [test_example]
+    with pytest.raises(ValidationError, match="identity crosses dataset partitions"):
+        LearningProvenanceBundleV0.model_validate(data)
+
+
+def test_model_task_must_match_both_dataset_tasks():
+    data = payload()
+    data["models"][0]["task_ref"] = "task-different"
+    with pytest.raises(ValidationError, match="model task differs"):
+        LearningProvenanceBundleV0.model_validate(data)
+
+
+@pytest.mark.parametrize(
+    "record_path,field",
+    [
+        (("snapshots", 0), "as_of"),
+        (("snapshots", 0), "observed_at"),
+        (("candidates", 0), "proposed_at"),
+        (("reviews", 0), "reviewed_at"),
+        (("outcomes", 0), "observed_at"),
+        (("datasets", 0), "frozen_at"),
+        (("models", 0), "recorded_at"),
+        ((), "recorded_at"),
+    ],
+)
+def test_all_time_fields_require_bounded_rfc3339_utc(record_path, field):
+    data = payload()
+    target = data
+    for part in record_path:
+        target = target[part]
+    target[field] = "not-a-timestamp"
+    with pytest.raises(ValidationError, match="RFC3339 UTC"):
+        LearningProvenanceBundleV0.model_validate(data)
+
+
+@pytest.mark.parametrize(
+    "timestamp",
+    [
+        "2026-10-30T09:06:00+09:00",
+        "2026-10-30T00:06:00",
+        "2026-10-30T00:06:00.1234567Z",
+        "2026-02-30T00:06:00Z",
+    ],
+)
+def test_timestamp_profile_rejects_offsets_naive_precision_and_invalid_calendar(timestamp):
+    data = payload()
+    data["candidates"][0]["proposed_at"] = timestamp
+    with pytest.raises(ValidationError):
+        LearningProvenanceBundleV0.model_validate(data)
+
+
+@pytest.mark.parametrize(
+    "mutate,match",
+    [
+        (
+            lambda d: d["snapshots"][0].update(
+                as_of="2026-10-30T00:06:00Z",
+                observed_at="2026-10-30T00:05:00Z",
+            ),
+            "snapshot.observed_at precedes its referenced record",
+        ),
+        (
+            lambda d: d["reviews"][0].update(reviewed_at="2026-10-30T00:05:00Z"),
+            "reviewed_at precedes its referenced record",
+        ),
+        (
+            lambda d: d["datasets"][0].update(frozen_at="2026-10-30T00:09:00Z"),
+            "dataset.frozen_at precedes its referenced record",
+        ),
+        (
+            lambda d: d["models"][0].update(recorded_at="2026-10-30T00:11:00Z"),
+            "model.recorded_at precedes its referenced record",
+        ),
+        (
+            lambda d: d.update(recorded_at="2026-10-30T00:12:30Z"),
+            "bundle.recorded_at precedes its referenced record",
+        ),
+    ],
+)
+def test_impossible_record_ordering_fails_closed(mutate, match):
+    data = payload()
+    mutate(data)
+    with pytest.raises(ValidationError, match=match):
+        LearningProvenanceBundleV0.model_validate(data)
+
+
+def test_outcome_may_precede_teacher_proposal_without_implying_freshness():
+    data = payload()
+    data["outcomes"][0]["observed_at"] = "2026-10-30T00:04:00Z"
+    assert LearningProvenanceBundleV0.model_validate(data).outcomes[0].observed_at == (
+        "2026-10-30T00:04:00Z"
+    )
+
+
 def test_model_cannot_be_marked_admitted_or_activated():
     data = payload()
     data["models"][0]["admitted"] = True

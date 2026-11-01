@@ -148,6 +148,7 @@
       "model_ref": "model-ranker-1",
       "artifact_digest": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
       "trainer_version_ref": "trainer-1",
+      "task_ref": "task-priority-ordering",
       "feature_schema_ref": "features-1",
       "training_dataset_ref": "dataset-train-1",
       "evaluation_dataset_ref": "dataset-eval-1",
