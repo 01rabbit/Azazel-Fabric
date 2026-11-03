@@ -85,7 +85,7 @@ def _apply(base: dict, case: dict) -> dict:
     repeat = changes.pop("__repeat_limitations", None)
     payload.update(changes)
     if repeat is not None:
-        payload["limitations"] = [f"limit-{i}" for i in range(repeat)]
+        payload["limitations"] = [f"limit_{i}" for i in range(repeat)]
     return payload
 
 
@@ -135,3 +135,64 @@ def test_the_limitations_bound_matches_effect_observation():
         OutcomeObservationEnvelope.model_fields["limitations"].metadata[0].max_length
         == EffectObservation.model_fields["limitations"].metadata[0].max_length
     )
+
+
+#: Tokens Azazel-Deception actually emits (convention C2). All must pass.
+DECEPTION_LIMITATION_TOKENS = (
+    "objective_content_not_bound",
+    "objective_trace_differs_from_effect_trace",
+    "objective_not_supplied",
+    "desired_observations_not_hypothesis_specific",
+    "desired_observations_not_specified",
+    "no_interaction_observed_is_not_evidence_of_safety",
+    "telemetry_gap:http_access_log",
+    "stale",
+    "lease_expired",
+    "runtime_active_after_lease_end",
+    "redirection_does_not_imply_diversion",
+    "isolation_drift_observed",
+    "isolation_not_asserted",
+    "interactions_truncated",
+    "unbound_interactions_excluded:3",
+    "interactions_outside_lease:2",
+    "runtime_state_not_independently_reverified",
+    "session_ended_new_observations_belong_to_a_new_session",
+    "presented_terrain_not_projected",
+)
+
+
+@pytest.mark.parametrize("token", DECEPTION_LIMITATION_TOKENS)
+def test_every_token_deception_emits_is_accepted(token):
+    payload = _load("effect_knowledge_objective_envelope_v0.json")
+    payload["limitations"] = [token]
+    assert OutcomeObservationEnvelope.model_validate(payload).limitations == (token,)
+
+
+def test_existing_effect_observation_limitations_are_not_tightened():
+    from azazel_fabric.effect_contracts import EffectObservation
+
+    payload = json.loads(
+        (FIXTURES / "effect_gadget_observation_v0.json").read_text(encoding="utf-8")
+    )
+    payload["limitations"] = ["Free text with spaces / slashes"]
+    assert EffectObservation.model_validate(payload).limitations
+
+
+@pytest.mark.parametrize("kind", ["observation_objective", "hypothesis", "frame"])
+def test_an_advisory_kind_cannot_fill_a_decision_or_trace_slot(kind):
+    from azazel_fabric.effect_contracts import DefensiveEffectRef, EffectClass
+    from tests.test_effect_contracts import effect_ref  # noqa: F401  (builder)
+
+    with pytest.raises(ValidationError):
+        DefensiveEffectRef.model_validate(
+            {
+                **effect_ref().model_dump(mode="json"),
+                "authority_class": "producer_decision_ref",
+                "decision_ref": f"{kind}:x",
+            }
+        )
+    with pytest.raises(ValidationError):
+        DefensiveEffectRef.model_validate(
+            {**effect_ref().model_dump(mode="json"), "trace_id": f"{kind}:x"}
+        )
+    assert EffectClass  # imported for the model's enum validation only

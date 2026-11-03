@@ -30,9 +30,11 @@ from pydantic import BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler
 from azazel_fabric.schema.defensive_state import DefensiveState
 
 from .authority import AuthorityClass
-from .refs import RefKind, reject_ref_kinds, require_ref_kind
+from .refs import RefKind, parse_ref, reject_ref_kinds, require_ref_kind
 from .validation import (
     assert_bounded_fact_payload,
+    assert_limitation_token,
+    assert_no_command_segments,
     assert_no_effect_authority_fields,
     assert_no_runtime_directives,
     assert_no_secret_material,
@@ -164,7 +166,19 @@ _NOT_A_DECISION = frozenset(
         RefKind.ENVIRONMENT,
         RefKind.SURFACE,
         RefKind.ARTIFACT,
+        # Fabric#72: observation context is never an authorization.
+        RefKind.OBSERVATION_OBJECTIVE,
+        RefKind.HYPOTHESIS,
+        RefKind.FRAME,
     }
+)
+
+
+#: The three observation-context kinds alone. Used where a slot did not
+#: previously reject `_NOT_A_DECISION` (so widening it would refuse values
+#: `v0.9.0rc5` accepted), but must still refuse these new kinds.
+_OBSERVATION_CONTEXT_KINDS = frozenset(
+    {RefKind.OBSERVATION_OBJECTIVE, RefKind.HYPOTHESIS, RefKind.FRAME}
 )
 
 
@@ -537,6 +551,7 @@ class OutcomeObservationEnvelope(_StrictFrozenModel):
 
         require_ref_kind(self.envelope_id, RefKind.ENVELOPE, field="envelope_id")
         reject_ref_kinds(self.decision_ref, _NOT_A_DECISION, field="decision_ref")
+        reject_ref_kinds(self.trace_id, _OBSERVATION_CONTEXT_KINDS, field="trace_id")
         if self.effect_ref is not None:
             require_ref_kind(self.effect_ref, RefKind.EFFECT, field="effect_ref")
         if self.presentation_ref is not None:
@@ -552,6 +567,22 @@ class OutcomeObservationEnvelope(_StrictFrozenModel):
             require_ref_kind(value, RefKind.HYPOTHESIS, field="hypothesis_refs")
         if self.frame_ref is not None:
             require_ref_kind(self.frame_ref, RefKind.FRAME, field="frame_ref")
+        for field_name, value in (
+            ("observation_objective_ref", self.observation_objective_ref),
+            ("frame_ref", self.frame_ref),
+            *(("hypothesis_refs", v) for v in self.hypothesis_refs),
+        ):
+            if value is not None:
+                assert_no_command_segments(parse_ref(value)[1], field=field_name)
+        if len(set(self.hypothesis_refs)) != len(self.hypothesis_refs):
+            raise ValueError("hypothesis_refs must not repeat a hypothesis")
+        if self.hypothesis_refs and self.frame_ref is None:
+            raise ValueError(
+                "hypothesis_refs require frame_ref; a hypothesis id is local to "
+                "its frame and identifies nothing on its own"
+            )
+        for value in self.limitations:
+            assert_limitation_token(value, field="limitations")
         has_objective_context = bool(
             self.observation_objective_ref is not None
             or self.hypothesis_refs

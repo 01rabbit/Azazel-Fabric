@@ -13,8 +13,8 @@
   ],
   "frame_ref": "frame:golden-mio-frame-1",
   "hypothesis_refs": [
-    "hypothesis:golden-mio-hypothesis-1",
-    "hypothesis:golden-mio-hypothesis-2"
+    "hypothesis:h1",
+    "hypothesis:h2"
   ],
   "impact_observations": {},
   "limitations": [
