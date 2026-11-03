@@ -53,7 +53,8 @@ COMMAND_SEGMENTS = frozenset(
         "stop", "open", "allow", "authorize", "authorized", "approve", "approved",
         "enable", "extend", "terminate", "withdraw", "block", "isolate",
         "quarantine", "redirect", "expose", "command", "shell", "sudo", "deploy",
-        "install", "delete", "kill",
+        "install", "delete", "kill", "override", "enforce", "grant", "granted",
+        "bypass",
     }
 )
 

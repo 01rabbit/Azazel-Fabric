@@ -13,8 +13,8 @@ Toward `v0.9.0rc6` — **not cut, not signed.** `main` is `0.9.0rc6.dev0`.
 **Not additive** (Fabric#65): a typed reference, a provisioning digest or a
 MAC that ends in a newline, and validated under `v0.9.0rc5`, is refused here.
 
-**Not additive** (Fabric#72): a `decision_ref`, `activation_decision_ref` or
-`trace_id` that is typed `observation_objective:`, `hypothesis:` or `frame:`
+**Not additive** (Fabric#72): a `decision_ref`, `activation_decision_ref`,
+`trace_id` or `EffectObservation.execution_ref` that is typed `observation_objective:`, `hypothesis:` or `frame:`
 is refused where `v0.9.0rc5` read it as untyped. No producer is known to emit
 such a value.
 

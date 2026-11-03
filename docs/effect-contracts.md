@@ -263,17 +263,35 @@ lowercased, and refused if any whole segment is in `COMMAND_SEGMENTS`:
 activate activation deactivate execute exec run start stop open allow
 authorize authorized approve approved enable extend terminate withdraw block
 isolate quarantine redirect expose command shell sudo deploy install delete kill
+override enforce grant granted bypass
 ```
 
 Whole segments only: `redirection`, `isolation` and `active` are fine. This is
 a lint on labels, not an authorization guarantee. Other products copy the set
 rather than importing it.
 
+**C2'. Gap and confounder names.** A name in `telemetry_gaps` or `confounders`
+should match `[A-Za-z0-9._-]{1,64}` (no `:`) and pass the C3 check, so that
+`telemetry_gap:<name>` always satisfies C2. Fabric does **not** enforce this on
+the existing `OutcomeObservationEnvelope.telemetry_gaps` / `confounders`
+(unchanged, to stay additive); producers and consumers do.
+
+**C6. Invalid entries are dropped one at a time (consumer side).** A consumer
+that finds an invalid entry in `limitations`, `telemetry_gaps` or `confounders`
+drops that entry, marks that it did so, and keeps the rest of the envelope and
+context. Structural contradictions (`coverage_complete` against the gaps, a
+trace or effect mismatch, tampering) still quarantine the whole envelope.
+Fabric validation itself rejects the whole envelope; the per-entry drop is a
+consumer policy.
+
+**Matching.** Every grammar here is applied with `fullmatch` (or `\Z`); a
+trailing newline is refused.
+
 **C4. Advisory kinds never fill an authorization slot.** `observation_objective`,
 `hypothesis` and `frame` are in `_NOT_A_DECISION`, so a `decision_ref`,
 `activation_decision_ref` or `trace_id` of those kinds is refused in
 `DefensiveEffectRef` and `PresentedTerrainRef`. `OutcomeObservationEnvelope`
-refuses them in `decision_ref` and `trace_id`. **Not additive** for those three
+refuses them in `decision_ref` and `trace_id`. `EffectObservation.execution_ref` is checked against `_NOT_A_DECISION` as well, so it refuses them too. **Not additive** for those three
 kinds: before this change a value like `frame:x` was untyped and accepted in
 those slots. No producer is known to have emitted these kinds as a decision.
 

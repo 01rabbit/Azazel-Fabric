@@ -196,3 +196,35 @@ def test_an_advisory_kind_cannot_fill_a_decision_or_trace_slot(kind):
             {**effect_ref().model_dump(mode="json"), "trace_id": f"{kind}:x"}
         )
     assert EffectClass  # imported for the model's enum validation only
+
+
+def test_the_imperative_set_has_the_35_agreed_words_including_the_r2_additions():
+    from azazel_fabric.effect_contracts import COMMAND_SEGMENTS
+
+    assert len(COMMAND_SEGMENTS) == 35
+    assert {"override", "enforce", "grant", "granted", "bypass"} <= COMMAND_SEGMENTS
+
+
+@pytest.mark.parametrize("word", ["override", "enforce", "grant", "granted", "bypass"])
+def test_the_r2_words_are_refused_in_limitations_and_ref_bodies(word):
+    payload = _load("effect_knowledge_objective_envelope_v0.json")
+    with pytest.raises(ValidationError):
+        OutcomeObservationEnvelope.model_validate({**payload, "limitations": [f"x_{word}_now"]})
+    with pytest.raises(ValidationError):
+        OutcomeObservationEnvelope.model_validate(
+            {**payload, "observation_objective_ref": f"observation_objective:o.{word.upper()}"}
+        )
+
+
+def test_whole_segments_only_for_the_r2_words():
+    payload = _load("effect_knowledge_objective_envelope_v0.json")
+    payload["limitations"] = ["overridden_by_nothing", "enforcement_not_observed", "bypassed_not_seen"]
+    assert OutcomeObservationEnvelope.model_validate(payload)
+
+
+def test_existing_telemetry_gaps_and_confounders_validation_is_unchanged():
+    """C2': Fabric does not tighten the rc5 fields (non-additive)."""
+    payload = _load("effect_knowledge_outcome_envelope_v0.json")
+    payload["telemetry_gaps"] = ["Free text / with: odd chars"]
+    payload["confounders"] = ["Run now"]
+    assert OutcomeObservationEnvelope.model_validate(payload)
