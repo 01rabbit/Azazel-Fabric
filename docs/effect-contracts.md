@@ -218,34 +218,76 @@ optional fields, all empty by default:
 | Field | Kind it must be | Bound |
 | --- | --- | --- |
 | `observation_objective_ref` | `observation_objective:` | one |
-| `hypothesis_refs` | `hypothesis:` | at most 8 |
+| `hypothesis_refs` | `hypothesis:` | at most 8, no repeats, requires `frame_ref` |
 | `frame_ref` | `frame:` | one |
-| `limitations` | free-form short strings | at most 128, as `EffectObservation.limitations` |
-
-**A hypothesis ref is read together with the frame ref.** A producer such as MIO may mint hypothesis ids that are local to one cycle (`h1`, `h2`), unique only within a frame; `hypothesis_refs` alone does not identify a hypothesis globally, so consumers must interpret it as the pair (`frame_ref`, `hypothesis_ref`). Fabric does not enforce this pairing in rc6.
+| `limitations` | limitation token (C2) | at most 128, as `EffectObservation.limitations` |
 
 An objective is **non-executable** and **never an Edge decision**. It does not
-fill `decision_ref`, does not make anything live, and does not carry authority.
+replace `decision_ref`, does not make anything live, and carries no authority.
 Specifically:
 
-- each slot takes exactly its own kind; an `observation_objective_ref` of `decision:...`,
-  `advisory:...` or an untyped value is refused;
+- each slot takes exactly its own kind; an `observation_objective_ref` of
+  `decision:...`, `advisory:...` or an untyped value is refused;
+- `observation_objective`, `hypothesis` and `frame` refs are refused wherever
+  a decision is expected (`decision_ref`, `activation_decision_ref`) and in
+  `trace_id` (C4, below);
 - ref bodies keep the opaque grammar (no slash, whitespace, quote or newline),
-  so a command line, path or URL cannot be a ref body;
+  so a command line, path or URL cannot be a ref body, and carry no imperative
+  segment (C3);
 - the existing directive and authority-field walk still runs over the whole
-  payload;
+  payload (it inspects keys, not values);
 - an envelope with an objective, hypothesis or frame but **no** `decision_ref`
   must not claim `active_materialized`; `producer_decision_ref` was already
   refused for every envelope. `observed_fact` and `planned_shadow` remain fine.
 
-**Compatibility.** Additive. Old payloads validate unchanged. The four fields
-are omitted from a dump while empty, so an envelope that does not use them
-serializes to exactly its `v0.9.0rc5` bytes (the published
-`effect_knowledge_outcome_envelope_v0.json` is unchanged), and a consumer
-still pinned to `rc5`, which forbids unknown fields, can read it. An envelope
-that *does* use the fields cannot be read by an `rc5` consumer; that consumer
-must re-pin. Slot kinds for `environment_ref` and `actor_session_ref` are **not**
-tightened here: doing so would refuse values `rc5` accepted.
+### Conventions shared by the four proposals (canonical here)
+
+**C1. A hypothesis is identified by its frame.** `hypothesis:<hid>` is read
+together with `frame_ref` (`frame:<frame_id>`); a producer such as MIO mints
+hypothesis ids local to one cycle (`h1`, `h2`), so `hypothesis_refs` alone does
+not identify anything globally. An envelope with `hypothesis_refs` must carry
+`frame_ref`, and `hypothesis_refs` may not repeat. Interim form, before this
+lands: a single `advisory:mio-hypothesis-<frame_id>~<hid>` ref, where `~` is
+outside the producers' local-id grammar and inside Fabric's opaque body set.
+
+**C2. Limitation token grammar.** `[a-z][a-z0-9_]{2,63}(:[A-Za-z0-9._-]{1,64})?`
+(`LIMITATION_TOKEN_PATTERN`), enforced on the new
+`OutcomeObservationEnvelope.limitations` only. `EffectObservation.limitations`
+is unchanged. Examples: `stale`, `telemetry_gap:http_access_log`,
+`unbound_interactions_excluded:3`.
+
+**C3. Imperative-word set.** A token or ref body is split on `_ - . ~ :`,
+lowercased, and refused if any whole segment is in `COMMAND_SEGMENTS`:
+
+```
+activate activation deactivate execute exec run start stop open allow
+authorize authorized approve approved enable extend terminate withdraw block
+isolate quarantine redirect expose command shell sudo deploy install delete kill
+```
+
+Whole segments only: `redirection`, `isolation` and `active` are fine. This is
+a lint on labels, not an authorization guarantee. Other products copy the set
+rather than importing it.
+
+**C4. Advisory kinds never fill an authorization slot.** `observation_objective`,
+`hypothesis` and `frame` are in `_NOT_A_DECISION`, so a `decision_ref`,
+`activation_decision_ref` or `trace_id` of those kinds is refused in
+`DefensiveEffectRef` and `PresentedTerrainRef`. `OutcomeObservationEnvelope`
+refuses them in `decision_ref` and `trace_id`. **Not additive** for those three
+kinds: before this change a value like `frame:x` was untyped and accepted in
+those slots. No producer is known to have emitted these kinds as a decision.
+
+**Compatibility.** Otherwise additive. Old payloads validate unchanged. The four
+fields are omitted from a dump while empty, so an envelope that does not use
+them serializes to exactly its `v0.9.0rc5` bytes (the published
+`effect_knowledge_outcome_envelope_v0.json` is unchanged), and a consumer still
+pinned to `rc5`, which forbids unknown fields, can read it. An envelope that
+*does* use the fields cannot be read by an `rc5` consumer; that consumer must
+re-pin. Slot kinds for `environment_ref` and `actor_session_ref` are **not**
+tightened here: doing so would refuse values `rc5` accepted. Because the
+omission uses a model serializer, `model_json_schema(mode="serialization")` of
+the envelope is empty (`{"type": "object", "additionalProperties": ...}`); the
+validation-mode schema is complete and is the one to use.
 
 Vectors: `effect_knowledge_objective_envelope_v0.json` and the rejection set
 `effect_objective_envelope_rejections_v0.json`.
