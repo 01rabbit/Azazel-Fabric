@@ -181,7 +181,31 @@ def test_existing_effect_observation_limitations_are_not_tightened():
 @pytest.mark.parametrize("kind", ["observation_objective", "hypothesis", "frame"])
 def test_an_advisory_kind_cannot_fill_a_decision_or_trace_slot(kind):
     from azazel_fabric.effect_contracts import DefensiveEffectRef, EffectClass
-    from tests.test_effect_contracts import effect_ref  # noqa: F401  (builder)
+
+    # Self-contained builder: CI runs bare `pytest`, so another test module
+    # is not importable as `tests.*`.
+    base = {
+        "effect_id": "effect:e1",
+        "effect_class": EffectClass.REDIRECT_TO_PRESENTED_TERRAIN.value,
+        "producer_product": "edge",
+        "producer_node": "edge-1",
+        "trace_id": "trace-1",
+        "decision_ref": "decision-1",
+        "target_scope_ref": "scope:session-1",
+        "policy_ref": "policy-1",
+        "created_at": "2026-01-01T00:00:00+00:00",
+        "expires_at": "2026-01-01T01:00:00+00:00",
+        "authority_class": "producer_decision_ref",
+    }
+    DefensiveEffectRef.model_validate(base)  # the untouched base is valid
+
+    class _Ref:
+        @staticmethod
+        def model_dump(mode="json"):
+            return dict(base)
+
+    def effect_ref():
+        return _Ref
 
     with pytest.raises(ValidationError):
         DefensiveEffectRef.model_validate(
