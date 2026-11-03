@@ -300,8 +300,24 @@ def _outcome_samples() -> list[BaseModel]:
     return [execution(), mechanism(), outcome(), assessment()]
 
 
+def _deception55_v02_samples() -> list[BaseModel]:
+    """Proposal-only v0.2 binding shapes (Deception #55); not yet adopted."""
+    from test_deception55_v02_contracts import _decision, _obs
+
+    from azazel_fabric.deception_contracts import (
+        EnvironmentActivationDecisionV02,
+        InteractionObservationV02,
+    )
+
+    return [
+        EnvironmentActivationDecisionV02.model_validate(_decision()),
+        InteractionObservationV02.model_validate(_obs()),
+    ]
+
+
 SAMPLES = (
     _samples()
+    + _deception55_v02_samples()
     + _golden_provisioning_samples()
     + _golden_effect_samples()
     + _golden_external_security_samples()

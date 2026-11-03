@@ -67,6 +67,7 @@ TIER_FIELD_EXEMPTIONS: dict[str, str] = {
     # the product's; recording it is provenance, not Fabric deciding.
     "PlacementPlan.selected_tier": "records a product's own selection",
     "EnvironmentActivationDecision.selected_tier": "records a product's own selection",
+    "EnvironmentActivationDecisionV02.selected_tier": "records a product's own selection",
     "EnvironmentOutcome.selected_tier": "records a product's own selection",
     "RuntimeContext.selected_tier": "records a product's own selection",
 }

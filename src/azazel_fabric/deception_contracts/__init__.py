@@ -35,6 +35,16 @@ from azazel_fabric.deception_contracts.models import (
     RuntimeRequirements,
     SafetyPolicy,
 )
+from azazel_fabric.deception_contracts.models_v02 import (
+    EnvironmentActivationDecisionV02,
+    InteractionObservationV02,
+    ObservationBindingError,
+    check_observation_binding,
+    parse_activation_decision,
+    parse_activation_decision_v02,
+    parse_interaction_observation,
+    parse_interaction_observation_v02,
+)
 from azazel_fabric.deception_contracts.observation import (
     ConfounderTag,
     EffectivenessAdvisory,
@@ -100,6 +110,14 @@ __all__ = [
     "RuntimeContext",
     "InteractionObservation",
     "EffectivenessAdvisory",
+    "EnvironmentActivationDecisionV02",
+    "InteractionObservationV02",
+    "ObservationBindingError",
+    "check_observation_binding",
+    "parse_activation_decision",
+    "parse_activation_decision_v02",
+    "parse_interaction_observation",
+    "parse_interaction_observation_v02",
     "FiniteStateTransition",
     "TransitionCatalog",
     "TransitionNotInCatalog",

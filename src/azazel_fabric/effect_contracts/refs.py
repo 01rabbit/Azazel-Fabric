@@ -71,6 +71,17 @@ class RefKind(str, Enum):
     OUTCOME = "outcome"
     ENVELOPE = "envelope"
     FIXTURE = "fixture"
+    #: Proposal-only (Deception #55 v0.2 binding): the M.I.O. situation frame an
+    #: observation objective was derived from. A reference, never the frame.
+    FRAME = "frame"
+    #: Proposal-only: a hypothesis the observation is meant to bear on.
+    HYPOTHESIS = "hypothesis"
+    #: Proposal-only: an Edge-issued activation lease. Edge alone issues,
+    #: renews and revokes it; this is only the name it travels under.
+    LEASE = "lease"
+    #: Proposal-only: an M.I.O. observation objective, by reference. Distinct
+    #: from ``advisory`` so an Engage/action advisory ref cannot fill that slot.
+    OBSERVATION_OBJECTIVE = "observation_objective"
 
 
 #: A typed ref is a kind, the **first** colon, and an opaque body.

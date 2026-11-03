@@ -125,6 +125,7 @@ _PINNED_LITERALS: dict[tuple[str, str], object] = {
     ("CredentialLure", "decoy_only"): True,
     ("NarrativeManifest", "synthetic_only"): True,
     ("EnvironmentActivationDecision", "decision_authority"): "azazel-edge",
+    ("EnvironmentActivationDecisionV02", "decision_authority"): "azazel-edge",
     ("EnvironmentTransitionDecision", "decision_authority"): "azazel-edge",
     ("EnvironmentTerminationDecision", "decision_authority"): "azazel-edge",
     # A defensive-state projection reports a posture a product-local authority
@@ -139,6 +140,7 @@ _PINNED_LITERALS: dict[tuple[str, str], object] = {
     ("EffectivenessAdvisory", "authority"): "advisory_only",
     ("EffectivenessAdvisory", "executable"): False,
     ("InteractionObservation", "authority"): "descriptive_only",
+    ("InteractionObservationV02", "authority"): "descriptive_only",
     # Outcome-as-Evidence facts (v0.9.0rc1): a producer states a fact or a
     # non-executable assessment; neither carries action authority.
     ("ExecutionRefV0", "authority_class"): "producer_execution_fact",
