@@ -71,6 +71,13 @@ class RefKind(str, Enum):
     OUTCOME = "outcome"
     ENVELOPE = "envelope"
     FIXTURE = "fixture"
+    #: A non-executable observation objective (Fabric#72). A reference to the
+    #: record of one; it asks for observation and confers no authority.
+    OBSERVATION_OBJECTIVE = "observation_objective"
+    #: A hypothesis an objective is organized around. Never a finding.
+    HYPOTHESIS = "hypothesis"
+    #: The framing an objective was posed under.
+    FRAME = "frame"
 
 
 #: A typed ref is a kind, the **first** colon, and an opaque body.

@@ -47,7 +47,11 @@ from .refs import (
 )
 from .validation import (
     BANNED_EFFECT_AUTHORITY_FIELDS,
+    COMMAND_SEGMENTS,
+    LIMITATION_TOKEN_PATTERN,
     SECRET_MATERIAL_MARKERS,
+    assert_limitation_token,
+    assert_no_command_segments,
     assert_bounded_fact_payload,
     assert_effect_chain_consistent,
     assert_no_effect_authority_fields,
@@ -59,6 +63,10 @@ from .validation import (
 
 __all__ = [
     "BANNED_EFFECT_AUTHORITY_FIELDS",
+    "COMMAND_SEGMENTS",
+    "LIMITATION_TOKEN_PATTERN",
+    "assert_limitation_token",
+    "assert_no_command_segments",
     "OBSERVABLE_AUTHORITY_CLASSES",
     "OPAQUE_REF_PATTERN",
     "SECRET_MATERIAL_MARKERS",

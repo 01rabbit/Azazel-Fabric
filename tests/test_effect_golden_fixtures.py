@@ -51,6 +51,8 @@ MODEL_FOR_FIXTURE = {
     # because it had no working code path.
     "effect_shadow_defensive_effect_ref_v0.json": DefensiveEffectRef,
     "effect_shadow_presented_terrain_v0.json": PresentedTerrainRef,
+    # Fabric#72: an envelope gathered under an observation objective.
+    "effect_knowledge_objective_envelope_v0.json": OutcomeObservationEnvelope,
 }
 
 
