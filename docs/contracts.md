@@ -390,7 +390,7 @@ across Edge, Gadget, AZ-06 and Knowledge: `DefensiveEffectRef`,
 `ReplayProvenance`, over typed opaque references and a six-way authority
 classification whose unknown value coerces to the weakest reading.
 
-The envelope may also carry optional, non-executable `objective_ref`,
+The envelope may also carry optional, non-executable `observation_objective_ref`,
 `hypothesis_refs`, `frame_ref` and `limitations` (Fabric#72, additive; see
 `effect-contracts.md` §7a).
 

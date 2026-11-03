@@ -459,7 +459,7 @@ class ReplayProvenance(_StrictFrozenModel):
 #: exactly the bytes it did under `v0.9.0rc5` and a consumer still pinned to
 #: that tag (which forbids unknown fields) can read it.
 _ENVELOPE_RC6_OPTIONAL_FIELDS = (
-    "objective_ref",
+    "observation_objective_ref",
     "hypothesis_refs",
     "frame_ref",
     "limitations",
@@ -489,11 +489,11 @@ class OutcomeObservationEnvelope(_StrictFrozenModel):
     presentation_ref: str | None = Field(default=None, max_length=256)
     actor_session_ref: str | None = Field(default=None, max_length=256)
     #: Optional since `v0.9.0rc6` (Fabric#72). The non-executable observation
-    #: objective this envelope was gathered under. Typed `objective:`. It names
+    #: objective this envelope was gathered under. Typed `observation_objective:`. It names
     #: what was looked for; it does not say a decision was made, and it never
     #: replaces `decision_ref`, which stays the only link to an authenticated
     #: producer decision.
-    objective_ref: str | None = Field(default=None, min_length=1, max_length=256)
+    observation_objective_ref: str | None = Field(default=None, min_length=1, max_length=256)
     #: Hypotheses the objective was organized around. Typed `hypothesis:`.
     hypothesis_refs: tuple[str, ...] = Field(default_factory=tuple, max_length=8)
     #: The framing the objective was posed under. Typed `frame:`.
@@ -546,14 +546,14 @@ class OutcomeObservationEnvelope(_StrictFrozenModel):
 
         # Fabric#72: objective / hypothesis / frame refs are observation
         # context. Each slot takes exactly its own kind.
-        if self.objective_ref is not None:
-            require_ref_kind(self.objective_ref, RefKind.OBJECTIVE, field="objective_ref")
+        if self.observation_objective_ref is not None:
+            require_ref_kind(self.observation_objective_ref, RefKind.OBSERVATION_OBJECTIVE, field="observation_objective_ref")
         for value in self.hypothesis_refs:
             require_ref_kind(value, RefKind.HYPOTHESIS, field="hypothesis_refs")
         if self.frame_ref is not None:
             require_ref_kind(self.frame_ref, RefKind.FRAME, field="frame_ref")
         has_objective_context = bool(
-            self.objective_ref is not None
+            self.observation_objective_ref is not None
             or self.hypothesis_refs
             or self.frame_ref is not None
         )

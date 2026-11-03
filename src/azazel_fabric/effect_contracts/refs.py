@@ -73,7 +73,7 @@ class RefKind(str, Enum):
     FIXTURE = "fixture"
     #: A non-executable observation objective (Fabric#72). A reference to the
     #: record of one; it asks for observation and confers no authority.
-    OBJECTIVE = "objective"
+    OBSERVATION_OBJECTIVE = "observation_objective"
     #: A hypothesis an objective is organized around. Never a finding.
     HYPOTHESIS = "hypothesis"
     #: The framing an objective was posed under.

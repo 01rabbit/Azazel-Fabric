@@ -271,7 +271,7 @@ def golden_knowledge_objective_envelope() -> dict[str, Any]:
         environment_ref="environment:env-golden-1",
         presentation_ref=_PRESENTATION,
         actor_session_ref="session:golden-actor-1",
-        objective_ref="objective:golden-mio-objective-1",
+        observation_objective_ref="observation_objective:golden-mio-objective-1",
         hypothesis_refs=("hypothesis:golden-mio-hypothesis-1", "hypothesis:golden-mio-hypothesis-2"),
         frame_ref="frame:golden-mio-frame-1",
         outcome_observation_refs=("gadget-outcome-golden-1",),

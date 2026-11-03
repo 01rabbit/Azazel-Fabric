@@ -26,7 +26,7 @@ from azazel_fabric.testing.effect import (
 )
 
 FIXTURES = Path(__file__).parent / "fixtures" / "effect"
-NEW_FIELDS = ("objective_ref", "hypothesis_refs", "frame_ref", "limitations")
+NEW_FIELDS = ("observation_objective_ref", "hypothesis_refs", "frame_ref", "limitations")
 
 
 def _load(name: str) -> dict:
@@ -34,10 +34,10 @@ def _load(name: str) -> dict:
 
 
 def test_the_new_ref_kinds_exist_and_existing_kinds_are_untouched():
-    assert RefKind.OBJECTIVE.value == "objective"
+    assert RefKind.OBSERVATION_OBJECTIVE.value == "observation_objective"
     assert RefKind.HYPOTHESIS.value == "hypothesis"
     assert RefKind.FRAME.value == "frame"
-    assert parse_ref("objective:o1")[0] is RefKind.OBJECTIVE
+    assert parse_ref("observation_objective:o1")[0] is RefKind.OBSERVATION_OBJECTIVE
     assert parse_ref("advisory:o1")[0] is RefKind.ADVISORY
     assert parse_ref("decision:d1")[0] is RefKind.DECISION
 
@@ -47,7 +47,7 @@ def test_an_rc5_payload_still_validates_and_round_trips_byte_for_byte():
     stored = _load("effect_knowledge_outcome_envelope_v0.json")
     assert not set(NEW_FIELDS) & set(stored)
     model = OutcomeObservationEnvelope.model_validate(stored)
-    assert model.objective_ref is None
+    assert model.observation_objective_ref is None
     assert model.frame_ref is None
     assert model.hypothesis_refs == ()
     assert model.limitations == ()

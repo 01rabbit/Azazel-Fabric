@@ -217,16 +217,18 @@ optional fields, all empty by default:
 
 | Field | Kind it must be | Bound |
 | --- | --- | --- |
-| `objective_ref` | `objective:` | one |
+| `observation_objective_ref` | `observation_objective:` | one |
 | `hypothesis_refs` | `hypothesis:` | at most 8 |
 | `frame_ref` | `frame:` | one |
 | `limitations` | free-form short strings | at most 128, as `EffectObservation.limitations` |
+
+**A hypothesis ref is read together with the frame ref.** A producer such as MIO may mint hypothesis ids that are local to one cycle (`h1`, `h2`), unique only within a frame; `hypothesis_refs` alone does not identify a hypothesis globally, so consumers must interpret it as the pair (`frame_ref`, `hypothesis_ref`). Fabric does not enforce this pairing in rc6.
 
 An objective is **non-executable** and **never an Edge decision**. It does not
 fill `decision_ref`, does not make anything live, and does not carry authority.
 Specifically:
 
-- each slot takes exactly its own kind; an `objective_ref` of `decision:...`,
+- each slot takes exactly its own kind; an `observation_objective_ref` of `decision:...`,
   `advisory:...` or an untyped value is refused;
 - ref bodies keep the opaque grammar (no slash, whitespace, quote or newline),
   so a command line, path or URL cannot be a ref body;
