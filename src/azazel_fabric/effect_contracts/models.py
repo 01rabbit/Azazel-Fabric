@@ -25,7 +25,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, SerializerFunctionWrapHandler, model_serializer, model_validator
 
 from azazel_fabric.schema.defensive_state import DefensiveState
 
@@ -454,6 +454,18 @@ class ReplayProvenance(_StrictFrozenModel):
         return self
 
 
+#: Fields added to the envelope in `v0.9.0rc6` (Fabric#72). They are left out of
+#: a dump while empty, so an envelope that does not use them serializes to
+#: exactly the bytes it did under `v0.9.0rc5` and a consumer still pinned to
+#: that tag (which forbids unknown fields) can read it.
+_ENVELOPE_RC6_OPTIONAL_FIELDS = (
+    "objective_ref",
+    "hypothesis_refs",
+    "frame_ref",
+    "limitations",
+)
+
+
 class OutcomeObservationEnvelope(_StrictFrozenModel):
     """Correlates already-produced outcome facts. It adds no verdict.
 
@@ -476,6 +488,16 @@ class OutcomeObservationEnvelope(_StrictFrozenModel):
     environment_ref: str | None = Field(default=None, max_length=256)
     presentation_ref: str | None = Field(default=None, max_length=256)
     actor_session_ref: str | None = Field(default=None, max_length=256)
+    #: Optional since `v0.9.0rc6` (Fabric#72). The non-executable observation
+    #: objective this envelope was gathered under. Typed `objective:`. It names
+    #: what was looked for; it does not say a decision was made, and it never
+    #: replaces `decision_ref`, which stays the only link to an authenticated
+    #: producer decision.
+    objective_ref: str | None = Field(default=None, min_length=1, max_length=256)
+    #: Hypotheses the objective was organized around. Typed `hypothesis:`.
+    hypothesis_refs: tuple[str, ...] = Field(default_factory=tuple, max_length=8)
+    #: The framing the objective was posed under. Typed `frame:`.
+    frame_ref: str | None = Field(default=None, min_length=1, max_length=256)
     #: Ids of ``outcome_contracts.OutcomeObservationV0`` records. The envelope
     #: correlates them; it does not restate or re-interpret them.
     outcome_observation_refs: tuple[str, ...] = Field(default_factory=tuple, max_length=128)
@@ -489,10 +511,21 @@ class OutcomeObservationEnvelope(_StrictFrozenModel):
     confounders: tuple[str, ...] = Field(default_factory=tuple, max_length=128)
     impact_observations: dict[str, Any] = Field(default_factory=dict)
     evidence_refs: tuple[str, ...] = Field(default_factory=tuple, max_length=128)
+    #: What this envelope could not show. Same bound as
+    #: `EffectObservation.limitations`. Additive since `v0.9.0rc6`.
+    limitations: tuple[str, ...] = Field(default_factory=tuple, max_length=128)
     provenance: ReplayProvenance | None = None
     observed_at: str = Field(min_length=1, max_length=64)
     authority_class: AuthorityClass
     directive: Literal[False] = False
+
+    @model_serializer(mode="wrap")
+    def _omit_empty_rc6_fields(self, handler: SerializerFunctionWrapHandler) -> dict[str, Any]:
+        data = handler(self)
+        for name in _ENVELOPE_RC6_OPTIONAL_FIELDS:
+            if name in data and data[name] in (None, [], ()):
+                del data[name]
+        return data
 
     @model_validator(mode="after")
     def _validate(self) -> "OutcomeObservationEnvelope":
@@ -509,6 +542,30 @@ class OutcomeObservationEnvelope(_StrictFrozenModel):
         if self.presentation_ref is not None:
             require_ref_kind(
                 self.presentation_ref, RefKind.PRESENTATION, field="presentation_ref"
+            )
+
+        # Fabric#72: objective / hypothesis / frame refs are observation
+        # context. Each slot takes exactly its own kind.
+        if self.objective_ref is not None:
+            require_ref_kind(self.objective_ref, RefKind.OBJECTIVE, field="objective_ref")
+        for value in self.hypothesis_refs:
+            require_ref_kind(value, RefKind.HYPOTHESIS, field="hypothesis_refs")
+        if self.frame_ref is not None:
+            require_ref_kind(self.frame_ref, RefKind.FRAME, field="frame_ref")
+        has_objective_context = bool(
+            self.objective_ref is not None
+            or self.hypothesis_refs
+            or self.frame_ref is not None
+        )
+        if (
+            has_objective_context
+            and self.decision_ref is None
+            and self.authority_class is AuthorityClass.ACTIVE_MATERIALIZED
+        ):
+            raise ValueError(
+                "an envelope carrying an objective, hypothesis or frame but no "
+                "decision_ref must not claim active_materialized; an objective "
+                "is not a decision and does not make anything live"
             )
 
         start = parse_timestamp(self.window_start, field="window_start")
