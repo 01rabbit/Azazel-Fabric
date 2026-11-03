@@ -382,9 +382,20 @@ def _open_annotation(annotation: Any) -> str | None:
     if getattr(annotation, "__name__", None) == "JsonValue":
         return "JsonValue"
     for candidate in (annotation, typing.get_origin(annotation)):
-        if isinstance(candidate, type) and issubclass(candidate, collections.abc.Mapping):
+        if _is_class(candidate) and issubclass(candidate, collections.abc.Mapping):
             return f"a mapping ({annotation!r})"
     return None
+
+
+def _is_class(annotation: Any) -> bool:
+    """A real class, not a parametrised alias.
+
+    On Python 3.10, `isinstance(dict[str, str], type)` is True while
+    `issubclass(dict[str, str], ...)` raises; 3.11 and later return False.
+    """
+    import types
+
+    return isinstance(annotation, type) and not isinstance(annotation, types.GenericAlias)
 
 
 def _nested_annotations(annotation: Any) -> list[Any]:
@@ -420,7 +431,7 @@ def test_every_model_under_a_cti_response_is_closed():
                 if reason is not None:
                     open_models.append(f"{model.__name__}.{name} ({reason})")
                     continue
-                if isinstance(annotation, type) and issubclass(annotation, BaseModel):
+                if _is_class(annotation) and issubclass(annotation, BaseModel):
                     pending.append(annotation)
                     continue
                 stack.extend(_nested_annotations(annotation))

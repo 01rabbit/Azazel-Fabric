@@ -34,10 +34,11 @@ way, each before its tag existed.
 `v0.9.0rc6`'s digest is in the tree and **is not signed yet**.
 `release/v0.9.0rc6.digest.json.sig` does not exist, and
 `test_every_published_candidate_is_signed` is red until it does — the same
-state `v0.9.0rc3` was in while it waited for its signature. Which key signs it
-is the release owner's decision under Fabric#61, which paused signing with the
-key that `git stash -u` once pulled into `.git`; a new key is added to
-`release/signing-keys.json` beside the old one, never in place of it.
+state `v0.9.0rc3` was in while it waited for its signature. The release owner
+decided to resume signing with the existing `release-owner` key in
+[Fabric#61](https://github.com/01rabbit/Azazel-Fabric/issues/61#issuecomment-6399309162).
+The trusted-key map stays unchanged. The key must remain outside the repository,
+and signing must not use `git stash`.
 
 ```bash
 python3 tools/rc_signature.py release/v0.9.0rc4.digest.json --check
@@ -250,7 +251,10 @@ The objects were dropped and pruned. **That is removal from git's object
 store, not a guarantee the key is unrecoverable**: backups, shell history,
 swap, unallocated blocks and any copy of the directory made during the window
 are all outside what `gc` touches. The key is treated as possibly exposed,
-which is what #61 records and why signing with it is paused.
+which is what #61 records. The release owner's subsequent decision in #61
+resumes signing with the existing key, accepting that residual risk and
+requiring the key to stay outside the repository and no `git stash` during
+signing. It does not change the exposure assessment or the trusted-key map.
 
 Use `git -c stash.showIncludeUntracked=false` habits aside — the working
 instruction is simpler: move the change to a branch, or commit it. There is no
