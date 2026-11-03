@@ -20,6 +20,16 @@ interpreter's recursion limit.
 
 ### Added
 
+- **Observation objective refs on `OutcomeObservationEnvelope`** (Fabric#72,
+  proposed): `RefKind.OBJECTIVE`, `HYPOTHESIS`, `FRAME`, and optional
+  `objective_ref`, `hypothesis_refs` (at most 8), `frame_ref`, `limitations`
+  on the envelope. Non-executable; they never replace `decision_ref`, and an
+  envelope carrying them without a `decision_ref` may not claim
+  `active_materialized`. **Additive:** the fields are omitted from a dump when
+  empty, so `v0.9.0rc5` payloads validate and serialize byte-for-byte. New
+  vector `effect_knowledge_objective_envelope_v0.json` and rejection fixtures.
+  See `docs/effect-contracts.md` §7a.
+
 - **Experimental external-security profile** (`external_security_contracts`,
   Fabric#25): `ExternalObservationEnvelope/v0.1`, `AdvisoryContextEnvelope/v0.1`,
   `ExposureChangeProposal/v0.1`, `DeviceChangeObservation/v0.1`, with

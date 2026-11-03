@@ -210,6 +210,44 @@ its `telemetry_gaps`, and one claiming complete coverage may not name any.
 Unnamed telemetry loss is how a partial observation comes to read as a whole
 one.
 
+## 7a. Observation objectives on the envelope (proposed for `v0.9.0rc6`, Fabric#72)
+
+An `OutcomeObservationEnvelope` may say what the observation was *for*. Four
+optional fields, all empty by default:
+
+| Field | Kind it must be | Bound |
+| --- | --- | --- |
+| `objective_ref` | `objective:` | one |
+| `hypothesis_refs` | `hypothesis:` | at most 8 |
+| `frame_ref` | `frame:` | one |
+| `limitations` | free-form short strings | at most 128, as `EffectObservation.limitations` |
+
+An objective is **non-executable** and **never an Edge decision**. It does not
+fill `decision_ref`, does not make anything live, and does not carry authority.
+Specifically:
+
+- each slot takes exactly its own kind; an `objective_ref` of `decision:...`,
+  `advisory:...` or an untyped value is refused;
+- ref bodies keep the opaque grammar (no slash, whitespace, quote or newline),
+  so a command line, path or URL cannot be a ref body;
+- the existing directive and authority-field walk still runs over the whole
+  payload;
+- an envelope with an objective, hypothesis or frame but **no** `decision_ref`
+  must not claim `active_materialized`; `producer_decision_ref` was already
+  refused for every envelope. `observed_fact` and `planned_shadow` remain fine.
+
+**Compatibility.** Additive. Old payloads validate unchanged. The four fields
+are omitted from a dump while empty, so an envelope that does not use them
+serializes to exactly its `v0.9.0rc5` bytes (the published
+`effect_knowledge_outcome_envelope_v0.json` is unchanged), and a consumer
+still pinned to `rc5`, which forbids unknown fields, can read it. An envelope
+that *does* use the fields cannot be read by an `rc5` consumer; that consumer
+must re-pin. Slot kinds for `environment_ref` and `actor_session_ref` are **not**
+tightened here: doing so would refuse values `rc5` accepted.
+
+Vectors: `effect_knowledge_objective_envelope_v0.json` and the rejection set
+`effect_objective_envelope_rejections_v0.json`.
+
 ## 8. Golden vectors
 
 `azazel_fabric.testing.effect` publishes one chain across four producers —
