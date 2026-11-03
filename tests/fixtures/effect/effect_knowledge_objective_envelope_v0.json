@@ -1,0 +1,42 @@
+{
+  "actor_session_ref": "session:golden-actor-1",
+  "authority_class": "observed_fact",
+  "confounders": [],
+  "coverage_complete": true,
+  "decision_ref": "decision-golden-effect-1",
+  "directive": false,
+  "effect_ref": "effect:golden-effect-1",
+  "envelope_id": "envelope:golden-objective-1",
+  "environment_ref": "environment:env-golden-1",
+  "evidence_refs": [
+    "evidence:deception-runtime-golden-1"
+  ],
+  "frame_ref": "frame:golden-mio-frame-1",
+  "hypothesis_refs": [
+    "hypothesis:golden-mio-hypothesis-1",
+    "hypothesis:golden-mio-hypothesis-2"
+  ],
+  "impact_observations": {},
+  "limitations": [
+    "no_interaction_observed_is_not_evidence_of_safety"
+  ],
+  "objective_ref": "objective:golden-mio-objective-1",
+  "observation_class": "presented_terrain_engagement",
+  "observed_at": "2026-08-20T00:30:00+00:00",
+  "outcome_observation_refs": [
+    "gadget-outcome-golden-1"
+  ],
+  "presentation_ref": "presentation:golden-effect-1",
+  "producer_node": "knowledge-golden-1",
+  "producer_product": "knowledge",
+  "producer_version": "golden-1",
+  "provenance": null,
+  "schema_version": "outcome-observation-envelope/v0.1",
+  "telemetry_coverage": {
+    "deception_runtime": "full"
+  },
+  "telemetry_gaps": [],
+  "trace_id": "trace-golden-effect-1",
+  "window_end": "2026-08-20T00:30:00+00:00",
+  "window_start": "2026-08-20T00:00:00+00:00"
+}
