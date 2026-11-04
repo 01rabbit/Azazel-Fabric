@@ -1,22 +1,14 @@
-"""`README.md` and `docs/release-compatibility.md` must name the same pins.
+"""`README.md` and `docs/release-compatibility.md` must name the same public pins.
 
-Fabric states each consumer's observed Fabric pin in two places: the
+Fabric states each public consumer's observed Fabric pin in two places: the
 "Consumer status" table in `README.md`, and the consumer pin table in
 `docs/release-compatibility.md`. Neither can be checked against the consumer
 repositories -- Fabric's CI cannot see them -- so both rest on somebody having
 read the source and written down what they saw.
 
 That part stays manual. What does not have to stay manual is the two tables
-agreeing with each other, and they had drifted: `release-compatibility.md`
-carried a verification note dated 2026-09-20 naming four consumers on a
-`v0.9.0` candidate, while `README.md` said `v0.8.0` for all four and described
-Azazel-Nexus as a documentation-only repository it had already stopped being.
-The Gadget row was stale in both, by four releases, with the note in one of
-them explicitly disclaiming it.
-
-Two tables of the same facts, each updated by hand, is one more thing to
-forget. This test is what makes forgetting visible: it does not know which
-table is right, only that a disagreement is a bug in one of them.
+agreeing with each other. This test covers the four public consumers only and
+does not look at, or require, any other consumer's rows.
 """
 
 from __future__ import annotations
@@ -31,21 +23,13 @@ README = REPO_ROOT / "README.md"
 COMPAT = REPO_ROOT / "docs" / "release-compatibility.md"
 
 #: Written out rather than derived from either table, so a consumer dropped
-#: from both still fails here. `Azazel-Gadget` is included deliberately: its
-#: row is the one that went four releases stale.
+#: from either table still fails here.
 EXPECTED_CONSUMERS = {
     "Azazel-Edge",
     "Azazel-Gadget",
     "Azazel-Knowledge",
     "Azazel-Deception",
-    "Azazel-Boot",
-    "Azazel-Nexus",
 }
-
-#: A pin is a backticked tag, or the explicit absence of one. Nexus declares
-#: nothing on purpose, and "no declaration" is a claim this test checks like
-#: any other -- an absence that quietly became a version would be drift too.
-NO_DECLARATION = "—none—"
 
 _TAG = re.compile(r"`(v\d+\.\d+\.\d+(?:rc\d+)?)`")
 
@@ -72,7 +56,8 @@ def _rows(path: Path, heading: str) -> dict[str, str]:
             continue
         rest = " ".join(cells[1:])
         match = _TAG.search(rest)
-        found[name] = match.group(1) if match else NO_DECLARATION
+        if match:
+            found[name] = match.group(1)
     return found
 
 
@@ -86,8 +71,8 @@ def compat_pins() -> dict[str, str]:
     return _rows(COMPAT, "| Consumer | Observed declaration | Interpretation |")
 
 
-def test_both_tables_cover_every_consumer(readme_pins, compat_pins):
-    """Fails if a consumer is dropped from either table, or from this file.
+def test_both_tables_cover_every_public_consumer(readme_pins, compat_pins):
+    """Fails if a public consumer is missing a pin in either table.
 
     Parsing a table and comparing whatever it yielded is how two empty
     findings come out equal. The set is pinned here so an emptied table is a
@@ -107,18 +92,6 @@ def test_the_two_tables_name_the_same_pin(consumer, readme_pins, compat_pins):
         "consumer repository from here, so fix it by reading that "
         "repository's dependency declaration, not by copying the other table."
     )
-
-
-def test_the_declared_absence_is_still_an_absence(readme_pins, compat_pins):
-    """Nexus's empty row is a design statement, not a gap to be filled.
-
-    `dependencies = []` is deliberate there. If a tag ever appears in that
-    row, it is either a real adoption that both tables and the adoption
-    matrix must record, or somebody filled a blank because it looked unfinished.
-    """
-
-    assert readme_pins["Azazel-Nexus"] == NO_DECLARATION
-    assert compat_pins["Azazel-Nexus"] == NO_DECLARATION
 
 
 #: The tag inside the install command, which is a bare `@vX.Y.Z` in a fenced

@@ -1,9 +1,10 @@
 # Release Compatibility and Support Truth
 
-Status: **R0 coordination baseline, 2026-09-19; re-verified 2026-09-19 against
-the consumer repositories.** This document records the published Fabric release
-and observed consumer dependency declarations. An observed pin is not, by
-itself, an interoperability certification.
+Status: **R0 coordination baseline, 2026-09-19; the four public consumer pins
+re-checked 2026-11-04.** Azazel-Edge, Azazel-Gadget, Azazel-Knowledge and
+Azazel-Deception were checked on 2026-11-04. This document records the published
+Fabric release and observed consumer dependency declarations. An observed pin is
+not, by itself, an interoperability certification.
 
 ## Current Fabric release
 
@@ -70,25 +71,25 @@ support.
 
 | Consumer | Observed declaration | Interpretation |
 |---|---|---|
-| Azazel-Edge | `v0.9.0rc2` in `requirements/fabric.txt` | Current reference authority consumer. An **optional** extra: Edge's arbiter runs with no Fabric installed |
-| Azazel-Gadget | `v0.8.0` in `requirements.txt` | The only consumer on the latest **stable** tag. It uses `view` + `schema.mode` and none of the candidate families, so it has no reason to carry a candidate (Azazel-Gadget#22) |
-| Azazel-Knowledge | `v0.9.0rc2` in the `api` optional dependency (`pyproject.toml`) | Advisory API boundary only; core stays dependency-minimal |
-| Azazel-Deception | `v0.9.0rc2` in `pyproject.toml` | Current AZ-06 runtime declaration |
-| Azazel-Nexus | **no declaration** | No longer documentation-only — it carries code with deliberately zero dependencies. Its absence from this table is a design choice, not an omission |
-| Azazel-Boot | `v0.9.0rc1` in the `fabric` optional extra (`pyproject.toml`, ADR-0004) | Exact-tag source pin, one release behind. An image lock is still required before a Boot implementation release |
+| Azazel-Edge | `v0.9.0rc4` in `requirements/fabric.txt` (checked 2026-11-04) | Current reference authority consumer. An **optional** extra: Edge's arbiter runs with no Fabric installed |
+| Azazel-Gadget | `v0.8.0` in `requirements.txt` (checked 2026-11-04) | The consumer on the latest **stable** tag. It uses `view` + `schema.mode` and none of the candidate families (Azazel-Gadget#22) |
+| Azazel-Knowledge | `v0.9.0rc5` in the `api` optional dependency (`pyproject.toml`) (checked 2026-11-04) | Advisory API boundary only; core stays dependency-minimal |
+| Azazel-Deception | `v0.9.0rc5` in `pyproject.toml` (checked 2026-11-04) | AZ-06 runtime declaration |
+| Azazel-Nexus | **no declaration** (last observed 2026-09-20; **stale, unverified** on 2026-11-04) | No longer documentation-only — it carries code with deliberately zero dependencies. Its absence from this table is a design choice, not an omission |
+| Azazel-Boot | `v0.9.0rc1` in the `fabric` optional extra (`pyproject.toml`, ADR-0004) (last observed 2026-09-20; **stale, unverified** on 2026-11-04) | Not a current reading. An image lock is still required before a Boot implementation release |
 
-Verification note (2026-09-20): every row was read directly from that
-repository's dependency declaration. The Gadget row had been carried forward
-from an earlier audit and was stale by four releases; it is now read from
-`requirements.txt:19` at Azazel-Gadget `main` `7aeb923`, and that repository's
-CI installs the manifest, so the tag it names is exercised rather than only
-declared.
+Verification note (2026-11-04): the four public consumer pins — Azazel-Edge,
+Azazel-Gadget, Azazel-Knowledge and Azazel-Deception — were checked against their
+dependency declarations on 2026-11-04. Any other row in the table above was last
+observed on 2026-09-20 and was not re-verified on 2026-11-04; it is stale and
+must not be read as a current pin. An earlier version of this note said every row
+had been freshly verified on 2026-09-20. That claim was misleading and is
+withdrawn.
 
-`v0.8.0` is no longer the point the consumers agree on: four of them declare a
-`v0.9.0` candidate and they do not agree on which one. That is the expected
-shape while candidates circulate — each product adopts on its own schedule —
-but it means "the reference release" is not a single answer right now, and a
-statement that names one is wrong until `v0.9.0` is cut.
+Of the four rechecked consumers, Edge (`v0.9.0rc4`) and Knowledge and Deception
+(`v0.9.0rc5`) declare `v0.9.0` candidates, and not the same one; Gadget declares
+the stable `v0.8.0`. `v0.8.0` is therefore not the point all four agree on, and a
+statement that names a single "reference release" is wrong until `v0.9.0` is cut.
 
 ## Contract family adoption and the R1c gate
 
@@ -149,21 +150,18 @@ included, that name the module:
 | Azazel-Edge | `v0.9.0rc4` | `4b5242c` | yes — 4 files |
 | Azazel-Deception | `v0.9.0rc5` | `9cd7987` | yes — 3 files |
 | Azazel-Nexus | `v0.9.0rc5` (the `fabric` extra, and `FABRIC_PIN` in `fabric_boundary.py`) | `94d70b1` | no |
-| Azazel-Knowledge | `v0.9.0rc2` | `2445c1b` | no |
+| Azazel-Knowledge | `v0.9.0rc5` (re-read 2026-11-04; commit not recorded) | `2445c1b` (2026-10-25) | no (2026-10-25 reading) |
 | Azazel-Boot | **no declaration** | `8c90965` | no |
 | Azazel-Gadget | `v0.8.0` | `7aeb923` | no |
 
-Four rows moved since the 2026-09-20 observation. Deception and Nexus now pin
-`v0.9.0rc5`; Azazel-Boot no longer declares Fabric at all (its
-`pyproject.toml` has `dependencies = []` and no Fabric extra); and
-Azazel-Gadget was read this time rather than left `unknown`. Edge still pins
-`v0.9.0rc4`, so it skips `rc5`.
+Edge still pins `v0.9.0rc4`, so it skips `rc5`. Knowledge was re-read on
+2026-11-04 as declaring `v0.9.0rc5`; its commit was not recorded in this pass, and
+the `Uses effect_contracts` reading for it is the 2026-10-25 one.
 
-The *Observed consumer declarations* table above, and the consumer status in
-`README.md` that `tests/test_consumer_pin_tables_agree.py` holds it to, still
-record the 2026-09-20 reading — Nexus as a deliberate non-declaration
-included. They are re-read together once the products move to `v0.9.0rc6`,
-rather than twice in a row by hand.
+For the four public consumers, the *Observed consumer declarations* table above
+and the consumer status in `README.md` agree as of 2026-11-04, and
+`tests/test_consumer_pin_tables_agree.py` holds the two to that agreement. Those
+two tables are re-read together when the public pins move.
 
 **Nexus, Deception and Edge each refuse any Fabric but the exact tag they
 pin.** Nexus's `fabric_boundary.py` refuses an installed Fabric whose
