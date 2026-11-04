@@ -113,6 +113,26 @@ def test_canonical_bytes_keep_array_order_significant():
         KnowledgeContextRequestV1.model_validate(_request())
     )
 
+    limitations = _response(limitations=["first limit", "second limit"])
+    reversed_limitations = _response(limitations=["second limit", "first limit"])
+    assert canonical_knowledge_context_bytes(
+        KnowledgeContextResponseV1.model_validate(limitations)
+    ) != canonical_knowledge_context_bytes(
+        KnowledgeContextResponseV1.model_validate(reversed_limitations)
+    )
+
+    inferences = _response()
+    second_inference = copy.deepcopy(inferences["inferences"][0])
+    second_inference["inference_id"] = "inf-2"
+    inferences["inferences"].append(second_inference)
+    reversed_inferences = copy.deepcopy(inferences)
+    reversed_inferences["inferences"].reverse()
+    assert canonical_knowledge_context_bytes(
+        KnowledgeContextResponseV1.model_validate(inferences)
+    ) != canonical_knowledge_context_bytes(
+        KnowledgeContextResponseV1.model_validate(reversed_inferences)
+    )
+
 
 def test_equivalent_instants_canonicalize_to_the_same_utc_text():
     shifted = _request(requested_at="2026-11-04T09:00:00+09:00")
@@ -706,6 +726,22 @@ def test_each_supported_snapshot_state_is_accepted():
             })
         )
         assert response.snapshot.state == state
+
+
+def test_stale_snapshot_is_not_promoted_by_future_semantic_expiry():
+    response = KnowledgeContextResponseV1.model_validate(
+        _response(
+            snapshot={
+                "ref": "snapshot:2026-11-04-0001",
+                "state": "stale",
+                "as_of": "2026-11-04T00:00:00Z",
+            },
+            expires_at="2099-01-01T00:00:00Z",
+        )
+    )
+
+    assert response.snapshot.state == "stale"
+    assert b'"state":"stale"' in canonical_knowledge_context_bytes(response)
 
 
 def test_semantic_expiry_is_ordered_by_instant_not_by_text():
