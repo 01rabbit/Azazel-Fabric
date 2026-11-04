@@ -18,8 +18,9 @@ from azazel_fabric.mio_contracts.validation import (
 )
 
 _RFC3339_UTC = re.compile(
-    r"\A[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}"
-    r"(?:\.[0-9]{1,6})?Z\Z",
+    r"\A(?P<year>[0-9]{4})-(?P<month>[0-9]{2})-(?P<day>[0-9]{2})"
+    r"T(?P<hour>[0-9]{2}):(?P<minute>[0-9]{2}):(?P<second>[0-9]{2})"
+    r"(?:\.(?P<fraction>[0-9]{1,6}))?Z\Z",
     re.ASCII,
 )
 
@@ -32,10 +33,24 @@ def _utc_timestamp(value: str, *, field: str) -> datetime:
     fractional precision are refused for deterministic comparison.
     """
 
-    if len(value) > 27 or _RFC3339_UTC.fullmatch(value) is None:
+    if len(value) > 27:
+        raise ValueError(f"{field} must use the bounded RFC3339 UTC profile")
+    match = _RFC3339_UTC.fullmatch(value)
+    if match is None:
         raise ValueError(f"{field} must use the bounded RFC3339 UTC profile")
     try:
-        return datetime.fromisoformat(value[:-1] + "+00:00").astimezone(timezone.utc)
+        parts = match.groupdict()
+        fraction = (parts["fraction"] or "").ljust(6, "0")
+        return datetime(
+            int(parts["year"]),
+            int(parts["month"]),
+            int(parts["day"]),
+            int(parts["hour"]),
+            int(parts["minute"]),
+            int(parts["second"]),
+            int(fraction or "0"),
+            tzinfo=timezone.utc,
+        )
     except ValueError as exc:
         raise ValueError(f"{field} is not a valid RFC3339 UTC instant") from exc
 

@@ -210,7 +210,7 @@ its `telemetry_gaps`, and one claiming complete coverage may not name any.
 Unnamed telemetry loss is how a partial observation comes to read as a whole
 one.
 
-## 7a. Observation objectives on the envelope (proposed for `v0.9.0rc6`, Fabric#72)
+## 7a. Observation objectives on the envelope (proposed for `v0.9.0rc7`, Fabric#72)
 
 An `OutcomeObservationEnvelope` may say what the observation was *for*. Four
 optional fields, all empty by default:

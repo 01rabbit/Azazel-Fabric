@@ -1,8 +1,9 @@
 # External-security observation, advisory, and exposure contracts
 
 Status: **experimental** (`azazel_fabric.external_security_contracts`,
-Fabric#25). On `main` as `0.9.0rc6.dev0`; the minimum version is the next
-candidate, `0.9.0rc6`, which is **unpublished**. No producer, no consumer, **no
+Fabric#25). Minimum compatible version: `0.9.0rc7`, the current unpublished
+candidate (`0.9.0rc7.dev0`); `rc6` was not cut as a tag.
+No producer, no consumer, **no
 compatibility promise**, and outside the R1c stable gate (Fabric#23 program
 decision). Additive and optional: no existing model changed, and nothing else
 in Fabric imports this family.

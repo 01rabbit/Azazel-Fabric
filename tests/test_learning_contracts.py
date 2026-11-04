@@ -12,6 +12,7 @@ from azazel_fabric.mio_contracts import (
     TeacherReviewDispositionV0,
 )
 from azazel_fabric.mio_contracts import canonical_mio_json
+from azazel_fabric.mio_contracts.learning import _utc_timestamp
 
 
 FIXTURE = Path(__file__).parent / "fixtures" / "learning" / "mio_learning_provenance_bundle_v0.json"
@@ -183,6 +184,8 @@ def test_all_time_fields_require_bounded_rfc3339_utc(record_path, field):
         "2026-10-30T00:06:00",
         "2026-10-30T00:06:00.1234567Z",
         "2026-02-30T00:06:00Z",
+        "2026-10-30T24:00:00Z",
+        "2026-10-30T00:06:60Z",
     ],
 )
 def test_timestamp_profile_rejects_offsets_naive_precision_and_invalid_calendar(timestamp):
@@ -190,6 +193,22 @@ def test_timestamp_profile_rejects_offsets_naive_precision_and_invalid_calendar(
     data["candidates"][0]["proposed_at"] = timestamp
     with pytest.raises(ValidationError):
         LearningProvenanceBundleV0.model_validate(data)
+
+
+@pytest.mark.parametrize(
+    "fraction,microsecond",
+    [
+        ("1", 100_000),
+        ("12", 120_000),
+        ("123", 123_000),
+        ("1234", 123_400),
+        ("12345", 123_450),
+        ("123456", 123_456),
+    ],
+)
+def test_timestamp_profile_accepts_one_to_six_fractional_digits(fraction, microsecond):
+    timestamp = f"2026-10-30T00:06:00.{fraction}Z"
+    assert _utc_timestamp(timestamp, field="timestamp").microsecond == microsecond
 
 
 @pytest.mark.parametrize(

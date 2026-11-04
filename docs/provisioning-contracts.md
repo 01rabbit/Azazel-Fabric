@@ -230,7 +230,7 @@ simultaneous untested pin change.
 | `mio-contracts/v0.1` | `0.9.0rc1` | M.I.O. cognition family (candidate) |
 | `defensive-state/v0.1` | `0.9.0rc2` | canonical `DefensiveState` vocabulary and `coerce_defensive_state` (candidate) |
 | `effect-contracts/v0.1` | `0.9.0rc2` | cross-series effect / outcome / presented-terrain family (candidate) |
-| `external-security-contracts/v0.1` | `0.9.0rc7` | **experimental** external-security profile (Fabric#25); next candidate **unpublished** on `main` as `0.9.0rc7.dev0`. No compatibility promise |
+| `external-security-contracts/v0.1` | `0.9.0rc7` | **experimental** external-security profile (Fabric#25); current minimum is the unpublished candidate `0.9.0rc7.dev0` because `rc6` was never cut as a tag. No compatibility promise |
 | `mio-learning-provenance/v0.1` | `0.9.0rc7` | **experimental proposal** within `mio_contracts` (Fabric#72); additive, optional, next candidate **unpublished** on `main` as `0.9.0rc7.dev0`. No compatibility promise and no producer/consumer adoption claimed |
 
 A minimum version is a compatibility claim, not an admission decision.
