@@ -97,6 +97,22 @@ def test_canonical_bytes_keep_array_order_significant():
     b = canonical_knowledge_context_bytes(KnowledgeContextResponseV1.model_validate(reversed_order))
     assert a != b
 
+    facts = _response()
+    facts["facts"].reverse()
+    assert canonical_knowledge_context_bytes(
+        KnowledgeContextResponseV1.model_validate(facts)
+    ) != canonical_knowledge_context_bytes(
+        KnowledgeContextResponseV1.model_validate(_response())
+    )
+
+    entities = _request()
+    entities["entities"].reverse()
+    assert canonical_knowledge_context_bytes(
+        KnowledgeContextRequestV1.model_validate(entities)
+    ) != canonical_knowledge_context_bytes(
+        KnowledgeContextRequestV1.model_validate(_request())
+    )
+
 
 def test_equivalent_instants_canonicalize_to_the_same_utc_text():
     shifted = _request(requested_at="2026-11-04T09:00:00+09:00")
