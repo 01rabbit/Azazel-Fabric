@@ -17,8 +17,11 @@ from pydantic import ValidationError
 
 from azazel_fabric.knowledge_context import (
     EntityRef,
+    InferenceClaim,
     KnowledgeContextRequestV1,
     KnowledgeContextResponseV1,
+    SnapshotInfo,
+    SourceReportedFact,
     assert_response_correlates,
     canonical_knowledge_context_bytes,
 )
@@ -59,6 +62,14 @@ def test_request_golden_roundtrip_is_byte_stable():
     assert canonical_knowledge_context_bytes(again) == canonical_knowledge_context_bytes(model)
 
 
+def test_golden_fixtures_have_exactly_one_unix_newline():
+    for name in ("request_v1.json", "response_v1.json"):
+        raw = _fixture_bytes(name)
+        assert raw.endswith(b"\n")
+        assert not raw.endswith(b"\n\n")
+        assert b"\r\n" not in raw
+
+
 def test_response_golden_roundtrip_is_byte_stable():
     raw = _fixture_bytes("response_v1.json")
     model = KnowledgeContextResponseV1.model_validate_json(raw)
@@ -97,6 +108,16 @@ def test_canonical_bytes_preserve_non_ascii_text():
     data = _response(unknowns=["ドメインの情報なし"])
     out = canonical_knowledge_context_bytes(KnowledgeContextResponseV1.model_validate(data))
     assert "ドメインの情報なし".encode("utf-8") in out
+
+
+def test_canonical_bytes_escape_quotes_and_backslashes():
+    value = 'quote " and backslash \\ plus 日本語'
+    out = canonical_knowledge_context_bytes(
+        KnowledgeContextResponseV1.model_validate(_response(unknowns=[value]))
+    )
+
+    assert json.loads(out)["unknowns"] == [value]
+    assert b'\\"' in out and b'\\\\' in out
 
 
 def test_canonical_helper_refuses_other_objects():
@@ -164,8 +185,38 @@ def test_canonical_helper_rejects_naive_datetime_from_unvalidated_model_copy():
 
 def test_models_are_frozen():
     model = KnowledgeContextRequestV1.model_validate(_request())
+    response = KnowledgeContextResponseV1.model_validate(_response())
     with pytest.raises(ValidationError):
         model.request_id = "other"  # type: ignore[misc]
+    with pytest.raises(ValidationError):
+        response.authority = "authoritative"  # type: ignore[misc]
+    with pytest.raises(ValidationError):
+        model.entities[0].value = "changed"  # type: ignore[misc]
+    with pytest.raises(ValidationError):
+        response.snapshot.state = "partial"  # type: ignore[misc]
+    with pytest.raises(ValidationError):
+        response.facts[0].value = "changed"  # type: ignore[misc]
+
+
+def test_model_validate_json_rejects_coercion_and_extra_fields():
+    with pytest.raises(ValidationError):
+        KnowledgeContextRequestV1.model_validate_json(
+            json.dumps({**_request(), "request_id": 7})
+        )
+    with pytest.raises(ValidationError):
+        KnowledgeContextRequestV1.model_validate_json(
+            json.dumps({**_request(), "unexpected": "field"})
+        )
+
+
+@pytest.mark.parametrize("timestamp", [b"NaN", b"Infinity", b"true", b"1793750400"])
+def test_model_validate_json_rejects_non_instant_timestamp_literals(timestamp):
+    raw = _fixture_bytes("request_v1.json").replace(
+        b'"2026-11-04T00:00:00Z"', timestamp, 1
+    )
+
+    with pytest.raises(ValidationError):
+        KnowledgeContextRequestV1.model_validate_json(raw)
 
 
 # -------------------------------------------------------------------- request
@@ -211,6 +262,7 @@ REQUEST_REFUSALS = {
     "int correlation_id": lambda d: _set(["correlation_id"], 7, d),
     "int source_product": lambda d: _set(["source_product"], 1, d),
     "empty request_id": lambda d: _set(["request_id"], "", d),
+    "empty entity_type": lambda d: _set(["entities", 0, "entity_type"], "", d),
     "oversize request_id": lambda d: _set(["request_id"], "a" * 129, d),
     "oversize source_ref": lambda d: _set(["source_ref"], "a" * 257, d),
     "URL-shaped source_ref": lambda d: _set(
@@ -242,6 +294,13 @@ def test_request_accepts_the_maximum_entity_count():
     entities = [{"entity_type": "domain", "value": f"h{i}.test"} for i in range(32)]
     model = KnowledgeContextRequestV1.model_validate(_request(entities=entities))
     assert len(model.entities) == 32
+
+
+def test_entity_type_is_an_open_identifier_vocabulary():
+    model = KnowledgeContextRequestV1.model_validate(
+        _request(entities=[{"entity_type": "custom_observable", "value": "x"}])
+    )
+    assert model.entities[0].entity_type == "custom_observable"
 
 
 def test_directive_refusal_names_the_invariant():
@@ -285,6 +344,29 @@ def _inference(n: int, **overrides):
     return data
 
 
+def _response_at_canonical_size(target_bytes: int) -> dict:
+    refs = iter(f"{i:06d}" + "p" * 194 for i in range(512))
+    facts = [_fact(i, provenance=[next(refs) for _ in range(8)]) for i in range(1, 65)]
+    data = _response(facts=facts, inferences=[], unknowns=["x"])
+    size = lambda: len(
+        json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+    )
+    padding = target_bytes - size()
+    assert padding >= 0
+    for fact in data["facts"]:
+        for index, ref in enumerate(fact["provenance"]):
+            extension = min(padding, 256 - len(ref))
+            fact["provenance"][index] = ref + "x" * extension
+            padding -= extension
+            if padding == 0:
+                break
+        if padding == 0:
+            break
+    assert padding == 0
+    assert size() == target_bytes
+    return data
+
+
 RESPONSE_REFUSALS = {
     "extra top-level field": lambda d: _set(["note"], "x", d),
     "extra snapshot field": lambda d: _set(["snapshot", "note"], "x", d),
@@ -310,6 +392,9 @@ RESPONSE_REFUSALS = {
         ["expires_at"], "2026-11-04T09:00:04+09:00", d
     ),
     "unknown snapshot state": lambda d: _set(["snapshot", "state"], "fresh", d),
+    "empty response subject type": lambda d: _set(
+        ["facts", 0, "subject", "entity_type"], "", d
+    ),
     "unavailable snapshot has no semantic response": lambda d: _set(
         ["snapshot", "state"], "unavailable", d
     ),
@@ -335,7 +420,11 @@ RESPONSE_REFUSALS = {
     "repeated basis fact": lambda d: _set(["inferences", 0, "basis_fact_ids"], ["fact-1", "fact-1"], d),
     "empty basis": lambda d: _set(["inferences", 0, "basis_fact_ids"], [], d),
     "too many basis facts": lambda d: _set(
-        ["inferences", 0, "basis_fact_ids"], [f"fact-{i}" for i in range(17)], d
+        ["inferences"],
+        [
+            _inference(1, basis_fact_ids=[f"fact-{i}" for i in range(1, 18)])
+        ],
+        _set(["facts"], [_fact(i) for i in range(1, 18)], d),
     ),
     "empty method refs": lambda d: _set(["inferences", 0, "method_refs"], [], d),
     "repeated method refs": lambda d: _set(
@@ -362,6 +451,12 @@ RESPONSE_REFUSALS = {
     "too many limitations": lambda d: _set(["limitations"], [f"l{i}" for i in range(17)], d),
     "oversize fact value": lambda d: _set(["facts", 0, "value"], "v" * 513, d),
     "oversize statement": lambda d: _set(["inferences", 0, "statement"], "s" * 513, d),
+    "newline in fact value": lambda d: _set(["facts", 0, "value"], "a\nb", d),
+    "newline in inference statement": lambda d: _set(
+        ["inferences", 0, "statement"], "a\nb", d
+    ),
+    "control character in unknown": lambda d: _set(["unknowns", 0], "a\x00b", d),
+    "bidi override in unknown": lambda d: _set(["unknowns", 0], "safe\u202eevil", d),
     "oversize unknown": lambda d: _set(["unknowns", 0], "u" * 513, d),
     "empty statement": lambda d: _set(["inferences", 0, "statement"], "", d),
     "newline in limitation": lambda d: _set(["limitations", 0], "a\nb", d),
@@ -387,11 +482,48 @@ def test_response_accepts_the_maximum_counts():
     assert (len(model.facts), len(model.inferences)) == (64, 32)
 
 
+def test_response_accepts_exact_shared_canonical_size_limit():
+    model = KnowledgeContextResponseV1.model_validate(_response_at_canonical_size(128 * 1024))
+
+    assert len(canonical_knowledge_context_bytes(model)) == 128 * 1024
+
+
+def test_response_accepts_maximum_fact_value_length():
+    model = KnowledgeContextResponseV1.model_validate(
+        _response(facts=[_fact(1, value="v" * 512)], inferences=[])
+    )
+
+    assert len(model.facts[0].value) == 512
+
+
 def test_response_rejects_combined_payload_over_shared_canonical_limit():
-    next_ref = iter(f"{i:06d}" + "p" * 250 for i in range(512))
-    facts = [_fact(i, provenance=[next(next_ref) for _ in range(8)]) for i in range(1, 65)]
+    data = _response_at_canonical_size(128 * 1024 + 1)
     with pytest.raises(ValidationError, match="maximum canonical size"):
-        KnowledgeContextResponseV1.model_validate(_response(facts=facts))
+        KnowledgeContextResponseV1.model_validate(data)
+
+
+def test_payload_size_limit_counts_utf8_bytes_not_characters():
+    data = _response_at_canonical_size(128 * 1024 - 2)
+    data["unknowns"] = ["x魚"]
+    raw = json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode(
+        "utf-8"
+    )
+
+    assert len(raw) == 128 * 1024 + 1
+    assert len(raw.decode("utf-8")) == 128 * 1024 - 1
+
+    with pytest.raises(ValidationError, match="maximum canonical size"):
+        KnowledgeContextResponseV1.model_validate(data)
+
+
+def test_payload_size_limit_accepts_multibyte_content_at_exact_byte_limit():
+    data = _response_at_canonical_size(128 * 1024 - 3)
+    data["unknowns"] = ["x魚"]
+    model = KnowledgeContextResponseV1.model_validate(data)
+
+    encoded = canonical_knowledge_context_bytes(model)
+    assert len(encoded) == 128 * 1024
+    assert len(encoded.decode("utf-8")) < len(encoded)
 
 
 @pytest.mark.parametrize(
@@ -436,6 +568,22 @@ def test_response_correlates_with_matching_request():
     assert_response_correlates(request, response)
 
 
+def test_response_generation_equal_to_request_time_is_accepted():
+    request = KnowledgeContextRequestV1.model_validate(_request())
+    response = KnowledgeContextResponseV1.model_validate(
+        _response(
+            generated_at="2026-11-04T00:00:00Z",
+            snapshot={
+                "ref": "snapshot:2026-11-04-0001",
+                "state": "complete",
+                "as_of": "2026-11-04T00:00:00Z",
+            },
+        )
+    )
+
+    assert_response_correlates(request, response)
+
+
 def test_response_correlation_helper_rejects_model_subclasses():
     class ExtendedRequest(KnowledgeContextRequestV1):
         extension: str
@@ -472,7 +620,11 @@ def test_response_correlation_helper_rejects_nested_model_subclasses():
 
 @pytest.mark.parametrize("claim_field,claim", [
     ("facts", _fact(1, subject={"entity_type": "domain", "value": "other.test"})),
+    ("facts", _fact(1, subject={"entity_type": "domain", "value": "198.51.100.7"})),
+    ("facts", _fact(1, subject={"entity_type": "ip_address", "value": "example.test"})),
     ("inferences", _inference(1, subject={"entity_type": "domain", "value": "other.test"})),
+    ("inferences", _inference(1, subject={"entity_type": "domain", "value": "198.51.100.7"})),
+    ("inferences", _inference(1, subject={"entity_type": "ip_address", "value": "example.test"})),
 ])
 def test_response_claim_subject_must_be_requested(claim_field, claim):
     request = KnowledgeContextRequestV1.model_validate(_request())
@@ -484,10 +636,51 @@ def test_response_claim_subject_must_be_requested(claim_field, claim):
         assert_response_correlates(request, response)
 
 
+def test_claim_for_the_second_requested_entity_is_accepted():
+    request = KnowledgeContextRequestV1.model_validate(_request())
+    response = KnowledgeContextResponseV1.model_validate(
+        _response(
+            facts=[_fact(1, subject={"entity_type": "domain", "value": "example.test"})],
+            inferences=[],
+        )
+    )
+
+    assert_response_correlates(request, response)
+
+
+def test_inference_for_the_second_requested_entity_is_accepted():
+    request = KnowledgeContextRequestV1.model_validate(_request())
+    response = KnowledgeContextResponseV1.model_validate(
+        _response(
+            facts=[_fact(1)],
+            inferences=[
+                _inference(
+                    1,
+                    subject={"entity_type": "domain", "value": "example.test"},
+                )
+            ],
+        )
+    )
+
+    assert_response_correlates(request, response)
+
+
 def test_empty_facts_inferences_unknowns_and_limitations_are_expressible():
     data = _response(facts=[], inferences=[], unknowns=[], limitations=[])
     model = KnowledgeContextResponseV1.model_validate(data)
     assert model.facts == () and model.inferences == ()
+
+
+def test_each_supported_snapshot_state_is_accepted():
+    for state in ("complete", "partial", "stale"):
+        response = KnowledgeContextResponseV1.model_validate(
+            _response(snapshot={
+                "ref": "snapshot:2026-11-04-0001",
+                "state": state,
+                "as_of": "2026-11-04T00:00:00Z",
+            })
+        )
+        assert response.snapshot.state == state
 
 
 def test_semantic_expiry_is_ordered_by_instant_not_by_text():
@@ -531,7 +724,10 @@ def test_payload_shape_carries_no_auth_transport_or_enforcement_fields():
         "reasoning", "chain_of_thought", "metadata",
     }
     models = (KnowledgeContextRequestV1, KnowledgeContextResponseV1)
+    nested_models = (EntityRef, SnapshotInfo, SourceReportedFact, InferenceClaim)
     for model in models:
+        assert forbidden.isdisjoint(model.model_fields)
+    for model in nested_models:
         assert forbidden.isdisjoint(model.model_fields)
     for nested in ("snapshot", "facts", "inferences"):
         assert nested in KnowledgeContextResponseV1.model_fields
@@ -542,3 +738,15 @@ def test_response_input_is_not_mutated_by_validation():
     before = copy.deepcopy(data)
     KnowledgeContextResponseV1.model_validate(data)
     assert data == before
+
+
+def test_mutating_input_after_validation_does_not_change_model_or_canonical_bytes():
+    data = _response()
+    model = KnowledgeContextResponseV1.model_validate(data)
+    before = canonical_knowledge_context_bytes(model)
+
+    data["facts"][0]["value"] = "changed"
+    data["snapshot"]["state"] = "stale"
+    data["unknowns"].append("changed")
+
+    assert canonical_knowledge_context_bytes(model) == before
