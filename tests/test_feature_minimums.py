@@ -387,6 +387,13 @@ def test_every_minimum_is_the_first_tag_carrying_its_feature(rows):
 
     released = _released_versions()
     target = _unpublished_target()
+    # A release tree is prepared before its tag exists: the digest is signed on
+    # the branch, the branch merges, and the tag is cut at the merge commit
+    # (docs/release-signing.md). Between the merge and the tag, the version this
+    # tree *is* has no tag yet, and that is the procedure working rather than a
+    # minimum naming a release that never happened. Only that one version is
+    # excused, only from "is a tag"; once the tag exists it is checked in full.
+    releasing = None if ".dev" in __version__ else __version__
     problems = []
 
     for feature, minimum, _ in rows:
@@ -400,9 +407,10 @@ def test_every_minimum_is_the_first_tag_carrying_its_feature(rows):
                 problems.append(f"{feature}: already in v{latest}, before unpublished v{minimum}")
             continue
         if tag not in tags:
-            problems.append(f"{feature}: minimum {tag} is not a tag")
-            continue
-        if not _tag_has(tag, module):
+            if minimum != releasing:
+                problems.append(f"{feature}: minimum {tag} is not a tag")
+                continue
+        elif not _tag_has(tag, module):
             problems.append(f"{feature}: {tag} does not contain {module}")
         previous = _predecessor(minimum, released)
         if previous is not None and f"v{previous}" in tags and _tag_has(f"v{previous}", module):

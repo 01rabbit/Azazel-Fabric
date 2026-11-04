@@ -5,8 +5,8 @@ R1b is "a signed release-candidate digest" (`Azazel/docs/roadmaps/nexus-boot-pro
 
 | Half | Who | State |
 |---|---|---|
-| The digest — what bytes the candidate is made of | anyone, reproducibly | **done** for `v0.9.0rc1` … `v0.9.0rc4` |
-| The detached signature — who stands behind them | the release owner, with a private key | **done** for `v0.9.0rc1` … `v0.9.0rc4` |
+| The digest — what bytes the candidate is made of | anyone, reproducibly | **done** for `v0.9.0rc1` … `v0.9.0rc6` |
+| The detached signature — who stands behind them | the release owner, with a private key | **done** for `v0.9.0rc1` … `v0.9.0rc5`; **pending** for `v0.9.0rc6` |
 
 Neither half signs the git tag; see *What the signature covers* below.
 
@@ -31,6 +31,15 @@ python3 tools/rc_signature.py release/v0.9.0rc1.digest.json --check
 The digests for `v0.9.0rc3`, `v0.9.0rc4` and `v0.9.0rc5` were signed the same
 way, each before its tag existed.
 
+`v0.9.0rc6`'s digest is in the tree and **is not signed yet**.
+`release/v0.9.0rc6.digest.json.sig` does not exist, and
+`test_every_published_candidate_is_signed` is red until it does — the same
+state `v0.9.0rc3` was in while it waited for its signature. The release owner
+decided to resume signing with the existing `release-owner` key in
+[Fabric#61](https://github.com/01rabbit/Azazel-Fabric/issues/61#issuecomment-6399309162).
+The trusted-key map stays unchanged. The key must remain outside the repository,
+and signing must not use `git stash`.
+
 ```bash
 python3 tools/rc_signature.py release/v0.9.0rc4.digest.json --check
 # v0.9.0rc4.digest.json signed by: release-owner
@@ -49,17 +58,23 @@ differs, but not always in length:
 | `v0.9.0rc3` | **7915** | `0210f96783248aa64f392cd73c987fa119aa0d7918589f393d4f5a0a0f855d8e` |
 | `v0.9.0rc4` | **7915** | `b02ee97bf7b7783567b070129144b1f84987384873c96eb34ff7f4105f33101d` |
 | `v0.9.0rc5` | **7915** | `c183eb92dfd706cc2bcf69bad37641588f440c488b0264564c7a8e044647cc9d` |
+| `v0.9.0rc6` | 8440 | `99670e8f8b3c35944fb162b28225b2f538fd2bf869167e8e63ed988b2f9caa9c` |
 
 `rc2` through `rc5` cover the same 66 files, so four payloads in a row are the
 same length and only their contents differ. A size check cannot tell any of
 them apart; the digest can. Signing `rc2`'s payload while believing it is
 `rc4`'s would produce a signature that verifies — against the wrong candidate.
 
-Four candidates at 7915 bytes is not a coincidence worth noting once. It is
-this repository's standing condition: the file set has been stable across all
-of them, so the length check is useless by construction and will stay that
-way. Check the digest — the tagging chain for `rc5` was built around exactly
-that check, and it is what confirmed the signer's tree matched.
+Four candidates at 7915 bytes was not a coincidence worth noting once: the
+file set was stable across all of them, so the length check was useless by
+construction. Check the digest — the tagging chain for `rc5` was built around
+exactly that check, and it is what confirmed the signer's tree matched.
+
+`rc6` is 8440 bytes over 70 files, because the experimental
+`external_security_contracts` family (Fabric#25) added four. That breaks the
+streak and changes nothing about the rule: a length that differs proves only
+that the file set moved, and the next candidate that adds no file will match
+`rc6`'s length again. The digest is still the check.
 
 ## A candidate signs before its tag exists, not after
 
@@ -236,7 +251,10 @@ The objects were dropped and pruned. **That is removal from git's object
 store, not a guarantee the key is unrecoverable**: backups, shell history,
 swap, unallocated blocks and any copy of the directory made during the window
 are all outside what `gc` touches. The key is treated as possibly exposed,
-which is what #61 records and why signing with it is paused.
+which is what #61 records. The release owner's subsequent decision in #61
+resumes signing with the existing key, accepting that residual risk and
+requiring the key to stay outside the repository and no `git stash` during
+signing. It does not change the exposure assessment or the trusted-key map.
 
 Use `git -c stash.showIncludeUntracked=false` habits aside — the working
 instruction is simpler: move the change to a branch, or commit it. There is no

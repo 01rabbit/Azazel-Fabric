@@ -8,7 +8,9 @@ itself, an interoperability certification.
 ## Current Fabric release
 
 The latest **stable** release is `v0.8.0`. The latest **published** tag is the
-release candidate `v0.9.0rc5`, which gives a presented terrain a way to bind to
+release candidate `v0.9.0rc6` — the experimental `external_security_contracts`
+profile plus two non-additive tightenings (Fabric#65, Fabric#23) — on top of
+`v0.9.0rc5`, which gives a presented terrain a way to bind to
 an effect that has no decision, on top of `v0.9.0rc4`, which narrows what an
 `EffectObservation` may claim on top of `v0.9.0rc3` — the widened `effect_contracts` reference grammar
 — which sits on `v0.9.0rc2`, the canonical `DefensiveState` vocabulary and the
@@ -19,7 +21,7 @@ itself additive contract work (`outcome_contracts`, and the R1a
 A candidate is pinnable but makes no stability promise. It exists so a consumer
 can pin an exact tag — never a branch — while producing the downstream evidence
 `v0.9.0` requires. A consumer that needs stability stays on `v0.8.0`; a consumer
-adopting the new contract families pins the newest candidate, `v0.9.0rc5`, and
+adopting the new contract families pins the newest candidate, `v0.9.0rc6`, and
 expects to re-pin to `v0.9.0`.
 
 **A consumer adopting `effect_contracts` should move to `v0.9.0rc3`, and this
@@ -59,7 +61,7 @@ available. A `.devN` version is never a release.
 | `v0.9.0rc3` (candidate) | A typed cross-series reference may carry further colons in its body (`effect_contracts/refs.py`) | Additive for every consumer; **required for an `effect_contracts` adopter** — at `rc2` the grammar refused every hierarchical reference in the series, so the family had no possible producer |
 | `v0.9.0rc4` (candidate) | An `EffectObservation` may claim only `observed_fact` or `active_materialized` (`effect_contracts/models.py`, Fabric#52) | **Non-additive — the first in this series.** Input accepted at `rc3` is refused at `rc4`. Required before `v0.9.0` stable; a producer that emitted an observation under any other authority class must correct it, not re-pin around it |
 | `v0.9.0rc5` (candidate) | Presented-terrain provenance: `source_effect_ref`, `trace_id`, `synthetic_identity_refs`, `synthetic_credential_refs`; `activation_decision_ref` becomes optional (`effect_contracts`, Fabric#51) | **Additive.** Every `rc4` terrain payload still validates and still chains — checked by `test_an_rc4_terrain_payload_still_validates`. What changes is that a decision-less effect can be chained to a terrain **at all**, which `rc4` made structurally impossible |
-| `v0.9.0rc6` (candidate, **unpublished**) | **Experimental** `external_security_contracts` profile (Fabric#25); a typed reference, a provisioning digest or a MAC may not end in a newline (`effect_contracts/refs.py`, `provisioning_contracts/models.py`, Fabric#65); the deception, engagement and effect directive walkers refuse a payload nested more than 32 levels deep (Fabric#23) | **Non-additive.** The `external_security_contracts` profile is additive and optional, but two other changes are not: a typed ref, `sha256:` digest or MAC ending in one `\n` that validated at `rc5` is refused (Fabric#65), and a payload deeper than 32 levels passed to a deception, engagement or effect directive guard is refused with a `ValueError` even when it carries no directive (Fabric#23; `rc5` accepted it up to the recursion limit). Neither should reach a well-formed producer: no MAC payload changes in practice (`max_length=17`), and the deepest payload any model or fixture here passes to those guards is 3 levels. Not cut, not signed; `main` is `0.9.0rc6.dev0`. The experimental profile carries no compatibility promise |
+| `v0.9.0rc6` (candidate) | **Experimental** `external_security_contracts` profile (Fabric#25); a typed reference, a provisioning digest or a MAC may not end in a newline (`effect_contracts/refs.py`, `provisioning_contracts/models.py`, Fabric#65); the deception, engagement and effect directive walkers refuse a payload nested more than 32 levels deep (Fabric#23) | **Non-additive.** The `external_security_contracts` profile is additive and optional, but two other changes are not: a typed ref, `sha256:` digest or MAC ending in one `\n` that validated at `rc5` is refused (Fabric#65), and a payload deeper than 32 levels passed to a deception, engagement or effect directive guard is refused with a `ValueError` even when it carries no directive (Fabric#23; `rc5` accepted it up to the recursion limit). Neither should reach a well-formed producer: no MAC payload changes in practice (`max_length=17`), and the deepest payload any model or fixture here passes to those guards is 3 levels. The experimental profile carries no compatibility promise |
 
 All consumer deployments MUST pin an exact compatible Fabric tag or immutable
 image lock. They MUST NOT pin a branch. A product chooses when to adopt a newer
@@ -168,9 +170,9 @@ rather than twice in a row by hand.
 **Nexus, Deception and Edge each refuse any Fabric but the exact tag they
 pin.** Nexus's `fabric_boundary.py` refuses an installed Fabric whose
 `__version__` is not the pinned tag, and Deception's and Edge's pin tests do
-the same, so a `v0.9.0rc6` build is refused by all three until each moves its
+the same, so `v0.9.0rc6` is refused by all three until each moves its
 pin. That is the gate working, not an incompatibility. Run against `main`
-(`0.9.0rc6.dev0`) on 2026-10-25, every Nexus failure was that version gate and
+(`0.9.0rc6.dev0`, the same contract code as `v0.9.0rc6`) on 2026-10-25, every Nexus failure was that version gate and
 Edge's were its pin-integrity tests. The only contract-level failures were
 Deception's 12 cases of a test that asserts Fabric#65 is still *unfixed* —
 the non-additive change in the `rc6` row above, which that test was written to
@@ -183,7 +185,7 @@ notice.
 | `v0.9.0rc3` | A typed reference's body may carry further colons | **Required** for any adopter. Under `rc2` every hierarchical reference the series mints was refused, so the family had no possible producer |
 | `v0.9.0rc4` | An `EffectObservation` may claim only `observed_fact` or `active_materialized` | **Non-additive.** A producer that emitted any other authority class must correct it. Edge and Deception both moved; neither had to change code, because both already derived the class from the observation's status |
 | `v0.9.0rc5` | A terrain may bind to an effect that has no decision (`source_effect_ref` + `trace_id`); `synthetic_identity_refs` and `synthetic_credential_refs` added | **Additive.** Every `rc4` payload still validates and still chains. It makes reachable a path that `rc4` made structurally impossible: a `planned_shadow` effect could not be chained to a terrain at all |
-| `v0.9.0rc6` (unpublished) | A typed reference may not end in a newline (Fabric#65); `assert_no_effect_authority_fields`, `assert_no_secret_material` and the re-exported deception walkers refuse a payload nested more than 32 levels deep (Fabric#23) | **Non-additive.** `effect:x\n` was accepted as a ref at `rc5` and is refused at `rc6`. Deception's producer test asserts the old acceptance as a precondition and must drop it on re-pin; the same test checks that its producer never emits such a ref |
+| `v0.9.0rc6` | A typed reference may not end in a newline (Fabric#65); `assert_no_effect_authority_fields`, `assert_no_secret_material` and the re-exported deception walkers refuse a payload nested more than 32 levels deep (Fabric#23) | **Non-additive.** `effect:x\n` was accepted as a ref at `rc5` and is refused at `rc6`. Deception's producer test asserts the old acceptance as a precondition and must drop it on re-pin; the same test checks that its producer never emits such a ref |
 
 Four families clear the gate, and each does so on a real round trip rather
 than a count. `deception_contracts`: Edge constructs and signs an
