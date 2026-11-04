@@ -89,6 +89,15 @@ def test_canonical_bytes_do_not_depend_on_input_key_order():
     assert a == b
 
 
+def test_canonical_bytes_keep_array_order_significant():
+    data = _response(unknowns=["first unknown", "second unknown"])
+    reversed_order = _response(unknowns=["second unknown", "first unknown"])
+
+    a = canonical_knowledge_context_bytes(KnowledgeContextResponseV1.model_validate(data))
+    b = canonical_knowledge_context_bytes(KnowledgeContextResponseV1.model_validate(reversed_order))
+    assert a != b
+
+
 def test_equivalent_instants_canonicalize_to_the_same_utc_text():
     shifted = _request(requested_at="2026-11-04T09:00:00+09:00")
     model = KnowledgeContextRequestV1.model_validate(shifted)
