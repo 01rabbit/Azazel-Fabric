@@ -13,6 +13,11 @@ Toward `v0.9.0rc7` — **not cut, not signed.** `main` is `0.9.0rc7.dev0`.
 **Not additive** (Fabric#65): a typed reference, a provisioning digest or a
 MAC that ends in a newline, and validated under `v0.9.0rc5`, is refused here.
 
+**Not additive** (Fabric#72): a `decision_ref`, `activation_decision_ref`,
+`trace_id` or `EffectObservation.execution_ref` that is typed `observation_objective:`, `hypothesis:` or `frame:`
+is refused where `v0.9.0rc5` read it as untyped. No producer is known to emit
+such a value.
+
 **Not additive** (Fabric#23): a payload nested more than 32 levels deep, and
 passed to a deception, engagement or effect directive guard, is refused here
 even when it carries no directive. Under `v0.9.0rc5` it was accepted up to the
@@ -23,6 +28,20 @@ interpreter's recursion limit.
 - **Experimental M.I.O. learning-provenance proposal** (`mio_contracts/learning.py`, Fabric#72): separate Knowledge snapshot references, LLM teacher-label candidates, reviewer dispositions, independently observed outcome references, dataset/feature lineage, and model/evaluation lineage. It adds no accepted-label, training-eligibility, installation, or admission field. Full design and unresolved owner decisions: [`docs/mio-learning-contracts.md`](docs/mio-learning-contracts.md).
 
   This is an optional additive extension to the existing experimental `mio_contracts` family. No producer/consumer adoption, real Knowledge snapshot feed, training data, model training, or admission is claimed. The profile is descriptive only and makes no compatibility promise.
+
+- **Observation objective refs on `OutcomeObservationEnvelope`** (Fabric#72,
+  proposed): `RefKind.OBSERVATION_OBJECTIVE`, `HYPOTHESIS`, `FRAME`, and optional
+  `observation_objective_ref`, `hypothesis_refs` (at most 8), `frame_ref`, `limitations`
+  on the envelope. Non-executable; they never replace `decision_ref`, and an
+  envelope carrying them without a `decision_ref` may not claim
+  `active_materialized`. **Additive:** the fields are omitted from a dump when
+  empty, so `v0.9.0rc5` payloads validate and serialize byte-for-byte. New
+  vector `effect_knowledge_objective_envelope_v0.json` and rejection fixtures.
+  `hypothesis_refs` require `frame_ref` and may not repeat; `limitations` on the
+  envelope use a token grammar and an imperative-word set (conventions C1-C3 in
+  `docs/effect-contracts.md` §7a). Known cost: because empty fields are omitted
+  through a model serializer, the envelope's serialization-mode JSON Schema is
+  empty; use the validation-mode schema.
 
 - **Experimental external-security profile** (`external_security_contracts`,
   Fabric#25): `ExternalObservationEnvelope/v0.1`, `AdvisoryContextEnvelope/v0.1`,

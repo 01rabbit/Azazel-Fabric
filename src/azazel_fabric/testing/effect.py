@@ -251,6 +251,42 @@ def golden_shadow_presented_terrain() -> dict[str, Any]:
     ).model_dump(mode="json")
 
 
+def golden_knowledge_objective_envelope() -> dict[str, Any]:
+    """An envelope gathered under a non-executable observation objective (Fabric#72).
+
+    The objective, hypotheses and frame say what was looked for. The envelope
+    still names the Edge decision through ``decision_ref`` and claims only
+    ``observed_fact``; the objective neither stands in for the decision nor
+    makes anything live.
+    """
+
+    return OutcomeObservationEnvelope(
+        envelope_id="envelope:golden-objective-1",
+        producer_product="knowledge",
+        producer_node="knowledge-golden-1",
+        producer_version="golden-1",
+        trace_id=_TRACE,
+        decision_ref=_DECISION,
+        effect_ref=_EFFECT,
+        environment_ref="environment:env-golden-1",
+        presentation_ref=_PRESENTATION,
+        actor_session_ref="session:golden-actor-1",
+        observation_objective_ref="observation_objective:golden-mio-objective-1",
+        hypothesis_refs=("hypothesis:h1", "hypothesis:h2"),
+        frame_ref="frame:golden-mio-frame-1",
+        outcome_observation_refs=("gadget-outcome-golden-1",),
+        window_start=_T0,
+        window_end=_T2,
+        observation_class="presented_terrain_engagement",
+        telemetry_coverage={"deception_runtime": "full"},
+        coverage_complete=True,
+        evidence_refs=("evidence:deception-runtime-golden-1",),
+        limitations=("no_interaction_observed_is_not_evidence_of_safety",),
+        observed_at=_T2,
+        authority_class=AuthorityClass.OBSERVED_FACT,
+    ).model_dump(mode="json")
+
+
 GOLDEN_EFFECT_VECTORS: dict[str, Callable[[], dict[str, Any]]] = {
     "effect_edge_defensive_effect_ref_v0.json": golden_edge_effect_ref,
     "effect_knowledge_advisory_ref_v0.json": golden_advisory_effect_ref,
@@ -260,6 +296,7 @@ GOLDEN_EFFECT_VECTORS: dict[str, Callable[[], dict[str, Any]]] = {
     "effect_knowledge_outcome_envelope_v0.json": golden_knowledge_outcome_envelope,
     "effect_shadow_defensive_effect_ref_v0.json": golden_shadow_effect_ref,
     "effect_shadow_presented_terrain_v0.json": golden_shadow_presented_terrain,
+    "effect_knowledge_objective_envelope_v0.json": golden_knowledge_objective_envelope,
 }
 
 __all__ = [
@@ -269,6 +306,7 @@ __all__ = [
     "golden_deception_presented_terrain",
     "golden_edge_effect_ref",
     "golden_gadget_effect_observation",
+    "golden_knowledge_objective_envelope",
     "golden_knowledge_outcome_envelope",
     "golden_replay_provenance",
     "golden_shadow_effect_ref",

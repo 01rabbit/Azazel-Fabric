@@ -7,6 +7,7 @@ where a bypass would have to be introduced.
 
 from __future__ import annotations
 
+import re
 from typing import Any, Sequence
 
 from azazel_fabric.outcome_contracts.validation import (
@@ -17,6 +18,10 @@ from azazel_fabric.outcome_contracts.validation import (
 
 __all__ = [
     "BANNED_EFFECT_AUTHORITY_FIELDS",
+    "COMMAND_SEGMENTS",
+    "LIMITATION_TOKEN_PATTERN",
+    "assert_limitation_token",
+    "assert_no_command_segments",
     "SECRET_MATERIAL_MARKERS",
     "assert_bounded_fact_payload",
     "assert_effect_chain_consistent",
@@ -26,6 +31,50 @@ __all__ = [
     "assert_observation_within_effect_window",
     "canonical_fact_json",
 ]
+
+
+#: Grammar of a limitation token on the fields added in `v0.9.0rc6`
+#: (Fabric#72): a snake_case word, optionally followed by one parameter. A `/`,
+#: space, quote or uppercase lead cannot appear, so a limitation is a label and
+#: not a sentence, path or command line. Convention C2 in
+#: `docs/effect-contracts.md`.
+LIMITATION_TOKEN_PATTERN = re.compile(
+    r"[a-z][a-z0-9_]{2,63}(?::[A-Za-z0-9._-]{1,64})?\Z"
+)
+
+#: Imperative words that must not appear as a whole segment of a limitation
+#: token or of an objective/hypothesis/frame ref body. Segments are split on
+#: `_ - . ~ :` and compared lowercased, so `redirection` is not `redirect`,
+#: `isolation` is not `isolate` and `active` is not `activate`. A lint on
+#: labels, not an authorization guarantee. Convention C3.
+COMMAND_SEGMENTS = frozenset(
+    {
+        "activate", "activation", "deactivate", "execute", "exec", "run", "start",
+        "stop", "open", "allow", "authorize", "authorized", "approve", "approved",
+        "enable", "extend", "terminate", "withdraw", "block", "isolate",
+        "quarantine", "redirect", "expose", "command", "shell", "sudo", "deploy",
+        "install", "delete", "kill", "override", "enforce", "grant", "granted",
+        "bypass",
+    }
+)
+
+_SEGMENT_SPLIT = re.compile(r"[_\-.~:]")
+
+
+def assert_no_command_segments(value: str, *, field: str) -> None:
+    """Refuse a value having an imperative word as a whole segment."""
+
+    hits = sorted(
+        {seg for seg in _SEGMENT_SPLIT.split(value.lower()) if seg in COMMAND_SEGMENTS}
+    )
+    if hits:
+        raise ValueError(f"{field} contains an imperative word {hits[0]!r}: {value!r}")
+
+
+def assert_limitation_token(value: str, *, field: str) -> None:
+    if LIMITATION_TOKEN_PATTERN.fullmatch(value) is None:
+        raise ValueError(f"{field} entry is not a limitation token: {value!r}")
+    assert_no_command_segments(value, field=field)
 
 
 #: Concepts issue #15 names as belonging to owning products, never to Fabric.
