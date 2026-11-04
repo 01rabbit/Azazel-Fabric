@@ -3,8 +3,9 @@
 Version management is tag-driven on GitHub. This version must match the
 release tag being cut; a ``.devN`` suffix is only present between releases.
 
-``v0.9.0rc1`` through ``v0.9.0rc4`` are published, and each ships a **signed
-release digest** (``release/*.digest.json.sig``).
+``v0.9.0rc1`` through ``v0.9.0rc5`` are published, and each ships a **signed
+release digest** (``release/*.digest.json.sig``). ``v0.9.0rc5`` is the latest
+published candidate; ``main`` is ``0.9.0rc6.dev0`` and is not a tag.
 
 **The git tag itself is not signed and is not a trust boundary.** Every
 published tag here is an unsigned annotated tag; what carries a signature is

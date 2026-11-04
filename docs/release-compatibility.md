@@ -71,10 +71,10 @@ support.
 
 | Consumer | Observed declaration | Interpretation |
 |---|---|---|
-| Azazel-Edge | `v0.9.0rc4` in `requirements/fabric.txt` (checked 2026-11-04) | Current reference authority consumer. An **optional** extra: Edge's arbiter runs with no Fabric installed |
-| Azazel-Gadget | `v0.8.0` in `requirements.txt` (checked 2026-11-04) | The consumer on the latest **stable** tag. It uses `view` + `schema.mode` and none of the candidate families (Azazel-Gadget#22) |
-| Azazel-Knowledge | `v0.9.0rc5` in the `api` optional dependency (`pyproject.toml`) (checked 2026-11-04) | Advisory API boundary only; core stays dependency-minimal |
-| Azazel-Deception | `v0.9.0rc5` in `pyproject.toml` (checked 2026-11-04) | AZ-06 runtime declaration |
+| Azazel-Edge | `v0.9.0rc4` in `requirements/fabric.txt` (checked 2026-11-04; `main` checked at `38c2b07774c61b86209d0cd94ce2e7689d38600c`) | Current reference authority consumer. An **optional** extra: Edge's arbiter runs with no Fabric installed |
+| Azazel-Gadget | `v0.8.0` in `requirements.txt` (checked 2026-11-04; `main` checked at `7aeb923226043b405e04077a9f7defdaa5100404`) | The consumer on the latest **stable** tag. It uses `view` + `schema.mode` and none of the candidate families (Azazel-Gadget#22) |
+| Azazel-Knowledge | `v0.9.0rc5` in the `api` optional dependency (`pyproject.toml`) (checked 2026-11-04; `main` checked at `f3cca8f4b55b17ea52661fe7273ba201d07a7c0a`) | Advisory API boundary only; core stays dependency-minimal |
+| Azazel-Deception | `v0.9.0rc5` in `pyproject.toml` (checked 2026-11-04; `main` checked at `512da144331b2ed6cdc71d29bafe6da869722f03`) | AZ-06 runtime declaration |
 | Azazel-Nexus | **no declaration** (last observed 2026-09-20; **stale, unverified** on 2026-11-04) | No longer documentation-only — it carries code with deliberately zero dependencies. Its absence from this table is a design choice, not an omission |
 | Azazel-Boot | `v0.9.0rc1` in the `fabric` optional extra (`pyproject.toml`, ADR-0004) (last observed 2026-09-20; **stale, unverified** on 2026-11-04) | Not a current reading. An image lock is still required before a Boot implementation release |
 
