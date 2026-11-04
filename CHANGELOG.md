@@ -27,8 +27,8 @@ interpreter's recursion limit.
 
 ### Added
 
-- **Observation objective refs on `OutcomeObservationEnvelope`** (Fabric#72,
-  proposed): `RefKind.OBSERVATION_OBJECTIVE`, `HYPOTHESIS`, `FRAME`, and optional
+- **Observation objective refs on `OutcomeObservationEnvelope`** (Fabric#72):
+  `RefKind.OBSERVATION_OBJECTIVE`, `HYPOTHESIS`, `FRAME`, and optional
   `observation_objective_ref`, `hypothesis_refs` (at most 8), `frame_ref`, `limitations`
   on the envelope. Non-executable; they never replace `decision_ref`, and an
   envelope carrying them without a `decision_ref` may not claim
