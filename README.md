@@ -27,6 +27,8 @@ contracts; it does not decide, enforce, or execute.
 **Latest stable release: `v0.8.0`** — canonical Edge-decision transport
 signatures. A consumer that needs stability pins this tag.
 
+The stable install command is under [Install](#install); development checks are under [Development checks](#development-checks).
+
 Release state, as recorded in [`src/azazel_fabric/version.py`](src/azazel_fabric/version.py)
 and [release compatibility](docs/release-compatibility.md):
 
