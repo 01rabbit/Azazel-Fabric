@@ -1,5 +1,5 @@
 {
-  "content_digest": "sha256:99670e8f8b3c35944fb162b28225b2f538fd2bf869167e8e63ed988b2f9caa9c",
+  "content_digest": "sha256:88868e9190929cc91bee3a7860419ecfe705cad9467cde17df9fcd44706a6f1f",
   "covered": {
     "files": [
       "pyproject.toml"
@@ -30,11 +30,11 @@
     "src/azazel_fabric/deception_contracts/transitions.py": "sha256:1da8dfff29b8676127e092fb6d6494c4c1fa71513ebb93306e6884e9bc90af1f",
     "src/azazel_fabric/deception_contracts/validation.py": "sha256:788a7e75aa378454e3baab4a41b59dfc9a23c9df0b9e91a0c5946b3a56341934",
     "src/azazel_fabric/deception_integrity.py": "sha256:7a7b4a64c01ff0e2b0e8accd56f0587ef2ae9233b07e669ecdcaec908185a203",
-    "src/azazel_fabric/effect_contracts/__init__.py": "sha256:ac0b71b0082ac817cd0ad80b144c9e8464da13fed25da407ce933dea584434ab",
+    "src/azazel_fabric/effect_contracts/__init__.py": "sha256:a1ca1c516c97d0ef1599e66b84af478da47fe234b56835f6638e99730f90ea6c",
     "src/azazel_fabric/effect_contracts/authority.py": "sha256:7aea162cfb652612760469cdaf35b1050301fae9a1295d5993094ebcbc9d4841",
-    "src/azazel_fabric/effect_contracts/models.py": "sha256:2573397f5c3d6eedd3b8a860215d654d4a6cd3a0172924a4f36e4defa5fa3958",
-    "src/azazel_fabric/effect_contracts/refs.py": "sha256:0ac68124e6388b2e9cc8e04887d2e3ec8ecf425307ac7f28efce1c2b11cb2982",
-    "src/azazel_fabric/effect_contracts/validation.py": "sha256:ff75ac083b177ef3c9d7568f5e8f56c70d170a9801a9228687e8b615038fe689",
+    "src/azazel_fabric/effect_contracts/models.py": "sha256:b468ff275b323483e3b419181ce708d49ec781d7a9d8218071182fd3ce4ef8f1",
+    "src/azazel_fabric/effect_contracts/refs.py": "sha256:382f8260d80095a763b0c5f14397eaf6e223527e05b56ebee9547a7f1076a3ac",
+    "src/azazel_fabric/effect_contracts/validation.py": "sha256:62280ab315367d8529ae045d5785f9d7efa6dffd2bc9c9d24684a772d6c03fca",
     "src/azazel_fabric/engagement_contracts/__init__.py": "sha256:3b680bb93d8a940c5ca3a1fb5b57a19b6474f010f867175c7fb3073b9773aba4",
     "src/azazel_fabric/engagement_contracts/models.py": "sha256:ea8ceb35c78af0bac71fbfa13f81160ec6287ef585ebe1f5e5c0188960b93908",
     "src/azazel_fabric/engagement_contracts/validation.py": "sha256:7a11f5d58e4cf911513a2318597f874d686af6dd2b2301d32c2ec82293ddb573",
@@ -69,7 +69,7 @@
     "src/azazel_fabric/schema/trust.py": "sha256:256cacc34e4b573c775285e8471a527451b7ffa41335c0875316044adbbdbb7f",
     "src/azazel_fabric/testing/__init__.py": "sha256:88ba1ffa2b25f0561606e609b86ef0edd895629b5bc25ef065b5a1132c9ef90f",
     "src/azazel_fabric/testing/deception.py": "sha256:652c3213694330bfcc1705c1efc9048ca9a9afcc958c9017cb9c7da68e3ec057",
-    "src/azazel_fabric/testing/effect.py": "sha256:45846d8d0ca31d1c089f6cb634a600e3dd626e7806af959291625468bb8aa66e",
+    "src/azazel_fabric/testing/effect.py": "sha256:ab04303c80f8a39fc9f317266f233ddd933f90108bdc2edd091659ae403a1f7f",
     "src/azazel_fabric/testing/external_security.py": "sha256:b960aef04d23d18d6ef29eff196caec618d9dd172addb59ead4903d0041aa1a6",
     "src/azazel_fabric/testing/factories.py": "sha256:8e871f12c414e258e85e70e12e5f4e30c8ceaa55f18cecde41fb95e77680c1d7",
     "src/azazel_fabric/testing/golden.py": "sha256:06d81d3aea8c85fc41c25f0d884f1f52baa27ca1dd79598fc1b677af29602460",

@@ -58,7 +58,7 @@ differs, but not always in length:
 | `v0.9.0rc3` | **7915** | `0210f96783248aa64f392cd73c987fa119aa0d7918589f393d4f5a0a0f855d8e` |
 | `v0.9.0rc4` | **7915** | `b02ee97bf7b7783567b070129144b1f84987384873c96eb34ff7f4105f33101d` |
 | `v0.9.0rc5` | **7915** | `c183eb92dfd706cc2bcf69bad37641588f440c488b0264564c7a8e044647cc9d` |
-| `v0.9.0rc6` | 8440 | `99670e8f8b3c35944fb162b28225b2f538fd2bf869167e8e63ed988b2f9caa9c` |
+| `v0.9.0rc6` | 8440 | `88868e9190929cc91bee3a7860419ecfe705cad9467cde17df9fcd44706a6f1f` |
 
 `rc2` through `rc5` cover the same 66 files, so four payloads in a row are the
 same length and only their contents differ. A size check cannot tell any of
