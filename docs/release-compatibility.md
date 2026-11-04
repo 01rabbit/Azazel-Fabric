@@ -80,9 +80,10 @@ support.
 
 Verification note (2026-11-04): the four public consumer pins — Azazel-Edge,
 Azazel-Gadget, Azazel-Knowledge and Azazel-Deception — were checked against their
-dependency declarations on 2026-11-04. Any other row in the table above was last
-observed on 2026-09-20 and was not re-verified on 2026-11-04; it is stale and
-must not be read as a current pin. An earlier version of this note said every row
+dependency declarations on 2026-11-04. The Nexus and Boot rows above are a
+historical 2026-09-20 snapshot, superseded by the separately dated 2026-10-25
+read below; they were not re-verified on 2026-11-04 and must not be read as
+current pins. An earlier version of this note said every row
 had been freshly verified on 2026-09-20. That claim was misleading and is
 withdrawn.
 
@@ -150,13 +151,13 @@ included, that name the module:
 | Azazel-Edge | `v0.9.0rc4` | `4b5242c` | yes — 4 files |
 | Azazel-Deception | `v0.9.0rc5` | `9cd7987` | yes — 3 files |
 | Azazel-Nexus | `v0.9.0rc5` (the `fabric` extra, and `FABRIC_PIN` in `fabric_boundary.py`) | `94d70b1` | no |
-| Azazel-Knowledge | `v0.9.0rc5` (re-read 2026-11-04; commit not recorded) | `2445c1b` (2026-10-25) | no (2026-10-25 reading) |
+| Azazel-Knowledge | `v0.9.0rc5` (pin re-read 2026-11-04; source SHA not recorded for that read) | `2445c1b` (2026-10-25 source snapshot) | no (2026-10-25 reading) |
 | Azazel-Boot | **no declaration** | `8c90965` | no |
 | Azazel-Gadget | `v0.8.0` | `7aeb923` | no |
 
-Edge still pins `v0.9.0rc4`, so it skips `rc5`. Knowledge was re-read on
-2026-11-04 as declaring `v0.9.0rc5`; its commit was not recorded in this pass, and
-the `Uses effect_contracts` reading for it is the 2026-10-25 one.
+Edge still pins `v0.9.0rc4`, so it skips `rc5`. Knowledge's declaration was
+re-read on 2026-11-04, but the source SHA for that re-read was not recorded; its
+`Uses effect_contracts` reading remains the one from the 2026-10-25 source snapshot.
 
 For the four public consumers, the *Observed consumer declarations* table above
 and the consumer status in `README.md` agree as of 2026-11-04, and
