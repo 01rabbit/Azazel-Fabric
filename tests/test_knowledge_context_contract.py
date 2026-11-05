@@ -811,3 +811,30 @@ def test_mutating_input_after_validation_does_not_change_model_or_canonical_byte
     data["unknowns"].append("changed")
 
     assert canonical_knowledge_context_bytes(model) == before
+
+
+# ------------------------------------------------- review follow-ups (Fabric#86)
+
+
+@pytest.mark.parametrize("field", ["request_id", "correlation_id", "source_product"])
+def test_identifier_fields_refuse_bytes(field):
+    """Strict string fields: lax mode would read b"req-1" as "req-1"."""
+
+    with pytest.raises(ValidationError):
+        KnowledgeContextRequestV1.model_validate(_request(**{field: b"req-1"}))
+
+
+def test_nesting_beyond_the_skeleton_bound_is_refused_by_the_depth_guard():
+    """The directive scan walks a key skeleton capped at 8 levels.
+
+    A payload nested deeper is refused by that cap, not only by extra="forbid",
+    so the scan cannot be made to recurse without bound.
+    """
+
+    deep: dict = {}
+    cursor = deep
+    for _ in range(12):
+        cursor["n"] = {}
+        cursor = cursor["n"]
+    with pytest.raises(ValidationError, match="knowledge-context payload exceeds maximum nesting depth"):
+        KnowledgeContextRequestV1.model_validate(_request(extension=deep))
