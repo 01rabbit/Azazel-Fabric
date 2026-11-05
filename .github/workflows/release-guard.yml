@@ -1,0 +1,51 @@
+# A Release must come from release.yml, which verifies the tag, the digest, the
+# signature and the tests before it publishes (docs/release-signing.md). A Release created any other way
+# (the web UI, `gh release create`, the API) skipped all of that -- the
+# v0.9.0rc6 Release was made by hand, ahead of its workflow, and went out
+# marked Latest.
+#
+# A Release created with GITHUB_TOKEN does not trigger workflows, so release.yml's
+# own Releases never reach this job; anything that does reach it was made with a
+# person's (or an agent's) credentials. Both use the same account here, so the
+# author's login cannot tell them apart -- only `github-actions[bot]` can be
+# told apart, and that is the one check made.
+#
+# This detects; it cannot prevent. By the time it runs the Release has been
+# public for seconds and its notifications are sent. What it does is take the
+# Release back to a draft, so it stops being listed or resolved as latest, and
+# open an issue so the owner decides what happens next. The tag is not touched.
+name: Release guard
+on:
+  release:
+    types: [published]
+permissions:
+  contents: write
+  issues: write
+jobs:
+  guard:
+    if: github.event.release.author.login != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Return the Release to draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RELEASE_ID: ${{ github.event.release.id }}
+        run: |
+          gh api -X PATCH "repos/$REPO/releases/$RELEASE_ID" -F draft=true -F make_latest=false >/dev/null
+          gh api "repos/$REPO/releases/$RELEASE_ID" --jq '"draft=\(.draft) tag=\(.tag_name)"'
+      - name: Open an issue for the owner
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ github.event.release.tag_name }}
+          AUTHOR: ${{ github.event.release.author.login }}
+          URL: ${{ github.event.release.html_url }}
+        run: |
+          gh issue create --repo "$REPO" \
+            --title "Release $TAG was not created by release.yml and was returned to draft" \
+            --body "The Release for \`$TAG\` was published by \`$AUTHOR\`, not by \`github-actions[bot]\`, so it skipped release.yml's checks (tag/version match, digest, signature, tests). It has been returned to **draft**; the tag is unchanged.
+
+          If the same action also created the tag, release.yml runs for it too: when every check passes it publishes this Release again (that is the intended path), and when a check fails the Release stays a draft -- the v0.9.0rc6 case. Either way, check the Release workflow run for \`$TAG\` before doing anything else, and do not publish the draft by hand.
+
+          Draft: $URL"
