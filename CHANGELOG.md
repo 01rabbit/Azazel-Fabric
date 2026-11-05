@@ -8,6 +8,47 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.9.0] — Stable release of the `v0.9.0` series (R1c)
+
+The contract surface is `v0.9.0rc6`'s, unchanged: `src/` differs from the
+`v0.9.0rc6` tag only in `version.py`. Everything listed under `[0.9.0rc1]`
+through `[0.9.0rc6]` below ships here.
+
+### Upgrading from `v0.8.0`
+
+- **One change is not additive for a `v0.8.0` consumer** (Fabric#23):
+  `deception_contracts.assert_no_runtime_directives` /
+  `assert_no_effectiveness_verdict` and
+  `engagement_contracts.assert_no_engagement_directives` refuse a payload
+  nested more than 32 levels deep with a `ValueError`, even when it carries no
+  directive. `v0.8.0` walked it to the recursion limit. No model or fixture in
+  this repository passes those guards more than 3 levels.
+- Everything else a `v0.8.0` consumer uses is unchanged: no released symbol was
+  removed or narrowed, and `v0.8.0`'s own test suite passes against this tree.
+- The other non-additive changes in this series (Fabric#52, Fabric#65,
+  Fabric#72) touch only families first released in a `v0.9.0` candidate, so
+  they matter to a consumer moving from a candidate, not from `v0.8.0`. A
+  consumer on `v0.9.0rc6` moves with no change.
+- Pin the exact tag: `azazel-fabric @
+  git+https://github.com/01rabbit/Azazel-Fabric.git@v0.9.0`.
+
+### What the stable tag promises, and what it does not
+
+- **Stable** (R1c gate met — one producer, two consumers, cited in
+  `docs/release-compatibility.md`): `deception_contracts`, `effect_contracts`,
+  `engagement_contracts`, `outcome_contracts`, plus the rest of the `v0.8.0`
+  surface (all but `cti_contracts`, which is experimental).
+- **Experimental, no compatibility promise**: `cti_contracts`, `mio_contracts`,
+  `external_security_contracts`, `provisioning_contracts`.
+- **Not part of the `v0.9.0` claim** (release-owner decision, 2026-11-05,
+  recorded in Fabric#23): an aggregated, signed conformance attestation across
+  products, and interoperability tested against golden fixtures built from a
+  real producer's output. The stable tag carries the signed digest (R1b) and the
+  adoption citations; it does not claim either of those. Both are next-release
+  work.
+
 ### Changed
 
 - **`provisioning_contracts` is experimental** (release-owner decision,
@@ -19,6 +60,8 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
   are the same as in `v0.9.0rc6`. It returns to the gate when it has a producer
   and two independent consumers. Documentation only; the `rc6` digest is
   unaffected.
+- **Release history and signing records** name `v0.9.0` as the stable tag
+  (`docs/release-compatibility.md`, `docs/release-signing.md`).
 
 ## [0.9.0rc6] — Experimental external-security profile; trailing newlines and deep nesting refused (Fabric#25, Fabric#65, Fabric#23)
 

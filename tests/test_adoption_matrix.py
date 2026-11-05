@@ -1,6 +1,6 @@
 """The R1c adoption matrix in `docs/release-compatibility.md` is not decorative.
 
-R1c — the stable `v0.9.0` — waits on "at least one real producer and two real
+R1c — the stable `v0.9.0` — waited on "at least one real producer and two real
 consumers" per contract family. That gate is only as good as the record of who
 adopted what, and a record kept by hand goes stale silently: the consumer pin
 table in the same document said every product was on `v0.8.0` for a day after

@@ -24,21 +24,25 @@ materializes only Edge-approved environments.
 
 ## Status
 
-**Latest stable release: `v0.8.0` — canonical Edge-decision transport
-signatures.** The first canonical AZ-06 deception-environment contract baseline
-shipped in `v0.5.0`; subsequent `v0.6.0`, `v0.7.0`, and `v0.8.0` releases are
-additive. See [release compatibility](docs/release-compatibility.md) for the
-supported contract families and observed consumer pins.
+**Latest stable release: `v0.9.0`** — the `v0.9.0rc1` … `v0.9.0rc6` contract
+work made stable (outcome, effect, `DefensiveState`, and the stable deception
+and engagement families), with four families experimental and no
+compatibility promise for them. Upgrading from `v0.8.0` has one non-additive
+change (a 32-level nesting limit on the directive guards, Fabric#23); see
+`CHANGELOG.md` `[0.9.0]`. The first canonical AZ-06 deception-environment
+contract baseline shipped in `v0.5.0`; `v0.6.0` and `v0.8.0` were additive.
+See [release compatibility](docs/release-compatibility.md) for the supported
+contract families and observed consumer pins.
 
-Two **release candidates** are published toward `v0.9.0`. `v0.9.0rc1` adds
+Before `v0.9.0`, six **release candidates** were published; the first two are
+summarised here. `v0.9.0rc1` adds
 `azazel_fabric.outcome_contracts`, `azazel_fabric.provisioning_contracts`, and
 `azazel_fabric.mio_contracts`; `v0.9.0rc2` adds the canonical `DefensiveState`
 vocabulary (`azazel_fabric.schema.defensive_state`) and
 `azazel_fabric.effect_contracts`, and changes no symbol released before it, so
-a consumer already on `rc1` has no urgent reason to move. Both are pinnable but
-not stable: adopt one to produce the downstream evidence `v0.9.0` requires, and
-expect to re-pin. A consumer that needs stability stays on `v0.8.0` — see the
-consumer table below for who is where.
+a consumer already on `rc1` had no urgent reason to move. Candidates make no
+stability promise; every consumer should now pin `v0.9.0` — see the consumer
+table below for who was where.
 
 Stable `v0.5.0` also ships everything from `v0.4.0`:
 
@@ -62,8 +66,9 @@ Stable `v0.5.0` also ships everything from `v0.4.0`:
 - unrepresentable unrestricted egress/production access in the canonical safety model
 
 `v0.6.0` adds effectiveness observation and finite-state transition catalog
-contracts; `v0.7.0` adds advisory-only engagement contracts; `v0.8.0` adds the
-canonical decision-envelope signing helpers. All remain descriptive contracts:
+contracts; `v0.8.0` adds advisory-only engagement contracts (described under a
+`v0.7.0` that was never tagged) and the canonical decision-envelope signing
+helpers. All remain descriptive contracts:
 a valid signature proves transport origin and integrity, never action authority.
 
 See [`docs/deception-contracts.md`](docs/deception-contracts.md).
@@ -82,8 +87,8 @@ See [`docs/deception-contracts.md`](docs/deception-contracts.md).
 Verified 2026-09-20 by reading each repository's dependency declaration at
 `origin/main`: Edge `f706057`, Gadget `7aeb923`, Knowledge `f29c29d`,
 Deception `fad6587`, Boot `5ad2f2e`, Nexus `6831d8b`. Four consumers carry a
-`v0.9.0` candidate and do not all carry the same one, so there is no single
-"reference release" until `v0.9.0` is cut;
+`v0.9.0` candidate and do not all carry the same one; that was before `v0.9.0`
+was cut, which is now the reference release;
 [`docs/release-compatibility.md`](docs/release-compatibility.md) is the
 authority for this table and carries the reasoning behind each row.
 
@@ -92,7 +97,7 @@ authority for this table and carries the reasoning behind each row.
 Stable consumers should use the latest compatible exact tag, currently:
 
 ```bash
-pip install "azazel-fabric @ git+https://github.com/01rabbit/Azazel-Fabric.git@v0.8.0"
+pip install "azazel-fabric @ git+https://github.com/01rabbit/Azazel-Fabric.git@v0.9.0"
 ```
 
 Consumers pin an exact tag for field deployment (see

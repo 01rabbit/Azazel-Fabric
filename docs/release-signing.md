@@ -5,8 +5,8 @@ R1b is "a signed release-candidate digest" (`Azazel/docs/roadmaps/nexus-boot-pro
 
 | Half | Who | State |
 |---|---|---|
-| The digest — what bytes the candidate is made of | anyone, reproducibly | **done** for `v0.9.0rc1` … `v0.9.0rc6` |
-| The detached signature — who stands behind them | the release owner, with a private key | **done** for `v0.9.0rc1` … `v0.9.0rc6` |
+| The digest — what bytes the candidate is made of | anyone, reproducibly | **done** for `v0.9.0rc1` … `v0.9.0rc6` and `v0.9.0` |
+| The detached signature — who stands behind them | the release owner, with a private key | **done** for `v0.9.0rc1` … `v0.9.0rc6` and `v0.9.0` |
 
 Neither half signs the git tag; see *What the signature covers* below.
 
@@ -48,6 +48,17 @@ python3 tools/rc_signature.py release/v0.9.0rc6.digest.json --check
 # v0.9.0rc6.digest.json signed by: release-owner
 ```
 
+`v0.9.0`'s digest carries a verified release-owner signature, made **before**
+its tag existed — the order `v0.9.0rc6` did not keep. It is the stable tag, so
+`release.yml` refuses to publish it without that signature. The manifest and `release/v0.9.0.digest.json.sig` arrive in one pull
+request that is squash-merged, so on `main` they are one commit, and the tag is
+cut at that commit.
+
+```bash
+python3 tools/rc_signature.py release/v0.9.0.digest.json --check
+# v0.9.0.digest.json signed by: release-owner
+```
+
 ```bash
 python3 tools/rc_signature.py release/v0.9.0rc4.digest.json --check
 # v0.9.0rc4.digest.json signed by: release-owner
@@ -67,6 +78,7 @@ differs, but not always in length:
 | `v0.9.0rc4` | **7915** | `b02ee97bf7b7783567b070129144b1f84987384873c96eb34ff7f4105f33101d` |
 | `v0.9.0rc5` | **7915** | `c183eb92dfd706cc2bcf69bad37641588f440c488b0264564c7a8e044647cc9d` |
 | `v0.9.0rc6` | 8440 | `f1b76901bee8938b45b5a600d967286b7a397933acdbecb30328c6adad1ab1e6` |
+| `v0.9.0` | 8434 | `5107054682802f1e615615d0de51471859014d31a8808b61d8cbf6c16b27dbf4` |
 
 `rc2` through `rc5` cover the same 66 files, so four payloads in a row are the
 same length and only their contents differ. A size check cannot tell any of
@@ -468,6 +480,6 @@ guards actually run — a skipped guard reports success.
 
 A signature proves that the release owner signed these bytes. It does not make
 the contracts authoritative, does not grant any runtime or decision authority,
-and is not R1c: the stable tag additionally waits on per-family downstream
+and is not R1c: the stable tag additionally required per-family downstream
 adoption, recorded in
 [release compatibility](release-compatibility.md#contract-family-adoption-and-the-r1c-gate).

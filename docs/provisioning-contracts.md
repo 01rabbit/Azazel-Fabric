@@ -13,7 +13,7 @@ Ed25519 signature over the bytes that digest covers — see
 `python3 tools/rc_signature.py release/v0.9.0rc2.digest.json --check`.
 `v0.9.0rc1` predates the procedure but was signed afterwards with the same
 key, because Azazel-Boot pins it. **R1c** —
-the stable `v0.9.0` — waits on downstream evidence.
+the stable `v0.9.0` — waited on downstream evidence.
 
 **Both families are experimental and outside the R1c gate.** `mio_contracts`
 has neither side. `provisioning_contracts` has one real user — Azazel-Nexus
@@ -233,11 +233,12 @@ simultaneous untested pin change.
 A minimum version is a compatibility claim, not an admission decision.
 
 A candidate row names a version a consumer **can** pin: `v0.9.0rc1` and
-`v0.9.0rc2` are published tags and four products are on one of them. What the
-`rc` suffix withholds is the stability promise, not the tag. The rows stay
-marked `(candidate)` until `v0.9.0` is cut, at which point each one's minimum
-becomes `0.9.0` — a consumer already on a candidate needs no code change for
-that, only a re-pin.
+`v0.9.0rc2` are published tags. What the `rc` suffix withholds is the
+stability promise, not the tag. A minimum stays the first tag that carries the
+feature, so these rows keep their candidate minimums; `(candidate)` records
+where the feature first shipped. Since `v0.9.0` the stability promise attaches
+to `v0.9.0` for the non-experimental rows — a consumer already on a candidate
+needs no code change for that, only a re-pin.
 
 `external-security-contracts/v0.1` is the newest row: it first ships in
 `v0.9.0rc6`, and the family is **experimental** — Fabric#23 excludes it from
