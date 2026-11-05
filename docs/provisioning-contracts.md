@@ -229,7 +229,7 @@ simultaneous untested pin change.
 | `defensive-state/v0.1` | `0.9.0rc2` | canonical `DefensiveState` vocabulary and `coerce_defensive_state` (candidate) |
 | `effect-contracts/v0.1` | `0.9.0rc2` | cross-series effect / outcome / presented-terrain family (candidate) |
 | `external-security-contracts/v0.1` | `0.9.0rc6` | **experimental** external-security observation / advisory / exposure-proposal / device-observation profile (Fabric#25). No compatibility promise (candidate) |
-| `knowledge-context/v1` | `0.10.0rc1` | **experimental** [Knowledge Context](knowledge-context-contracts.md) request/response semantic profile (`knowledge-context-request/v1`, `knowledge-context-response/v1`; Fabric#72, Fabric#76). No compatibility promise (candidate; **unpublished** until `v0.10.0rc1` is tagged) |
+| `knowledge-context/v1` | `0.10.0rc1` | **experimental** [Knowledge Context](knowledge-context-contracts.md) request/response semantic profile (`knowledge-context-request/v1`, `knowledge-context-response/v1`; Fabric#72, Fabric#76). No compatibility promise (candidate) |
 
 A minimum version is a compatibility claim, not an admission decision.
 

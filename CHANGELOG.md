@@ -8,6 +8,15 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.10.0rc1] — Knowledge Context profile and producer captures (Fabric#76, Fabric#23)
+
+**Additive over `v0.9.0`.** No released symbol was removed or narrowed; the
+`v0.9.0` test suite passes against this tree except for five checks of the
+feature/adoption registries that do not know the new `knowledge_context` row
+(listed in Fabric#86). A release candidate: pinnable, no stability promise.
+
 ### Added
 
 - **Experimental Knowledge Context semantic profile** (`azazel_fabric.knowledge_context`,
