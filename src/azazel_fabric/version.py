@@ -8,9 +8,10 @@ release digest** (``release/*.digest.json.sig``). ``rc1``'s and ``rc6``'s
 signatures were added after their tags, so the ``rc6`` tag's own tree carries
 the manifest but not the ``.sig``.
 
-This is ``0.9.0``, the stable release, and it is the tree
+``main`` is ``0.10.0rc1.dev0``: development toward ``v0.10.0``, not a release.
+``0.9.0`` is the stable release, and it is the tree
 ``release/v0.9.0.digest.json`` records. Its contract surface is ``v0.9.0rc6``'s
-unchanged: only this version string and this docstring differ. Four families
+unchanged: at the ``v0.9.0`` tag only ``version.py`` differed from ``rc6``. Four families
 are **experimental** and carry no compatibility promise --
 ``cti_contracts``, ``mio_contracts``, ``external_security_contracts`` and
 ``provisioning_contracts`` (see ``docs/release-compatibility.md``). Against
@@ -53,4 +54,4 @@ one against a moved ``main`` would make it claim to be a digest of a tag it no
 longer matches, and would strand the signature that covers its current bytes.
 """
 
-__version__ = "0.9.0"
+__version__ = "0.10.0rc1.dev0"
