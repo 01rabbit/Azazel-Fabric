@@ -122,8 +122,8 @@ support.
 | Azazel-Gadget | `v0.9.0` in `requirements.txt` (2026-11-05) | On a **stable** tag. It uses `view` + `schema.mode` and none of the `v0.10.0` additions, so `v0.9.0` meets its needs and it has no reason to move (Azazel-Gadget#22) |
 | Azazel-Knowledge | `v0.10.0rc1` in the `api` optional dependency (`pyproject.toml`, ADR-0022; 2026-11-05) | Advisory API boundary only; core stays dependency-minimal. Its tests read both producers' captures (Knowledge#120). Its Knowledge Context producer (Knowledge#116) is open work, not on a tag |
 | Azazel-Deception | `v0.10.0rc1` in `pyproject.toml` (2026-11-05) | Current AZ-06 runtime declaration. Its CI reads Edge's producer captures (Deception#71) |
-| Azazel-Nexus | **no declaration** (not re-read for this release) | No longer documentation-only — it carries code with deliberately zero dependencies. Its absence from this table is a design choice, not an omission. Its Knowledge Context consumer (Nexus#402) is open work against a pre-release Fabric, outside this release's guarantee |
-| Azazel-Boot | `v0.9.0rc1` in the `fabric` optional extra (`pyproject.toml`, ADR-0004; **last read 2026-09-20, not re-read for this release**) | Exact-tag source pin, behind. An image lock is still required before a Boot implementation release |
+| Azazel-Nexus | **no declaration** (this table's 2026-09-20 reading; not re-read for this release) | The later 2026-10-25 observation below read a pre-release pin in its `fabric` extra instead; neither reading is claimed for this release. No longer documentation-only — it carries code with deliberately zero dependencies. Its absence from this table is a design choice, not an omission. Its Knowledge Context consumer (Nexus#402) is open work against a pre-release Fabric, outside this release's guarantee |
+| Azazel-Boot | `v0.9.0rc1` in the `fabric` optional extra (`pyproject.toml`, ADR-0004; **this table's 2026-09-20 reading, not re-read for this release**) | The later 2026-10-25 observation below found no Fabric declaration at all; neither reading is claimed for this release. Exact-tag source pin, behind. An image lock is still required before a Boot implementation release |
 
 Verification note (2026-09-20): every row was read directly from that
 repository's dependency declaration. The Gadget row had been carried forward
@@ -136,14 +136,17 @@ declared.
 `v0.9.0` candidate and they do not agree on which one. That is the expected
 shape while candidates circulate — each product adopts on its own schedule —
 but it meant "the reference release" was not a single answer until `v0.9.0`
-was cut. It is now `v0.9.0`; the rows above are dated observations and are
-re-read as each consumer re-pins.
+was cut. It was then `v0.9.0`, and is now `v0.10.0`; the rows above are dated
+observations and are re-read as each consumer re-pins.
 
 Verification note (2026-11-05, for `v0.10.0`): the Edge, Gadget, Knowledge and
 Deception rows were read from each repository's dependency declaration at
 `main` — Edge `2ef3ea8`, Gadget `551e1af`, Knowledge `8b3f350`, Deception
-`b27c097`. The Nexus and Boot rows were **not** re-read and are carried from
-2026-09-20; nothing about them is claimed for `v0.10.0`.
+`b27c097`. The Nexus and Boot rows were **not** re-read: they still carry the
+2026-09-20 reading, which the later 2026-10-25 observation under *What each
+product actually pins* already differs from (Nexus then pinned a pre-release in
+its `fabric` extra; Boot declared nothing). Nothing about either is claimed for
+`v0.10.0`.
 
 ## Contract family adoption and the R1c gate
 
@@ -220,10 +223,11 @@ Azazel-Gadget was read this time rather than left `unknown`. Edge still pins
 `v0.9.0rc4`, so it skips `rc5`.
 
 The *Observed consumer declarations* table above, and the consumer status in
-`README.md` that `tests/test_consumer_pin_tables_agree.py` holds it to, still
-record the 2026-09-20 reading — Nexus as a deliberate non-declaration
-included. They are re-read together once the products move to `v0.9.0rc6`,
-rather than twice in a row by hand.
+`README.md` that `tests/test_consumer_pin_tables_agree.py` holds it to, were
+re-read on 2026-11-05 for Edge, Gadget, Knowledge and Deception. Their Nexus
+and Boot rows still record the 2026-09-20 reading — Nexus as a deliberate
+non-declaration included — and so differ from this observation; they are not
+re-read for `v0.10.0`, and nothing about either is claimed for it.
 
 **Nexus, Deception and Edge each refuse any Fabric but the exact tag they
 pin.** Nexus's `fabric_boundary.py` refuses an installed Fabric whose

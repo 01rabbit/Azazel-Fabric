@@ -90,13 +90,14 @@ See [`docs/deception-contracts.md`](docs/deception-contracts.md).
 | Azazel-Gadget (AZ-02) | Shipping Fabric integration; observed dependency pin: `v0.9.0` (stable) for StatusView, which meets its needs. AZ-06 compatibility remains a constrained future `gadget-lite` subset. |
 | Azazel-Knowledge (AZ-04) | Observed API optional-dependency pin: `v0.10.0rc1` (a candidate); its tests read both producers' captures. Core remains dependency-minimal and advisory-only. |
 | Azazel-Deception (AZ-06) | Observed dependency pin: `v0.10.0rc1` (a candidate); its tests read Edge's producer captures. Live exposure remains disabled by default. |
-| Azazel-Boot (AZ-03) | Observed `fabric` optional-extra pin: `v0.9.0rc1` (a candidate), **last read 2026-09-20**; an image lock is still required before a Boot implementation release. |
-| Azazel-Nexus (AZ-07) | **No declaration** (last read 2026-09-20). No longer documentation-only — it carries code (`src/azazel_nexus/`) with `dependencies = []` on purpose. Its absence here is a design choice, not an omission. |
+| Azazel-Boot (AZ-03) | Observed `fabric` optional-extra pin: `v0.9.0rc1` (a candidate), **as read 2026-09-20** (a 2026-10-25 observation in the compatibility document found no declaration; not re-read for this release); an image lock is still required before a Boot implementation release. |
+| Azazel-Nexus (AZ-07) | **No declaration** (as read 2026-09-20; a 2026-10-25 observation in the compatibility document found a pre-release pin; not re-read for this release). No longer documentation-only — it carries code (`src/azazel_nexus/`) with `dependencies = []` on purpose. Its absence here is a design choice, not an omission. |
 
 Edge, Gadget, Knowledge and Deception were re-read on 2026-11-05 at `main`
 (Edge `2ef3ea8`, Gadget `551e1af`, Knowledge `8b3f350`, Deception `b27c097`);
-the three on `v0.10.0rc1` carry the contract surface `v0.10.0` makes stable. Boot and Nexus
-were last read on 2026-09-20 (Boot `5ad2f2e`, Nexus `6831d8b`) and nothing
+the three on `v0.10.0rc1` carry the contract surface `v0.10.0` makes stable. The Boot and Nexus
+rows carry the 2026-09-20 reading (Boot `5ad2f2e`, Nexus `6831d8b`), which a
+later observation already differs from; they were not re-read, and nothing
 about them is claimed for `v0.10.0`;
 [`docs/release-compatibility.md`](docs/release-compatibility.md) is the
 authority for this table and carries the reasoning behind each row.
