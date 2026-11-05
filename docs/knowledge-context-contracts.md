@@ -2,6 +2,8 @@
 
 実装: `azazel_fabric.knowledge_context`。Fabric Issue #72 に対応する最初の候補スライス。
 
+状態: **experimental**（互換性の約束なし）。最初に含まれる版は `0.10.0rc1`。採用状況と experimental の理由は [release compatibility](release-compatibility.md#contract-family-adoption-and-the-r1c-gate) を参照。
+
 これは **記述のみ** の契約である。認証、資格情報、トランスポート、鍵 ID、署名、コミッショニング、経路、ネットワーククライアント、ローカルポリシーの受理判断、学習、推論、強制は含まない。それらは利用側（consumer adapter）と別のトランスポート層の責務である。
 
 ## ペイロード

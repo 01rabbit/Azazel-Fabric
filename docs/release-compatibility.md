@@ -132,7 +132,7 @@ library, not exchanging a contract through it.
 **Which families are experimental, stated rather than implied.** The sentence
 above has said "non-experimental" since the gate was written and named none,
 which left a reader to work out for themselves whether an unmet row was a gap
-or a family that was never gated. Four are experimental:
+or a family that was never gated. Five are experimental:
 
 | Family | Why it is experimental | What that means for `v0.9.0` |
 | --- | --- | --- |
@@ -140,6 +140,7 @@ or a family that was never gated. Four are experimental:
 | `mio_contracts` | Neither side exists. Azazel-Nexus and Azazel-Boot name the module in their design documents as a *target*, and neither imports it | **Does not block the stable tag.** Same |
 | `external_security_contracts` | Introduced experimental by the Fabric#23 program decision: a family is stable only with one producer and two independent consumers, and this one (Fabric#25) has neither yet. Its intended producers and consumers (Knowledge#95, Deception#39, Nexus#16 adapters) are downstream work, and an external EDR/firewall feed is not a Fabric adopter | **Does not block the stable tag.** Its shape may change without a candidate bump, and it carries no compatibility promise |
 | `provisioning_contracts` | Moved out of the gate by the release owner on 2026-11-05, recorded in Fabric#23. Until then it was gated, on the strength of one real user: Azazel-Nexus consumes `InterfaceIdentity` through `fabric_boundary.py`. No second, independent consumer exists or is scheduled (every public product and Azazel-Boot import none of it; Boot's `PLANNED_FABRIC_MODULES` entry is a presence probe), and no product produces it, so the row could not reach one producer and two consumers without new product design that `v0.9.0` does not wait for. The decision is to stop presenting a one-user family as a stable contract, not a finding that it has two | **Does not block the stable tag.** Its shape may change without a candidate bump, and it carries no compatibility promise: Azazel-Nexus's use of `InterfaceIdentity` is not covered by `v0.9.0`'s compatibility statement and should pin an exact tag and re-check on every move. It returns to the gate when it has a producer and two independent consumers |
+| `knowledge_context` | New in `v0.10.0rc1` (Fabric#76): the Knowledge Context request/response semantic profile approved in Fabric#72 on 2026-11-04, admitted to `v0.10.0` as experimental by the release owner on 2026-11-05. It is a single module (`azazel_fabric.knowledge_context`), not a `*_contracts` package. Its intended producer (Azazel-Knowledge#116) and consumers (Azazel-MIO#47, Azazel-Nexus#402) are open candidate work pinned to pre-release Fabric commits, so nothing has adopted it from a tag | **Does not block a stable tag.** Its shape may change without a candidate bump, and it carries no compatibility promise. It joins the gate when it has a producer and two independent consumers on a released tag |
 
 Experimental is not "unadopted". An empty row is a gap, not a design
 position, and marking a family experimental because its row is empty would turn
@@ -157,6 +158,7 @@ is in its row above), not because its row was empty.
 | `external_security_contracts` | — | — | **experimental** |
 | `mio_contracts` | — | — | **experimental** |
 | `outcome_contracts` | Azazel-Edge:`py/azazel_edge/outcome/shared_export.py`, Azazel-Deception:`src/azazel_deception/runtime/outcome_export.py` | Azazel-Knowledge:`src/azazel_knowledge/api/contracts.py`, Azazel-Deception:`src/azazel_deception/runtime/producer_evidence.py` | **met** |
+| `knowledge_context` | — | — | **experimental** |
 | `provisioning_contracts` | — | — | **experimental** |
 
 ### What each product actually pins

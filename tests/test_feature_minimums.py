@@ -214,6 +214,7 @@ FEATURE_MODULES: dict[str, str] = {
     "mio-contracts/v0.1": "mio_contracts/__init__.py",
     "defensive-state/v0.1": "schema/defensive_state.py",
     "effect-contracts/v0.1": "effect_contracts/__init__.py",
+    "knowledge-context/v1": "knowledge_context.py",
     "external-security-contracts/v0.1": "external_security_contracts/__init__.py",
 }
 

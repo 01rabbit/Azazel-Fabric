@@ -10,6 +10,12 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ### Added
 
+- **Experimental Knowledge Context semantic profile** (`azazel_fabric.knowledge_context`,
+  Fabric#76, profile approved in Fabric#72): `KnowledgeContextRequestV1` /
+  `KnowledgeContextResponseV1`, canonical JSON bytes, and request/response
+  correlation. Descriptive only: no authentication, signature, transport, clock
+  or network. **Experimental, no compatibility promise**; additive.
+
 - **Producer captures** (`azazel_fabric.testing.producer_captures`, Fabric#23):
   30 records that real producers emitted — Azazel-Edge `e84af9a`
   (effect, engagement, deception, outcome) and Azazel-Deception `305af85`
