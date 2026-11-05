@@ -15,11 +15,13 @@ twice. See ``docs/release-signing.md`` and Fabric#56.
 
 This is ``0.9.0rc6``, and it is the tree ``release/v0.9.0rc6.digest.json``
 records. It carries the experimental ``external_security_contracts`` profile
-(Fabric#25), which is additive, and two changes that are **not**: a typed
+(Fabric#25), which is additive, and three changes that are **not**: a typed
 reference, a provisioning digest or a MAC may no longer end in a newline
-(Fabric#65), and the deception, engagement and effect directive walkers refuse
-a payload nested more than 32 levels deep (Fabric#23). Input that was valid
-under ``rc5`` can be refused under ``rc6``.
+(Fabric#65); a decision, activation-decision, trace or execution ref typed
+``observation_objective:``, ``hypothesis:`` or ``frame:`` is refused where
+``rc5`` read it as untyped (Fabric#72); and the deception, engagement and
+effect directive walkers refuse a payload nested more than 32 levels deep
+(Fabric#23). Input that was valid under ``rc5`` can be refused under ``rc6``.
 
 ``v0.9.0rc4`` carries one **non-additive** change: an ``EffectObservation``
 may claim only ``observed_fact`` or ``active_materialized`` (Fabric#52). The
