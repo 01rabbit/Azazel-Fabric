@@ -57,12 +57,12 @@ import json
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from azazel_fabric.provisioning_contracts.integrity import (  # noqa: E402
-    canonical_contract_bytes,
-    digest_payload,
-)
+from _fabric_src import integrity  # noqa: E402  (standard library only; see _fabric_src)
+
+canonical_contract_bytes = integrity.canonical_contract_bytes
+digest_payload = integrity.digest_payload
 
 DIGEST_FIELD = "content_digest"
 SIGNATURE_SUFFIX = ".sig"

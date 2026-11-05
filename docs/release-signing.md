@@ -348,7 +348,11 @@ not the working tree, and `release/v0.9.0rc2.digest.json` is byte-identical on
 `main` and at the tag. Step 1 is what ties the manifest to the tag's actual
 contents, and it has to happen at the tag to mean anything.
 
-Neither command needs PyNaCl. Check the result before signing — for
+Neither command needs PyNaCl, and neither needs pydantic or an installed
+`azazel_fabric`: the tools load the canonical serialization straight from
+`src/` (`tools/_fabric_src.py`, `tests/test_release_tools_standalone.py`).
+That holds from `0.10.0rc1.dev0` on; a checkout of an older tag still runs
+that tag's own tools, which import the package. Check the result before signing — for
 `v0.9.0rc2` it is 7915 bytes:
 
 ```bash
