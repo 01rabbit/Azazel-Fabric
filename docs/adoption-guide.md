@@ -151,8 +151,8 @@ Factories come in two flavours: `make_*` (fully populated) and `minimal_*`
 **Test your consumer against what the producers really send.** The factories
 and golden vectors above are built by Fabric from its own models. The
 *producer captures* are not: each one is the output of a real producer function
-in Azazel-Edge or Azazel-Deception at a recorded commit, captured byte for byte
-(Fabric#23). If your product consumes a stable family, feed them to the code
+in Azazel-Edge or Azazel-Deception at a recorded commit, with the values it
+returned (re-serialized with sorted keys; Fabric#23). If your product consumes a stable family, feed them to the code
 that parses what it receives:
 
 ```python

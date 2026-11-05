@@ -18,6 +18,9 @@ REPO = Path(__file__).resolve().parents[2]
 FIXTURES = REPO / "tests" / "fixtures" / "producer_captures"
 OUT = REPO / "src" / "azazel_fabric" / "testing" / "_producer_capture_data.py"
 
+#: Per-capture provenance fields; a capture missing one is refused.
+REQUIRED = ("family", "model", "producer", "input_from_product_tests", "list", "signed")
+
 
 def build() -> str:
     lines = [
@@ -30,6 +33,9 @@ def build() -> str:
         provenance = json.loads((product_dir / "provenance.json").read_text(encoding="utf-8"))
         product = provenance["product"]
         for stem, meta in sorted(provenance["captures"].items()):
+            missing = set(REQUIRED) - set(meta)
+            if missing:
+                raise SystemExit(f"{product}/{stem}: provenance lacks {sorted(missing)}")
             payload = (product_dir / f"{stem}.json").read_text(encoding="utf-8")
             record = {
                 "product": product,

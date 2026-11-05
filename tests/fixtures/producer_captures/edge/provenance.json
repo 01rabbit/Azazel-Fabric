@@ -67,7 +67,7 @@
     },
     "engagement_event_redirect_downgraded_to_notify": {
       "family": "engagement_contracts",
-      "input_from_product_tests": true,
+      "input_from_product_tests": false,
       "list": false,
       "model": "azazel_fabric.engagement_contracts.EngagementEvent",
       "producer": "py/azazel_edge/engagement/candidate.py:engagement_event",

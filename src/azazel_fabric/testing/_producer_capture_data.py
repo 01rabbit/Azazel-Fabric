@@ -273,7 +273,7 @@ CAPTURES = {
         'commit': 'e84af9a8ca7c9668416db41cd085d17264cbd8b9',
         'fabric_pin': 'v0.9.0',
         'family': 'engagement_contracts',
-        'input_from_product_tests': True,
+        'input_from_product_tests': False,
         'list': False,
         'model': 'azazel_fabric.engagement_contracts.EngagementEvent',
         'payload_json': '{\n  "activity": "notify",\n  "approach": "detect",\n  "constraints": {\n    "evidence_refs": [\n      "ev-soc-1",\n      "ev-noc-1"\n    ],\n    "max_duration_seconds": 300,\n    "outbound_allowed": false,\n    "production_access": false,\n    "scope": "decoy_segment",\n    "termination_conditions": [\n      "noc_health_degraded",\n      "max_duration_reached",\n      "operator_terminate"\n    ]\n  },\n  "event_id": "AZ-01-engev-notify",\n  "evidence_refs": [\n    "ev-soc-1",\n    "ev-noc-1"\n  ],\n  "objective": "detect",\n  "outcome": {\n    "attacker_reaction": "disengaged",\n    "ended_at": null,\n    "evidence_refs": [\n      "ev-soc-1",\n      "ev-noc-1"\n    ],\n    "reaction_window_s": null,\n    "schema_version": "engagement-outcome/v0.1",\n    "started_at": null,\n    "termination_reason": null\n  },\n  "product": "AZ-01",\n  "schema_version": "engagement-event/v0.1",\n  "trigger": {\n    "attack_technique": "T1110",\n    "confidence": 0.8,\n    "evidence_refs": [\n      "ev-soc-1",\n      "ev-noc-1"\n    ]\n  }\n}\n',

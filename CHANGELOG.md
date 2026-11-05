@@ -14,7 +14,8 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
   30 records that real producers emitted — Azazel-Edge `e84af9a`
   (effect, engagement, deception, outcome) and Azazel-Deception `305af85`
   (deception, effect, outcome) — captured from each product's own producer
-  functions with the inputs its tests use, so consumers can test against what
+  functions with the inputs its tests use (values as returned, JSON
+  re-serialized with sorted keys; each name's bytes pinned by SHA-256), so consumers can test against what
   the producers actually send rather than against vectors Fabric built from
   its own models. `producer_capture_names`, `load_producer_capture`,
   `producer_capture_body` and `producer_capture_provenance` are exported from

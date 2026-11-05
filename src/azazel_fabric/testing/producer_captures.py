@@ -5,7 +5,11 @@ its own models. That proves the models agree with themselves; it does not prove
 that what Azazel-Edge or Azazel-Deception actually emits is what a consumer
 reads. These are the other half: each payload is the output of a named
 producer function in a named product repository at a recorded commit, called
-with the inputs that product's own tests use, captured byte for byte.
+with the inputs that product's own tests use. The values are exactly what the
+function returned; the JSON is re-serialized with sorted keys and two-space
+indentation, so key order and whitespace are Fabric's, not the producer's.
+``input_from_product_tests`` is true only when every input is a value the
+product's tests pass; a capture whose inputs were extended for it says false.
 
 Use them in a consumer's test suite: feed the payload to the code that parses
 or validates what it receives, and assert what it does with it.
@@ -17,7 +21,8 @@ or validates what it receives, and assert what it does with it.
         ...
 
 **What is promised.** The functions and the names they return are part of the
-``azazel_fabric.testing`` surface. The bytes under a name never change: a
+``azazel_fabric.testing`` surface. The bytes under a name never change -- a
+test pins each one's SHA-256 (``tests/test_producer_captures.py``) -- and a
 refreshed capture from a newer producer commit is added under a new name
 (``..._v1``), and the old one stays. A capture is a record of what one commit
 emitted, not a statement that the producer still emits exactly that.
@@ -93,7 +98,7 @@ def _record(name: str) -> dict[str, Any]:
 
 
 def load_producer_capture(name: str) -> Any:
-    """The captured payload, exactly as the producer emitted it (a fresh copy)."""
+    """The captured payload: the values the producer returned (a fresh copy)."""
 
     return json.loads(_record(name)["payload_json"])
 
