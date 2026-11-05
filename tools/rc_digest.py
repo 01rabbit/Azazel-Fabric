@@ -34,13 +34,13 @@ import subprocess
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from azazel_fabric.provisioning_contracts.integrity import (  # noqa: E402
-    canonical_contract_json,
-    content_digest,
-)
-from azazel_fabric.version import __version__  # noqa: E402
+from _fabric_src import integrity, version  # noqa: E402  (standard library only; see _fabric_src)
+
+canonical_contract_json = integrity.canonical_contract_json
+content_digest = integrity.content_digest
+__version__ = version.__version__
 
 SCHEMA_VERSION = "fabric-release-candidate-digest/v0.1"
 
