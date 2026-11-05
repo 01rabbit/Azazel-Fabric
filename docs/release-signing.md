@@ -6,7 +6,7 @@ R1b is "a signed release-candidate digest" (`Azazel/docs/roadmaps/nexus-boot-pro
 | Half | Who | State |
 |---|---|---|
 | The digest — what bytes the candidate is made of | anyone, reproducibly | **done** for `v0.9.0rc1` … `v0.9.0rc6`, `v0.9.0`, `v0.10.0rc1` and `v0.10.0` |
-| The detached signature — who stands behind them | the release owner, with a private key | **done** for `v0.9.0rc1` … `v0.9.0rc6`, `v0.9.0` and `v0.10.0rc1`; **pending** for `v0.10.0` |
+| The detached signature — who stands behind them | the release owner, with a private key | **done** for `v0.9.0rc1` … `v0.9.0rc6`, `v0.9.0` and `v0.10.0rc1` and `v0.10.0` |
 
 Neither half signs the git tag; see *What the signature covers* below.
 
@@ -71,12 +71,19 @@ python3 tools/rc_signature.py release/v0.10.0rc1.digest.json --check
 # v0.10.0rc1.digest.json signed by: release-owner
 ```
 
-`v0.10.0`'s digest is in the tree and **is not signed yet**. It is the stable
-tag, so `release.yml` refuses to publish it without a signature. It is signed
-before its tag exists, the same order as `v0.9.0` and `v0.10.0rc1`: the
-signature joins the manifest in the release pull request, the pull request is
-squash-merged, and the tag is cut at that commit. Its payload differs from
-`v0.10.0rc1`'s only by `version.py` and the manifest's own version fields.
+`v0.10.0`'s digest carries a verified release-owner signature, made
+**before** its tag existed, the same order as `v0.9.0` and `v0.10.0rc1`. It is
+the stable tag, so `release.yml` refuses to publish it without that signature.
+The manifest and `release/v0.10.0.digest.json.sig` arrive in one pull request
+that is squash-merged, so on `main` they are one commit, and the tag is cut at
+that commit. Its payload differs from `v0.10.0rc1`'s only by `version.py` and
+the manifest's own version fields. The release owner signed with the existing
+`release-owner` key; the trusted-key map is unchanged.
+
+```bash
+python3 tools/rc_signature.py release/v0.10.0.digest.json --check
+# v0.10.0.digest.json signed by: release-owner
+```
 
 ```bash
 python3 tools/rc_signature.py release/v0.9.0rc4.digest.json --check
