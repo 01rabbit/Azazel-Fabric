@@ -6,7 +6,7 @@ R1b is "a signed release-candidate digest" (`Azazel/docs/roadmaps/nexus-boot-pro
 | Half | Who | State |
 |---|---|---|
 | The digest — what bytes the candidate is made of | anyone, reproducibly | **done** for `v0.9.0rc1` … `v0.9.0rc6` |
-| The detached signature — who stands behind them | the release owner, with a private key | **done** for `v0.9.0rc1` … `v0.9.0rc5`; **pending** for `v0.9.0rc6` |
+| The detached signature — who stands behind them | the release owner, with a private key | **done** for `v0.9.0rc1` … `v0.9.0rc6` |
 
 Neither half signs the git tag; see *What the signature covers* below.
 
@@ -31,14 +31,22 @@ python3 tools/rc_signature.py release/v0.9.0rc1.digest.json --check
 The digests for `v0.9.0rc3`, `v0.9.0rc4` and `v0.9.0rc5` were signed the same
 way, each before its tag existed.
 
-`v0.9.0rc6`'s digest is in the tree and **is not signed yet**.
-`release/v0.9.0rc6.digest.json.sig` does not exist, and
-`test_every_published_candidate_is_signed` is red until it does — the same
-state `v0.9.0rc3` was in while it waited for its signature. The release owner
-decided to resume signing with the existing `release-owner` key in
-[Fabric#61](https://github.com/01rabbit/Azazel-Fabric/issues/61#issuecomment-6399309162).
-The trusted-key map stays unchanged. The key must remain outside the repository,
-and signing must not use `git stash`.
+`v0.9.0rc6`'s digest was signed **after** its tag, like `v0.9.0rc1`'s. The
+tag `v0.9.0rc6` (commit `0233813`) was pushed before the signature existed, so
+the tagged tree carries the manifest but not `release/v0.9.0rc6.digest.json.sig`,
+and the Release workflow for that tag failed on
+`test_every_published_candidate_is_signed`. The tag was not moved: the manifest
+is byte-identical on `main` and at the tag, and `rc_digest.py --check` at the
+tag still matches `sha256:f1b76901…ab1e6`, so the signature added here covers
+exactly what the tag ships. The release owner signed with the existing
+`release-owner` key, as decided in
+[Fabric#61](https://github.com/01rabbit/Azazel-Fabric/issues/61#issuecomment-6399309162);
+the trusted-key map is unchanged.
+
+```bash
+python3 tools/rc_signature.py release/v0.9.0rc6.digest.json --check
+# v0.9.0rc6.digest.json signed by: release-owner
+```
 
 ```bash
 python3 tools/rc_signature.py release/v0.9.0rc4.digest.json --check
