@@ -8,8 +8,10 @@ itself, an interoperability certification.
 ## Current Fabric release
 
 The latest **stable** release is `v0.9.0`. The latest **published** tag is
-`v0.9.0`, the stable release of the series. Its contract surface is
-`v0.9.0rc6`'s unchanged (only `version.py` differs), and it supersedes
+the release candidate `v0.10.0rc1` — additive over `v0.9.0`: the experimental
+Knowledge Context profile (Fabric#76) and the producer captures in
+`azazel_fabric.testing` (Fabric#23). `v0.9.0`'s contract surface is
+`v0.9.0rc6`'s unchanged (only `version.py` differs), and it superseded
 `v0.8.0` as the stable tag. `v0.9.0rc6` is
 the experimental `external_security_contracts`
 profile plus non-additive tightenings (Fabric#65, Fabric#72, Fabric#23) — on top of
@@ -85,6 +87,7 @@ available. A `.devN` version is never a release.
 | `v0.9.0rc5` (candidate) | Presented-terrain provenance: `source_effect_ref`, `trace_id`, `synthetic_identity_refs`, `synthetic_credential_refs`; `activation_decision_ref` becomes optional (`effect_contracts`, Fabric#51) | **Additive.** Every `rc4` terrain payload still validates and still chains — checked by `test_an_rc4_terrain_payload_still_validates`. What changes is that a decision-less effect can be chained to a terrain **at all**, which `rc4` made structurally impossible |
 | `v0.9.0rc6` (candidate) | **Experimental** `external_security_contracts` profile (Fabric#25); a typed reference, a provisioning digest or a MAC may not end in a newline (`effect_contracts/refs.py`, `provisioning_contracts/models.py`, Fabric#65); the deception, engagement and effect directive walkers refuse a payload nested more than 32 levels deep (Fabric#23); optional observation-objective / hypothesis / frame refs on `OutcomeObservationEnvelope` (Fabric#72) | **Non-additive.** The `external_security_contracts` profile is additive and optional, but three other changes are not: a typed ref, `sha256:` digest or MAC ending in one `\n` that validated at `rc5` is refused (Fabric#65), and a payload deeper than 32 levels passed to a deception, engagement or effect directive guard is refused with a `ValueError` even when it carries no directive (Fabric#23; `rc5` accepted it up to the recursion limit). A `decision_ref`, `activation_decision_ref`, `trace_id` or `EffectObservation.execution_ref` typed `observation_objective:`, `hypothesis:` or `frame:` is refused where `rc5` read it as untyped (Fabric#72); the new envelope fields themselves are additive. None should reach a well-formed producer: no MAC payload changes in practice (`max_length=17`), and the deepest payload any model or fixture here passes to those guards is 3 levels. The experimental profile carries no compatibility promise |
 | `v0.9.0` | **Stable.** `v0.9.0rc6`'s contract surface unchanged; `provisioning_contracts` joins the experimental families (Fabric#23) | Against `v0.8.0`: additive except the 32-level nesting limit on the deception and engagement directive guards (Fabric#23). Against `v0.9.0rc6`: no package change. The four experimental families carry no compatibility promise |
+| `v0.10.0rc1` (candidate) | **Experimental** Knowledge Context request/response profile (`knowledge_context`, Fabric#76); producer captures — real Edge and Deception producer output — in `azazel_fabric.testing` (Fabric#23) | **Additive.** No released symbol changed. `knowledge_context` carries no compatibility promise; the captures' names and bytes are fixed once published |
 
 All consumer deployments MUST pin an exact compatible Fabric tag or immutable
 image lock. They MUST NOT pin a branch. A product chooses when to adopt a newer
