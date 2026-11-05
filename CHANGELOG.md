@@ -13,9 +13,11 @@ Nothing yet.
 ## [0.10.0rc1] — Knowledge Context profile and producer captures (Fabric#76, Fabric#23)
 
 **Additive over `v0.9.0`.** No released symbol was removed or narrowed; the
-`v0.9.0` test suite passes against this tree except for five checks of the
-feature/adoption registries that do not know the new `knowledge_context` row
-(listed in Fabric#86). A release candidate: pinnable, no stability promise.
+`v0.9.0` test suite passes against this tree except for seven checks of
+recorded state, none of contract behaviour: five of the feature/adoption
+registries, which do not know the new `knowledge_context` row (listed in
+Fabric#86), and two of the release ledger, which do not know this candidate's
+manifest and payload checksum (Fabric#87). A release candidate: pinnable, no stability promise.
 
 ### Added
 
