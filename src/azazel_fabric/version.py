@@ -3,8 +3,10 @@
 Version management is tag-driven on GitHub. This version must match the
 release tag being cut; a ``.devN`` suffix is only present between releases.
 
-``v0.9.0rc1`` through ``v0.9.0rc6`` are published, and each ships a **signed
-release digest** (``release/*.digest.json.sig``).
+``v0.9.0rc1`` through ``v0.9.0rc6`` are published, and each has a **signed
+release digest** (``release/*.digest.json.sig``). ``rc1``'s and ``rc6``'s
+signatures were added after their tags, so the ``rc6`` tag's own tree carries
+the manifest but not the ``.sig``.
 
 This is ``0.9.0``, the stable release, and it is the tree
 ``release/v0.9.0.digest.json`` records. Its contract surface is ``v0.9.0rc6``'s

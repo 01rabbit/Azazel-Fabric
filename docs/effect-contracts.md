@@ -1,13 +1,12 @@
 # Cross-series effect, outcome, and presented-terrain contracts
 
-Status: **shipped in the candidate `v0.9.0rc2`, not stable**
+Status: **stable since `v0.9.0`**, first shipped in the candidate `v0.9.0rc2`
 (`azazel_fabric.effect_contracts`). Introduced for Fabric#15 on top of
-`v0.9.0rc1`. **One producer, no consumer** — Azazel-Deception emits
-`PresentedTerrainRef` (Azazel-Deception#46); nothing reads one yet, and a
-contract that has never been read is not known to interoperate, so the R1c gate
-counts it as unmet. See [release compatibility](release-compatibility.md) for
-what the first adoption measured, including two records of this family that
-**no product can produce today**.
+`v0.9.0rc1`. Its producers (Azazel-Edge, Azazel-Deception) and consumers
+(Azazel-Deception, Azazel-Edge) are cited in
+[release compatibility](release-compatibility.md), which also records what the
+first adoption measured, including two records of this family that **no
+product can produce today**.
 Additive: a product that never imports this family is unaffected, and the
 released `outcome_contracts` family is untouched.
 

@@ -51,8 +51,9 @@ python3 tools/rc_signature.py release/v0.9.0rc6.digest.json --check
 `v0.9.0`'s digest is in the tree and **is not signed yet**. It is the stable
 tag, so `release.yml` refuses to publish it without a verified signature, and
 it must be signed **before** its tag exists — the order `v0.9.0rc6` did not
-keep. `release/v0.9.0.digest.json.sig` lands in the same commit as the
-manifest, and the tag is cut at that merge commit.
+keep. The manifest and `release/v0.9.0.digest.json.sig` arrive in one pull
+request that is squash-merged, so on `main` they are one commit, and the tag is
+cut at that commit.
 
 ```bash
 python3 tools/rc_signature.py release/v0.9.0rc4.digest.json --check
@@ -73,7 +74,7 @@ differs, but not always in length:
 | `v0.9.0rc4` | **7915** | `b02ee97bf7b7783567b070129144b1f84987384873c96eb34ff7f4105f33101d` |
 | `v0.9.0rc5` | **7915** | `c183eb92dfd706cc2bcf69bad37641588f440c488b0264564c7a8e044647cc9d` |
 | `v0.9.0rc6` | 8440 | `f1b76901bee8938b45b5a600d967286b7a397933acdbecb30328c6adad1ab1e6` |
-| `v0.9.0` | 8434 | `86d3fefeb1034cea0c9b0f6d4d36122a9a10337d4d78cdcc08a61c2dcafa6a76` |
+| `v0.9.0` | 8434 | `5107054682802f1e615615d0de51471859014d31a8808b61d8cbf6c16b27dbf4` |
 
 `rc2` through `rc5` cover the same 66 files, so four payloads in a row are the
 same length and only their contents differ. A size check cannot tell any of
@@ -475,6 +476,6 @@ guards actually run — a skipped guard reports success.
 
 A signature proves that the release owner signed these bytes. It does not make
 the contracts authoritative, does not grant any runtime or decision authority,
-and is not R1c: the stable tag additionally waits on per-family downstream
+and is not R1c: the stable tag additionally required per-family downstream
 adoption, recorded in
 [release compatibility](release-compatibility.md#contract-family-adoption-and-the-r1c-gate).

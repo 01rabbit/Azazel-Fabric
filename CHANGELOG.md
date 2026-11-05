@@ -38,7 +38,8 @@ through `[0.9.0rc6]` below ships here.
 
 - **Stable** (R1c gate met — one producer, two consumers, cited in
   `docs/release-compatibility.md`): `deception_contracts`, `effect_contracts`,
-  `engagement_contracts`, `outcome_contracts`, plus the `v0.8.0` surface.
+  `engagement_contracts`, `outcome_contracts`, plus the rest of the `v0.8.0`
+  surface (all but `cti_contracts`, which is experimental).
 - **Experimental, no compatibility promise**: `cti_contracts`, `mio_contracts`,
   `external_security_contracts`, `provisioning_contracts`.
 - **Not part of the `v0.9.0` claim** (release-owner decision, 2026-11-05,

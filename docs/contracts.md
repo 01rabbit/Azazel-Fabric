@@ -309,9 +309,8 @@ choice.
 
 ## 6. Outcome-as-Evidence contracts (`azazel_fabric.outcome_contracts`)
 
-**Status: implemented on `main`, shipped in the candidate `v0.9.0rc1` —
-not yet stable.** Added after
-`v0.8.0`; no tag carries it yet, so no consumer can pin it. Shipped as four
+**Status: stable since `v0.9.0`; first shipped in the candidate
+`v0.9.0rc1`.** Added after `v0.8.0`. Shipped as four
 frozen, `extra="forbid"` models plus validation helpers.
 
 The family exists to keep four different claims apart, because collapsing them
@@ -372,10 +371,9 @@ Two boundaries are worth restating here because they are easy to erode:
 
 ## 8. Cross-series effect / outcome / terrain contracts (`azazel_fabric.effect_contracts`)
 
-**Status: shipped in the candidate `v0.9.0rc2` — not yet stable.** Introduced
-for Fabric#15 on top of `v0.9.0rc1`. **No product has adopted it yet**, so it
-carries no R1c evidence; see
-[release compatibility](release-compatibility.md). Additive — the released
+**Status: stable since `v0.9.0`; first shipped in the candidate `v0.9.0rc2`.**
+Introduced for Fabric#15 on top of `v0.9.0rc1`. Its producers and consumers are
+cited in [release compatibility](release-compatibility.md). Additive — the released
 `outcome_contracts` family (§6) is untouched, and a product that never imports
 this one is unaffected.
 

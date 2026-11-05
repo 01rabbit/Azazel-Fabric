@@ -29,7 +29,8 @@ upgrade notes are in `CHANGELOG.md` `[0.9.0]`.
 
 **What `v0.9.0` promises.** The non-experimental families —
 `deception_contracts`, `effect_contracts`, `engagement_contracts` and
-`outcome_contracts` — and the `v0.8.0` surface carry a compatibility promise.
+`outcome_contracts` — and the rest of the `v0.8.0` surface (all but
+`cti_contracts`) carry a compatibility promise.
 The four experimental families (below) do not. Two things are explicitly **not**
 claimed by this stable tag, by release-owner decision on 2026-11-05 recorded in
 Fabric#23: an aggregated, signed conformance attestation across products, and
@@ -88,7 +89,7 @@ support.
 | Consumer | Observed declaration | Interpretation |
 |---|---|---|
 | Azazel-Edge | `v0.9.0rc2` in `requirements/fabric.txt` | Current reference authority consumer. An **optional** extra: Edge's arbiter runs with no Fabric installed |
-| Azazel-Gadget | `v0.8.0` in `requirements.txt` | The only consumer on the latest **stable** tag. It uses `view` + `schema.mode` and none of the candidate families, so it has no reason to carry a candidate (Azazel-Gadget#22) |
+| Azazel-Gadget | `v0.8.0` in `requirements.txt` | The only consumer observed on a **stable** tag (`v0.8.0`, before `v0.9.0`). It uses `view` + `schema.mode` and none of the candidate families, so it has no reason to carry a candidate (Azazel-Gadget#22) |
 | Azazel-Knowledge | `v0.9.0rc2` in the `api` optional dependency (`pyproject.toml`) | Advisory API boundary only; core stays dependency-minimal |
 | Azazel-Deception | `v0.9.0rc2` in `pyproject.toml` | Current AZ-06 runtime declaration |
 | Azazel-Nexus | **no declaration** | No longer documentation-only — it carries code with deliberately zero dependencies. Its absence from this table is a design choice, not an omission |

@@ -1,5 +1,5 @@
 {
-  "content_digest": "sha256:86d3fefeb1034cea0c9b0f6d4d36122a9a10337d4d78cdcc08a61c2dcafa6a76",
+  "content_digest": "sha256:5107054682802f1e615615d0de51471859014d31a8808b61d8cbf6c16b27dbf4",
   "covered": {
     "files": [
       "pyproject.toml"
@@ -75,7 +75,7 @@
     "src/azazel_fabric/testing/golden.py": "sha256:06d81d3aea8c85fc41c25f0d884f1f52baa27ca1dd79598fc1b677af29602460",
     "src/azazel_fabric/testing/invariants.py": "sha256:acf8927247cd4769d9071c7008ada4568e36ecb14e32fd73e88cea6d673ef3ff",
     "src/azazel_fabric/testing/provisioning.py": "sha256:737b2a57dfcf2f53c1b5f5ebe52fd7124fe2e3ca88536ae937d721e41e334ca3",
-    "src/azazel_fabric/version.py": "sha256:840a0278e0d3cd063b79d2dd032588d5c5641c12c8f4583b5ea57bb6c8787f9b",
+    "src/azazel_fabric/version.py": "sha256:2749b1daae9d2b937ace85998170cdc3770ffd77129ca656c1c891423395ef42",
     "src/azazel_fabric/view/__init__.py": "sha256:19868528292eeb96cafdda280dc7e60e86bc74c00f8bce39776d8890bb6a489b",
     "src/azazel_fabric/view/build.py": "sha256:cc9d81561694a07bbd80976512f5ce7504ce048ff66d6670628f3b72a76b0faa",
     "src/azazel_fabric/view/status.py": "sha256:15ca129889e6891e893685990bd5f371fd581b2857bc76ee48abe5733b0af6ef"
