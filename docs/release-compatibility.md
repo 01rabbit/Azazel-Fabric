@@ -7,8 +7,11 @@ itself, an interoperability certification.
 
 ## Current Fabric release
 
-The latest **stable** release is `v0.8.0`. The latest **published** tag is the
-release candidate `v0.9.0rc6` — the experimental `external_security_contracts`
+The latest **stable** release is `v0.9.0`. The latest **published** tag is
+`v0.9.0`, the stable release of the series. Its contract surface is
+`v0.9.0rc6`'s unchanged (only `version.py` differs), and it supersedes
+`v0.8.0` as the stable tag. `v0.9.0rc6` is
+the experimental `external_security_contracts`
 profile plus non-additive tightenings (Fabric#65, Fabric#72, Fabric#23) — on top of
 `v0.9.0rc5`, which gives a presented terrain a way to bind to
 an effect that has no decision, on top of `v0.9.0rc4`, which narrows what an
@@ -18,11 +21,22 @@ cross-series `effect_contracts` family, which in turn sits on `v0.9.0rc1`,
 itself additive contract work (`outcome_contracts`, and the R1a
 `provisioning_contracts` / `mio_contracts` families) over `v0.8.0`.
 
-A candidate is pinnable but makes no stability promise. It exists so a consumer
-can pin an exact tag — never a branch — while producing the downstream evidence
-`v0.9.0` requires. A consumer that needs stability stays on `v0.8.0`; a consumer
-adopting the new contract families pins the newest candidate, `v0.9.0rc6`, and
-expects to re-pin to `v0.9.0`.
+A candidate is pinnable but makes no stability promise. Every consumer should
+now pin `v0.9.0`. From `v0.9.0rc6` that move changes nothing in the package; from
+`v0.8.0` one change is not additive — the deception and engagement directive
+guards refuse a payload nested more than 32 levels deep (Fabric#23) — and the
+upgrade notes are in `CHANGELOG.md` `[0.9.0]`.
+
+**What `v0.9.0` promises.** The non-experimental families —
+`deception_contracts`, `effect_contracts`, `engagement_contracts` and
+`outcome_contracts` — and the `v0.8.0` surface carry a compatibility promise.
+The four experimental families (below) do not. Two things are explicitly **not**
+claimed by this stable tag, by release-owner decision on 2026-11-05 recorded in
+Fabric#23: an aggregated, signed conformance attestation across products, and
+interoperability tested against golden fixtures built from a real producer's
+output. The adoption rows below are citations of real producers and consumers,
+and each consumer's own CI ran against its pin; neither is a cross-product
+certification. Both are next-release work.
 
 **A consumer adopting `effect_contracts` should move to `v0.9.0rc3`, and this
 is the first candidate move in this series that is not optional for its
@@ -62,6 +76,7 @@ available. A `.devN` version is never a release.
 | `v0.9.0rc4` (candidate) | An `EffectObservation` may claim only `observed_fact` or `active_materialized` (`effect_contracts/models.py`, Fabric#52) | **Non-additive — the first in this series.** Input accepted at `rc3` is refused at `rc4`. Required before `v0.9.0` stable; a producer that emitted an observation under any other authority class must correct it, not re-pin around it |
 | `v0.9.0rc5` (candidate) | Presented-terrain provenance: `source_effect_ref`, `trace_id`, `synthetic_identity_refs`, `synthetic_credential_refs`; `activation_decision_ref` becomes optional (`effect_contracts`, Fabric#51) | **Additive.** Every `rc4` terrain payload still validates and still chains — checked by `test_an_rc4_terrain_payload_still_validates`. What changes is that a decision-less effect can be chained to a terrain **at all**, which `rc4` made structurally impossible |
 | `v0.9.0rc6` (candidate) | **Experimental** `external_security_contracts` profile (Fabric#25); a typed reference, a provisioning digest or a MAC may not end in a newline (`effect_contracts/refs.py`, `provisioning_contracts/models.py`, Fabric#65); the deception, engagement and effect directive walkers refuse a payload nested more than 32 levels deep (Fabric#23); optional observation-objective / hypothesis / frame refs on `OutcomeObservationEnvelope` (Fabric#72) | **Non-additive.** The `external_security_contracts` profile is additive and optional, but three other changes are not: a typed ref, `sha256:` digest or MAC ending in one `\n` that validated at `rc5` is refused (Fabric#65), and a payload deeper than 32 levels passed to a deception, engagement or effect directive guard is refused with a `ValueError` even when it carries no directive (Fabric#23; `rc5` accepted it up to the recursion limit). A `decision_ref`, `activation_decision_ref`, `trace_id` or `EffectObservation.execution_ref` typed `observation_objective:`, `hypothesis:` or `frame:` is refused where `rc5` read it as untyped (Fabric#72); the new envelope fields themselves are additive. None should reach a well-formed producer: no MAC payload changes in practice (`max_length=17`), and the deepest payload any model or fixture here passes to those guards is 3 levels. The experimental profile carries no compatibility promise |
+| `v0.9.0` | **Stable.** `v0.9.0rc6`'s contract surface unchanged; `provisioning_contracts` joins the experimental families (Fabric#23) | Against `v0.8.0`: additive except the 32-level nesting limit on the deception and engagement directive guards (Fabric#23). Against `v0.9.0rc6`: no package change. The four experimental families carry no compatibility promise |
 
 All consumer deployments MUST pin an exact compatible Fabric tag or immutable
 image lock. They MUST NOT pin a branch. A product chooses when to adopt a newer
@@ -89,12 +104,13 @@ declared.
 `v0.8.0` is no longer the point the consumers agree on: four of them declare a
 `v0.9.0` candidate and they do not agree on which one. That is the expected
 shape while candidates circulate — each product adopts on its own schedule —
-but it means "the reference release" is not a single answer right now, and a
-statement that names one is wrong until `v0.9.0` is cut.
+but it meant "the reference release" was not a single answer until `v0.9.0`
+was cut. It is now `v0.9.0`; the rows above are dated observations and are
+re-read as each consumer re-pins.
 
 ## Contract family adoption and the R1c gate
 
-R1c — the stable `v0.9.0` — waits on downstream evidence: **at least one real
+R1c — the stable `v0.9.0` — waited on downstream evidence: **at least one real
 producer and two real consumers** per non-experimental contract family
 (`Azazel/docs/roadmaps/nexus-boot-program-plan.md` §5 R1, Fabric#23). The gate
 is per family, not per release: a release carrying five families does not clear

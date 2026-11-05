@@ -162,6 +162,7 @@ PUBLISHED_CANDIDATES = (
     "v0.9.0rc4",
     "v0.9.0rc5",
     "v0.9.0rc6",
+    "v0.9.0",
 )
 
 #: Those of them a release owner has signed.

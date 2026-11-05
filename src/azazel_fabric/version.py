@@ -3,18 +3,28 @@
 Version management is tag-driven on GitHub. This version must match the
 release tag being cut; a ``.devN`` suffix is only present between releases.
 
-``v0.9.0rc1`` through ``v0.9.0rc5`` are published, and each ships a **signed
+``v0.9.0rc1`` through ``v0.9.0rc6`` are published, and each ships a **signed
 release digest** (``release/*.digest.json.sig``).
 
-**The git tag itself is not signed and is not a trust boundary.** Every
-published tag here is an unsigned annotated tag; what carries a signature is
+This is ``0.9.0``, the stable release, and it is the tree
+``release/v0.9.0.digest.json`` records. Its contract surface is ``v0.9.0rc6``'s
+unchanged: only this version string and this docstring differ. Four families
+are **experimental** and carry no compatibility promise --
+``cti_contracts``, ``mio_contracts``, ``external_security_contracts`` and
+``provisioning_contracts`` (see ``docs/release-compatibility.md``). Against
+``v0.8.0``, one change is not additive: the deception and engagement directive
+guards refuse a payload nested more than 32 levels deep (Fabric#23).
+
+**The git tag itself is not signed and is not a trust boundary.** No
+published tag here is signed (``v0.9.0rc1`` through ``rc5`` are annotated,
+``v0.8.0`` and ``v0.9.0rc6`` lightweight); what carries a signature is
 ``release/<tag>.digest.json``. Say "the digest is signed", never "the tag is
 signed" — the difference decides what a consumer may conclude from an install
 succeeding, and it is what caught ``v0.9.0rc4`` being cut at the wrong commit
 twice. See ``docs/release-signing.md`` and Fabric#56.
 
-This is ``0.9.0rc6``, and it is the tree ``release/v0.9.0rc6.digest.json``
-records. It carries the experimental ``external_security_contracts`` profile
+``0.9.0rc6`` is the tree ``release/v0.9.0rc6.digest.json`` records. It
+carries the experimental ``external_security_contracts`` profile
 (Fabric#25), which is additive, and three changes that are **not**: a typed
 reference, a provisioning digest or a MAC may no longer end in a newline
 (Fabric#65); a decision, activation-decision, trace or execution ref typed
@@ -41,4 +51,4 @@ one against a moved ``main`` would make it claim to be a digest of a tag it no
 longer matches, and would strand the signature that covers its current bytes.
 """
 
-__version__ = "0.9.0rc6"
+__version__ = "0.9.0"
