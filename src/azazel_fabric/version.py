@@ -8,12 +8,17 @@ release digest** (``release/*.digest.json.sig``). ``rc1``'s and ``rc6``'s
 signatures were added after their tags, so the ``rc6`` tag's own tree carries
 the manifest but not the ``.sig``.
 
-This is ``0.10.0rc1``, the first candidate toward ``v0.10.0``, and it is the tree
-``release/v0.10.0rc1.digest.json`` records. It is **additive** over ``v0.9.0``:
-the experimental Knowledge Context profile (``azazel_fabric.knowledge_context``,
-Fabric#76) and the producer captures in ``azazel_fabric.testing`` (Fabric#23).
-No released symbol changed. Five families are experimental (the four below
-and ``knowledge_context``).
+This is ``0.10.0``, the stable release of the ``v0.10.0`` series, and it is the
+tree ``release/v0.10.0.digest.json`` records. Its contract surface is
+``v0.10.0rc1``'s unchanged: at the ``v0.10.0`` tag only ``version.py`` differs
+from ``rc1``. It is **additive** over ``v0.9.0``: the experimental Knowledge
+Context profile (``azazel_fabric.knowledge_context``, Fabric#76) and the
+producer captures in ``azazel_fabric.testing`` (Fabric#23). No released symbol
+changed. Five families are experimental (the four below and
+``knowledge_context``).
+
+``0.10.0rc1`` is the tree ``release/v0.10.0rc1.digest.json`` records; its
+signature was made before its tag and is inside the tag's tree.
 
 ``0.9.0`` is the stable release, and it is the tree
 ``release/v0.9.0.digest.json`` records. Its contract surface is ``v0.9.0rc6``'s
@@ -60,4 +65,4 @@ one against a moved ``main`` would make it claim to be a digest of a tag it no
 longer matches, and would strand the signature that covers its current bytes.
 """
 
-__version__ = "0.10.0rc1"
+__version__ = "0.10.0"
