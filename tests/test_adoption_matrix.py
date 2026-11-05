@@ -100,7 +100,19 @@ def _package_contract_families() -> set[str]:
         path.name
         for path in PACKAGE_ROOT.iterdir()
         if path.is_dir() and path.name.endswith("_contracts")
-    }
+    } | STANDALONE_CONTRACT_MODULES
+
+
+#: Contract families shipped as one module rather than a `*_contracts` package.
+#: Listed because a module name carries no marker the derivation above can see;
+#: `test_every_standalone_contract_module_exists` keeps the list from naming a
+#: module the package no longer has.
+STANDALONE_CONTRACT_MODULES = {"knowledge_context"}
+
+
+def test_every_standalone_contract_module_exists():
+    missing = sorted(m for m in STANDALONE_CONTRACT_MODULES if not (PACKAGE_ROOT / f"{m}.py").is_file())
+    assert missing == [], f"STANDALONE_CONTRACT_MODULES names modules that are gone: {missing}"
 
 
 def _matrix_rows() -> list[tuple[str, str, str, str]]:
@@ -503,6 +515,10 @@ def test_an_experimental_family_is_not_one_that_simply_has_no_adopter(rows):
             "mio_contracts",
             "external_security_contracts",
             "provisioning_contracts",
+            # `knowledge_context` (Fabric#76) was admitted to v0.10.0 as
+            # experimental by the release owner on 2026-11-05: its producer and
+            # consumers are open candidate work on pre-release Fabric commits.
+            "knowledge_context",
         }, (
             f"{family} is newly marked experimental. That takes it out of the "
             "R1c gate, so it is a release decision rather than a table edit: "
