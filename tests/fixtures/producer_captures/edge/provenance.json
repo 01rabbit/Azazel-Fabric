@@ -1,0 +1,162 @@
+{
+  "captured": "2026-11-05",
+  "captures": {
+    "deception_transition_from_arbiter": {
+      "family": "deception_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.deception_contracts.EnvironmentTransitionDecision",
+      "producer": "py/azazel_edge/deception_transition.py:transition_decision_from_arbiter",
+      "signed": false
+    },
+    "deception_transition_signed": {
+      "family": "deception_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.deception_contracts.EnvironmentTransitionDecision",
+      "producer": "py/azazel_edge/deception_transition.py:build_transition_decision",
+      "signed": true
+    },
+    "deception_transition_unsigned": {
+      "family": "deception_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.deception_contracts.EnvironmentTransitionDecision",
+      "producer": "py/azazel_edge/deception_transition.py:build_transition_decision",
+      "signed": false
+    },
+    "effect_isolation": {
+      "family": "effect_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.effect_contracts.DefensiveEffectRef",
+      "producer": "py/azazel_edge/outcome/effect_export.py:export_defensive_effect_ref",
+      "signed": false
+    },
+    "effect_traffic_shaping": {
+      "family": "effect_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.effect_contracts.DefensiveEffectRef",
+      "producer": "py/azazel_edge/outcome/effect_export.py:export_defensive_effect_ref",
+      "signed": false
+    },
+    "engagement_candidate_isolate": {
+      "family": "engagement_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.engagement_contracts.EngagementCandidate",
+      "producer": "py/azazel_edge/engagement/candidate.py:build_engagement_candidate",
+      "signed": false
+    },
+    "engagement_candidate_redirect": {
+      "family": "engagement_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.engagement_contracts.EngagementCandidate",
+      "producer": "py/azazel_edge/engagement/candidate.py:build_engagement_candidate",
+      "signed": false
+    },
+    "engagement_event_redirect_accepted": {
+      "family": "engagement_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.engagement_contracts.EngagementEvent",
+      "producer": "py/azazel_edge/engagement/candidate.py:engagement_event",
+      "signed": false
+    },
+    "engagement_event_redirect_downgraded_to_notify": {
+      "family": "engagement_contracts",
+      "input_from_product_tests": false,
+      "list": false,
+      "model": "azazel_fabric.engagement_contracts.EngagementEvent",
+      "producer": "py/azazel_edge/engagement/candidate.py:engagement_event",
+      "signed": false
+    },
+    "outcome_assessment_redirect": {
+      "family": "outcome_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.outcome_contracts.TacticalEffectAssessmentRefV0",
+      "producer": "py/azazel_edge/outcome/shared_export.py",
+      "signed": false
+    },
+    "outcome_assessment_throttle": {
+      "family": "outcome_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.outcome_contracts.TacticalEffectAssessmentRefV0",
+      "producer": "py/azazel_edge/outcome/shared_export.py",
+      "signed": false
+    },
+    "outcome_execution_redirect": {
+      "family": "outcome_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.outcome_contracts.ExecutionRefV0",
+      "producer": "py/azazel_edge/outcome/shared_export.py",
+      "signed": false
+    },
+    "outcome_execution_throttle": {
+      "family": "outcome_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.outcome_contracts.ExecutionRefV0",
+      "producer": "py/azazel_edge/outcome/shared_export.py",
+      "signed": false
+    },
+    "outcome_mechanism_redirect": {
+      "family": "outcome_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.outcome_contracts.MechanismObservationV0",
+      "producer": "py/azazel_edge/outcome/shared_export.py",
+      "signed": false
+    },
+    "outcome_mechanism_route_change_degraded_to_unknown": {
+      "family": "outcome_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.outcome_contracts.MechanismObservationV0",
+      "producer": "py/azazel_edge/outcome/shared_export.py",
+      "signed": false
+    },
+    "outcome_mechanism_throttle": {
+      "family": "outcome_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.outcome_contracts.MechanismObservationV0",
+      "producer": "py/azazel_edge/outcome/shared_export.py",
+      "signed": false
+    },
+    "outcome_mechanism_throttle_observed": {
+      "family": "outcome_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.outcome_contracts.MechanismObservationV0",
+      "producer": "py/azazel_edge/outcome/shared_export.py",
+      "signed": false
+    },
+    "outcome_outcome_redirect": {
+      "family": "outcome_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.outcome_contracts.OutcomeObservationV0",
+      "producer": "py/azazel_edge/outcome/shared_export.py",
+      "signed": false
+    },
+    "outcome_outcome_throttle": {
+      "family": "outcome_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.outcome_contracts.OutcomeObservationV0",
+      "producer": "py/azazel_edge/outcome/shared_export.py",
+      "signed": false
+    }
+  },
+  "commit": "e84af9a8ca7c9668416db41cd085d17264cbd8b9",
+  "fabric_pin": "v0.9.0",
+  "product": "edge",
+  "repository": "01rabbit/Azazel-Edge",
+  "schema_version": "producer-capture-provenance/v0.1"
+}

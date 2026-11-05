@@ -1,0 +1,18 @@
+{
+  "current_state": "baseline",
+  "decision_authority": "azazel-edge",
+  "decision_id": "edge-transition-68b5b7ef55e7c4d7bb903aca",
+  "effective_at": "2026-08-21T00:00:00Z",
+  "environment_id": "env-1",
+  "evidence_refs": [
+    "ev-soc-1",
+    "ev-noc-1"
+  ],
+  "expires_at": "2026-08-21T00:05:00Z",
+  "reason_codes": [
+    "soc_high_confidence_redirect_is_preferred"
+  ],
+  "schema_version": "environment-transition-decision/v0.1",
+  "status": "accepted",
+  "target_state": "smb-share-open"
+}

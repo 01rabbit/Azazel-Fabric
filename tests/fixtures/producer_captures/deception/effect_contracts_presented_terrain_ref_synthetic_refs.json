@@ -1,0 +1,33 @@
+{
+  "activation_decision_ref": "decision-1",
+  "active_surface_refs": [
+    "surface:http:8080"
+  ],
+  "authority_class": "active_materialized",
+  "created_at": "2026-08-26T00:00:00+00:00",
+  "describes": "defender_presented_surface",
+  "directive": false,
+  "evidence_refs": [
+    "edge-nft-1",
+    "runtime-inspect-1"
+  ],
+  "expires_at": "2026-08-26T01:00:00+00:00",
+  "isolation_assertion_ref": "isolation-net-none",
+  "isolation_result_ref": null,
+  "lifecycle_state_ref": "lifecycle:c8f1b94314c70a0a8cc13673.active",
+  "presentation_id": "presentation:c8f1b94314c70a0a8cc13673",
+  "presentation_version": 0,
+  "producer_product": "azazel-deception",
+  "schema_version": "presented-terrain-ref/v0.1",
+  "source_effect_ref": "effect:e1",
+  "synthetic_artifact_refs": [
+    "artifact:honey:invoice-2026"
+  ],
+  "synthetic_credential_refs": [
+    "credential:smb:clerk-1"
+  ],
+  "synthetic_identity_refs": [
+    "identity:finance:clerk-1"
+  ],
+  "trace_id": "trace-1"
+}

@@ -1,0 +1,70 @@
+[
+  {
+    "attempt_count": null,
+    "authority": "descriptive_only",
+    "confounder_tags": [],
+    "dwell_ms": null,
+    "environment_id": "env-export-1",
+    "evidence_refs": [],
+    "first_contact_latency_ms": null,
+    "lure_id": null,
+    "metadata": {},
+    "node_id": "az06-test",
+    "observation_class": "interaction",
+    "observation_id": "env-export-1-obs-0001",
+    "observed_at": "2026-01-01T00:00:01Z",
+    "package_id": "municipal-linux-v1",
+    "reaction_kind": null,
+    "runtime_context": {
+      "active_components": [
+        "intranet-web"
+      ],
+      "architecture": "amd64",
+      "capability_drift": [],
+      "omitted_components": [
+        "evidence-sidecar-placeholder"
+      ],
+      "resource_saturation": null,
+      "runtime_adapter": "docker_compose",
+      "selected_tier": "lite"
+    },
+    "schema_version": "interaction-observation/v0.1",
+    "surface": "port"
+  },
+  {
+    "attempt_count": 2,
+    "authority": "descriptive_only",
+    "confounder_tags": [
+      "scanner_noise"
+    ],
+    "dwell_ms": 3000,
+    "environment_id": "env-export-1",
+    "evidence_refs": [
+      "evidence:obs:1"
+    ],
+    "first_contact_latency_ms": 120,
+    "lure_id": null,
+    "metadata": {},
+    "node_id": "az06-test",
+    "observation_class": "reaction",
+    "observation_id": "env-export-1-obs-0002",
+    "observed_at": "2026-01-01T00:00:02Z",
+    "package_id": "municipal-linux-v1",
+    "reaction_kind": "enumerate",
+    "runtime_context": {
+      "active_components": [
+        "intranet-web"
+      ],
+      "architecture": "amd64",
+      "capability_drift": [],
+      "omitted_components": [
+        "evidence-sidecar-placeholder"
+      ],
+      "resource_saturation": null,
+      "runtime_adapter": "docker_compose",
+      "selected_tier": "lite"
+    },
+    "schema_version": "interaction-observation/v0.1",
+    "surface": "service"
+  }
+]

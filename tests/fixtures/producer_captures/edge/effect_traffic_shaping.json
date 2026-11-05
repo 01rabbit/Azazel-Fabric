@@ -1,0 +1,18 @@
+{
+  "advisory_ref": null,
+  "authority_class": "producer_decision_ref",
+  "config_digest": null,
+  "created_at": "2026-09-20T12:00:00+00:00",
+  "decision_ref": "decision-1",
+  "directive": false,
+  "effect_class": "rate_limit",
+  "effect_id": "effect:cff74a8556ff401bc72249812018afcc",
+  "expires_at": "2026-09-20T13:00:00+00:00",
+  "policy_ref": "policy:soc-default",
+  "producer_node": "edge-1",
+  "producer_product": "azazel-edge",
+  "profile_ref": null,
+  "schema_version": "defensive-effect-ref/v0.1",
+  "target_scope_ref": "scope:6617f9307d832d50e04395e5604619cd",
+  "trace_id": "trace-1"
+}

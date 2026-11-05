@@ -34,6 +34,12 @@ from azazel_fabric.testing.golden import (
     golden_decision_names,
     load_golden_decision,
 )
+from azazel_fabric.testing.producer_captures import (
+    load_producer_capture,
+    producer_capture_body,
+    producer_capture_names,
+    producer_capture_provenance,
+)
 from azazel_fabric.testing.provisioning import (
     GOLDEN_PROVISIONING_NEGATIVE,
     GOLDEN_REFERENCE_AS_OF,
@@ -46,6 +52,10 @@ from azazel_fabric.testing.invariants import (
 )
 
 __all__ = [
+    "load_producer_capture",
+    "producer_capture_body",
+    "producer_capture_names",
+    "producer_capture_provenance",
     "GOLDEN_DECISION_SIGNATURE_KEY",
     "golden_decision_names",
     "load_golden_decision",

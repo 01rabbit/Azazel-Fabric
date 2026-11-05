@@ -1,0 +1,17 @@
+{
+  "authority_class": "observed_fact",
+  "directive": false,
+  "effect_ref": "effect:cff74a8556ff401bc72249812018afcc",
+  "evidence_refs": [
+    "runtime-inspect-2"
+  ],
+  "execution_ref": null,
+  "limitations": [],
+  "materialization_producer": "azazel-deception",
+  "observation_id": "effect_observation:1bf66fab5231ee2722d0d644",
+  "observed_at": "2026-09-20T12:30:00+00:00",
+  "schema_version": "effect-observation/v0.1",
+  "status": "terminated",
+  "termination_reason": "expired",
+  "trace_id": "trace-1"
+}

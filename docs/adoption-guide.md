@@ -148,6 +148,27 @@ Factories come in two flavours: `make_*` (fully populated) and `minimal_*`
 (required fields only). Both accept keyword overrides. Output is deterministic
 (fixed timestamps), so your golden tests do not flake.
 
+**Test your consumer against what the producers really send.** The factories
+and golden vectors above are built by Fabric from its own models. The
+*producer captures* are not: each one is the output of a real producer function
+in Azazel-Edge or Azazel-Deception at a recorded commit, with the values it
+returned (re-serialized with sorted keys; Fabric#23). If your product consumes a stable family, feed them to the code
+that parses what it receives:
+
+```python
+from azazel_fabric.testing import producer_capture_names, producer_capture_body
+
+def test_knowledge_reads_what_edge_and_deception_emit():
+    for name in producer_capture_names(family="outcome_contracts"):
+        record = producer_capture_body(name)    # MAC removed if it was signed
+        ingest_outcome(record)                  # your consumer code
+```
+
+`producer_capture_provenance(name)` says which product, commit and function a
+capture came from. The bytes under a name never change; a newer capture is
+added under a new name. A signed transition decision carries a MAC made with
+`GOLDEN_DECISION_SIGNATURE_KEY`, a published test constant.
+
 ## 6. Checklist for a new product's first Fabric commit
 
 1. Register the product/codename in the umbrella naming spec

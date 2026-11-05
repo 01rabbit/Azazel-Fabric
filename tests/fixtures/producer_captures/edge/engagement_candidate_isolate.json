@@ -1,0 +1,47 @@
+{
+  "activity": "isolate",
+  "approach": "prevent",
+  "attack_techniques": [
+    "T1110"
+  ],
+  "authority": "candidate_only",
+  "candidate_id": "AZ-01-eng-isolate",
+  "constraints": {
+    "evidence_refs": [
+      "ev-soc-1",
+      "ev-noc-1"
+    ],
+    "max_duration_seconds": 300,
+    "outbound_allowed": false,
+    "production_access": false,
+    "scope": "decoy_segment",
+    "termination_conditions": [
+      "noc_health_degraded",
+      "max_duration_reached",
+      "operator_terminate"
+    ]
+  },
+  "evidence_refs": [
+    "ev-soc-1",
+    "ev-noc-1"
+  ],
+  "expected_observations": [
+    "decoy_engaged",
+    "disengaged",
+    "continued_scanning"
+  ],
+  "objective": "prevent",
+  "product": "AZ-01",
+  "requested_actions": [
+    "isolate"
+  ],
+  "schema_version": "engagement-candidate/v0.1",
+  "trigger": {
+    "attack_technique": "T1110",
+    "confidence": 0.8,
+    "evidence_refs": [
+      "ev-soc-1",
+      "ev-noc-1"
+    ]
+  }
+}

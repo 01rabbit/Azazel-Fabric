@@ -1,0 +1,20 @@
+{
+  "authority_class": "producer_mechanism_fact",
+  "decision_ref": "trace-test-1",
+  "evidence_refs": [
+    "rust_event_engine_v1:trace-test-1"
+  ],
+  "execution_ref": "execution-73bba4bf961be450624dacbd",
+  "limitations": [],
+  "mechanism_kind": "traffic_shaping",
+  "observation_id": "mechanism-e5301b313c53691b5daeeb35",
+  "observed_at": "2026-08-26T00:00:00Z",
+  "observed_parameters": {
+    "verification_basis": "independent_postcondition"
+  },
+  "producer_node": "edge-1",
+  "producer_product": "azazel-edge",
+  "schema_version": "outcome-mechanism/v0.1",
+  "status": "observed",
+  "trace_id": "trace-test-1"
+}
