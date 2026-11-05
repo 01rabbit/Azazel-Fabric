@@ -10,6 +10,48 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 Nothing yet.
 
+## [0.10.0] — Stable release of the `v0.10.0` series
+
+The contract surface is `v0.10.0rc1`'s, unchanged: `src/` differs from the
+`v0.10.0rc1` tag only in `version.py` (the version string and its docstring).
+Everything listed under `[0.10.0rc1]` below ships here.
+
+### Upgrading
+
+- **From `v0.10.0rc1`:** no package change; move the pin.
+- **From `v0.9.0`:** additive. No released symbol was removed or narrowed. A
+  consumer that uses neither `knowledge_context` nor the producer captures has
+  no reason to move, and `v0.9.0` stays a supported stable tag.
+- Pin the exact tag: `azazel-fabric @
+  git+https://github.com/01rabbit/Azazel-Fabric.git@v0.10.0`.
+
+### What the stable tag promises, and what it does not
+
+- **Stable:** the same four families as `v0.9.0` — `deception_contracts`,
+  `effect_contracts`, `engagement_contracts`, `outcome_contracts` — plus the
+  rest of the `v0.8.0` surface (all but `cti_contracts`).
+- **Experimental, no compatibility promise:** `cti_contracts`,
+  `mio_contracts`, `external_security_contracts`, `provisioning_contracts` and
+  `knowledge_context`.
+- **Producer captures:** the names and the bytes under each name are fixed;
+  a refreshed capture is a new name.
+- **Evidence cited, not certified:** Azazel-Deception (Deception#71),
+  Azazel-Knowledge (Knowledge#120) and Azazel-Edge (Edge#542) pin
+  `v0.10.0rc1` and run consumer tests that read the producer captures. There
+  is still no aggregated, signed conformance attestation.
+- **Outside this release's guarantee:** the open Knowledge Context
+  integrations — its producer (Azazel-Knowledge#116) and consumers
+  (Azazel-MIO#47, Azazel-Nexus#402) — and anything not yet verified for
+  Azazel-Nexus or Azazel-Boot. They are not conditions of this tag and are not
+  covered by it.
+
+### Changed
+
+- **Release history, signing records and install instructions** name
+  `v0.10.0` as the stable tag (`README.md`, `docs/adoption-guide.md`,
+  `docs/release-compatibility.md`, `docs/release-signing.md`); the observed
+  consumer pins are re-read for Edge, Gadget, Knowledge and Deception.
+
 ## [0.10.0rc1] — Knowledge Context profile and producer captures (Fabric#76, Fabric#23)
 
 **Additive over `v0.9.0`.** No released symbol was removed or narrowed; the
