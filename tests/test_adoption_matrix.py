@@ -482,10 +482,10 @@ def test_every_experimental_family_says_why_it_is_one(rows):
 def test_an_experimental_family_is_not_one_that_simply_has_no_adopter(rows):
     """The distinction this verdict would otherwise erase.
 
-    `provisioning_contracts` has no producer and no consumer either, and it is
-    gated: Azazel-Nexus consumes `InterfaceIdentity` from it today, so the
-    missing half is a gap. Marking a family experimental because its row is
-    empty would turn every unfinished family into a design position.
+    An empty row is a gap. Marking a family experimental because its row is
+    empty would turn every unfinished family into a design position, so the
+    families allowed here are a closed list, and each entry cites the decision
+    that put it there.
     """
 
     for family, producers, consumers, verdict in rows:
@@ -495,10 +495,14 @@ def test_an_experimental_family_is_not_one_that_simply_has_no_adopter(rows):
         # program decision (stable needs one producer and two independent
         # consumers), recorded where the gate is defined in
         # `docs/release-compatibility.md` and in its ADR.
+        # `provisioning_contracts` left the gate by the release owner's
+        # 2026-11-05 decision, recorded in Fabric#23 and in its row: one real
+        # user (Azazel-Nexus) and no second independent consumer or producer.
         assert family.strip("`") in {
             "cti_contracts",
             "mio_contracts",
             "external_security_contracts",
+            "provisioning_contracts",
         }, (
             f"{family} is newly marked experimental. That takes it out of the "
             "R1c gate, so it is a release decision rather than a table edit: "

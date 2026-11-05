@@ -15,8 +15,12 @@ Ed25519 signature over the bytes that digest covers — see
 key, because Azazel-Boot pins it. **R1c** —
 the stable `v0.9.0` — waits on downstream evidence.
 
-**No product produces or consumes these two families yet**, so R1c is unmet for
-them. Azazel-Boot names them in `PLANNED_FABRIC_MODULES` and checks whether
+**Both families are experimental and outside the R1c gate.** `mio_contracts`
+has neither side. `provisioning_contracts` has one real user — Azazel-Nexus
+consumes `InterfaceIdentity` — and no producer or second, independent consumer;
+the release owner moved it out of the gate on 2026-11-05 (Fabric#23). Neither
+family blocks the stable `v0.9.0` tag, and **neither carries a compatibility
+promise**: a consumer pins an exact tag and re-checks on every move. Azazel-Boot names them in `PLANNED_FABRIC_MODULES` and checks whether
 they import, which is a presence probe rather than adoption — its own module
 says as much ("a module Boot would consume and cannot is reported, never
 assumed"). Counting that probe would clear the gate with nothing exchanged. The

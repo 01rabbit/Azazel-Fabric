@@ -8,7 +8,17 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ## [Unreleased]
 
-Nothing yet. The entries below moved into the tags that shipped them.
+### Changed
+
+- **`provisioning_contracts` is experimental** (release-owner decision,
+  2026-11-05, recorded in Fabric#23). It no longer blocks the stable `v0.9.0`
+  tag and carries no compatibility promise. Its only real user is
+  Azazel-Nexus (`InterfaceIdentity`); no product produces it and no second,
+  independent consumer exists, so it could not meet the R1c gate (one producer,
+  two consumers). No code changed: the package, its models and its validation
+  are the same as in `v0.9.0rc6`. It returns to the gate when it has a producer
+  and two independent consumers. Documentation only; the `rc6` digest is
+  unaffected.
 
 ## [0.9.0rc6] — Experimental external-security profile; trailing newlines and deep nesting refused (Fabric#25, Fabric#65, Fabric#23)
 
