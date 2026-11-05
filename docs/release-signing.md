@@ -128,6 +128,30 @@ documentation change before the tag leaves it valid, and `--check` at the tag
 afterwards must still pass. If it does not, the tag was cut from a different
 tree than the one that was signed, and the signature belongs to neither.
 
+## A Release is made by `release.yml`, never by hand
+
+`release.yml` publishes a Release only after the tag matches the package
+version, the digest matches the tree, the signature verifies (always, for a
+stable tag) and the tests pass. A Release made any other way — the web UI,
+`gh release create`, the API — skipped all of that. The `v0.9.0rc6` Release was
+made by hand, a minute before its workflow ran, and went out marked Latest while
+the workflow itself failed on the missing signature.
+
+`.github/workflows/release-guard.yml` catches that. A Release created with
+`GITHUB_TOKEN` does not trigger workflows, so `release.yml`'s own Releases never
+reach it; any published Release whose author is not `github-actions[bot]` is
+returned to **draft** and an issue is opened. It detects rather than prevents:
+the Release was public for a few seconds and its notifications went out. Every
+account that can publish here is the same login, so `github-actions[bot]` is the
+only author that can be told apart.
+
+If the same action also created the tag (`gh release create` does), `release.yml`
+runs for that tag too. When all its checks pass it publishes the draft again,
+which is the intended outcome; when one fails the draft stays a draft.
+Rehearsed on a throwaway repository (2026-11-05): a hand-made Release on a tag
+whose checks failed stayed a draft and was not resolved as latest; a
+`release.yml` Release was left alone.
+
 ## What the signature covers, and what it does not
 
 **The signed thing is the release digest, never the git tag.** Say "the digest
