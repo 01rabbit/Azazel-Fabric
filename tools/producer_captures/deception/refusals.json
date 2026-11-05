@@ -1,0 +1,38 @@
+{
+  "accept_effect_advisory_inference": {
+    "exception": "EffectRefRejected",
+    "message": "effect effect:cff74a8556ff401bc72249812018afcc claims 'advisory_inference'; AZ-06 materializes an Edge-approved environment and will not materialize advice or a shadow run"
+  },
+  "accept_effect_planned_shadow": {
+    "exception": "EffectRefRejected",
+    "message": "effect effect:cff74a8556ff401bc72249812018afcc claims 'planned_shadow'; AZ-06 materializes an Edge-approved environment and will not materialize advice or a shadow run"
+  },
+  "effect_projection_no_expiry": {
+    "exception": "EffectProjectionRefused",
+    "message": "no expiry is declared for this presentation. Fabric requires a bounded one, and a bound invented here would report that AZ-06 time-boxed a presentation it did not"
+  },
+  "effect_projection_non_snapshot": {
+    "exception": "EffectProjectionRefused",
+    "message": "a presented-terrain snapshot is required"
+  },
+  "effect_projection_two_isolation_assertions": {
+    "exception": "EffectProjectionRefused",
+    "message": "the snapshot carries 2 isolation assertions and Fabric's record has room for one; dropping the rest would narrow the evidence without saying so"
+  },
+  "effect_projection_untyped_identity": {
+    "exception": "EffectProjectionRefused",
+    "message": "synthetic_identity_refs value 'finance-clerk' is not a 'identity' reference the pinned Fabric grammar accepts, and AZ-06 will not rewrite a producer's identifier to make one fit"
+  },
+  "effect_ref_shadow_effect_on_live_terrain": {
+    "exception": "EffectRefRejected",
+    "message": "effect effect:e1 is a shadow run and this presentation carries active surfaces; that would record AZ-06 presenting a surface for an environment nobody approved"
+  },
+  "outcome_forbidden_claim_in_coverage": {
+    "exception": "ValueError",
+    "message": "forbidden outcome claim/authority field: attacker_belief"
+  },
+  "outcome_stale_snapshot": {
+    "exception": "ValueError",
+    "message": "stale Presented Terrain cannot be projected into a terminal shared phase"
+  }
+}

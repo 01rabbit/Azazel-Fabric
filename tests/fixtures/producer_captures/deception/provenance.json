@@ -1,0 +1,98 @@
+{
+  "captured": "2026-11-05",
+  "captures": {
+    "deception_contracts_interaction_observation_export_list": {
+      "family": "deception_contracts",
+      "input_from_product_tests": true,
+      "list": true,
+      "model": "azazel_fabric.deception_contracts.InteractionObservation",
+      "producer": "src/azazel_deception/runtime/observation_export.py:export_observations",
+      "signed": false
+    },
+    "deception_contracts_interaction_observation_interaction_port": {
+      "family": "deception_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.deception_contracts.InteractionObservation",
+      "producer": "src/azazel_deception/runtime/observation_export.py:export_observations",
+      "signed": false
+    },
+    "deception_contracts_interaction_observation_reaction_service": {
+      "family": "deception_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.deception_contracts.InteractionObservation",
+      "producer": "src/azazel_deception/runtime/observation_export.py:export_observations",
+      "signed": false
+    },
+    "effect_contracts_effect_observation_active": {
+      "family": "effect_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.effect_contracts.EffectObservation",
+      "producer": "src/azazel_deception/runtime/effect_projection.py:observe_effect",
+      "signed": false
+    },
+    "effect_contracts_effect_observation_terminated": {
+      "family": "effect_contracts",
+      "input_from_product_tests": false,
+      "list": false,
+      "model": "azazel_fabric.effect_contracts.EffectObservation",
+      "producer": "src/azazel_deception/runtime/effect_projection.py:observe_effect",
+      "signed": false
+    },
+    "effect_contracts_presented_terrain_ref_live": {
+      "family": "effect_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.effect_contracts.PresentedTerrainRef",
+      "producer": "src/azazel_deception/runtime/effect_projection.py:project_presented_terrain",
+      "signed": false
+    },
+    "effect_contracts_presented_terrain_ref_live_bound_to_decided_effect": {
+      "family": "effect_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.effect_contracts.PresentedTerrainRef",
+      "producer": "src/azazel_deception/runtime/effect_projection.py:project_presented_terrain",
+      "signed": false
+    },
+    "effect_contracts_presented_terrain_ref_shadow_stale": {
+      "family": "effect_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.effect_contracts.PresentedTerrainRef",
+      "producer": "src/azazel_deception/runtime/effect_projection.py:project_presented_terrain",
+      "signed": false
+    },
+    "effect_contracts_presented_terrain_ref_synthetic_refs": {
+      "family": "effect_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.effect_contracts.PresentedTerrainRef",
+      "producer": "src/azazel_deception/runtime/effect_projection.py:project_presented_terrain",
+      "signed": false
+    },
+    "outcome_contracts_presented_terrain_lifecycle_after_reset": {
+      "family": "outcome_contracts",
+      "input_from_product_tests": false,
+      "list": false,
+      "model": "azazel_fabric.outcome_contracts.OutcomeObservationV0",
+      "producer": "src/azazel_deception/runtime/outcome_export.py:presented_terrain_lifecycle_outcome",
+      "signed": false
+    },
+    "outcome_contracts_presented_terrain_lifecycle_during": {
+      "family": "outcome_contracts",
+      "input_from_product_tests": true,
+      "list": false,
+      "model": "azazel_fabric.outcome_contracts.OutcomeObservationV0",
+      "producer": "src/azazel_deception/runtime/outcome_export.py:presented_terrain_lifecycle_outcome",
+      "signed": false
+    }
+  },
+  "commit": "305af8524bc362c3f6f9615d369794f72888e1c4",
+  "fabric_pin": "v0.9.0",
+  "product": "deception",
+  "repository": "01rabbit/Azazel-Deception",
+  "schema_version": "producer-capture-provenance/v0.1"
+}

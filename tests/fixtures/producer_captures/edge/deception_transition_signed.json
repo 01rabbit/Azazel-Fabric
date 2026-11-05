@@ -1,0 +1,14 @@
+{
+  "current_state": "baseline",
+  "decision_authority": "azazel-edge",
+  "decision_id": "edge-transition-198cd24ab609d1c329e05dc3",
+  "decision_signature": "8a02ec2cbfb6e116d531178d73261dcfd5337dca82fefda6f3474b729296d5d8",
+  "effective_at": "2026-08-21T00:00:00Z",
+  "environment_id": "env-1",
+  "evidence_refs": [],
+  "expires_at": "2026-08-21T00:05:00Z",
+  "reason_codes": [],
+  "schema_version": "environment-transition-decision/v0.1",
+  "status": "accepted",
+  "target_state": "smb-share-open"
+}

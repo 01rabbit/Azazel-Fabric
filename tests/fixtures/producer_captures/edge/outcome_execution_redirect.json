@@ -1,0 +1,16 @@
+{
+  "action": "redirect",
+  "authority_class": "producer_execution_fact",
+  "decision_ref": "trace-test-1",
+  "evidence_refs": [
+    "rust_event_engine_v1:trace-test-1"
+  ],
+  "execution_ref": "execution-73bba4bf961be450624dacbd",
+  "observed_at": "2026-08-26T00:00:00Z",
+  "producer_node": "edge-1",
+  "producer_product": "azazel-edge",
+  "release_ref": null,
+  "schema_version": "outcome-execution/v0.1",
+  "status": "applied",
+  "trace_id": "trace-test-1"
+}

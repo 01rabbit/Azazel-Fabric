@@ -39,6 +39,13 @@ output. The adoption rows below are citations of real producers and consumers,
 and each consumer's own CI ran against its pin; neither is a cross-product
 certification. Both are next-release work.
 
+On `main` toward `v0.10.0`, the Fabric half of the second item exists: the
+producer captures in `azazel_fabric.testing.producer_captures` are real Edge and
+Deception producer output. The consumer half — each consumer's tests reading
+them — follows the first `v0.10.0` candidate, because every consumer pins an
+exact tag. Until then interoperability against real producer output is still
+not claimed.
+
 **A consumer adopting `effect_contracts` should move to `v0.9.0rc3`, and this
 is the first candidate move in this series that is not optional for its
 adopter.** Under the `rc2` grammar a typed reference's body could not contain a

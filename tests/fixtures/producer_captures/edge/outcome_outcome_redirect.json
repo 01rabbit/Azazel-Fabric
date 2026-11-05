@@ -1,0 +1,47 @@
+{
+  "authority_class": "producer_outcome_fact",
+  "confounders": [
+    "source_ip_is_not_actor_identity"
+  ],
+  "decision_ref": "trace-test-1",
+  "evidence_refs": [
+    "outcome:evidence:1"
+  ],
+  "execution_ref": "execution-73bba4bf961be450624dacbd",
+  "mechanism_observation_ref": "mechanism-486a9a5fa9c3f3f677b56d44",
+  "observation_class": "edge_outcome_record",
+  "observation_id": "outcome-1",
+  "observation_values": {
+    "adversary_response": {
+      "retry_interval_ms": 1200
+    },
+    "asset_impact": {},
+    "baseline_metrics": {
+      "connection_latency_ms": 100
+    },
+    "noc_impact": {
+      "impact_score": 0
+    },
+    "operator_override": {},
+    "post_metrics": {
+      "connection_latency_ms": 900
+    },
+    "termination_reason": "window_complete"
+  },
+  "observed_at": "2026-08-26T00:00:31Z",
+  "phase": "after",
+  "producer_node": "edge-1",
+  "producer_product": "azazel-edge",
+  "resource_impact": {
+    "cpu_delta": 0.1
+  },
+  "schema_version": "outcome-observation/v0.1",
+  "subject_ref": null,
+  "telemetry_coverage": {
+    "baseline": 1.0,
+    "post": 1.0
+  },
+  "trace_id": "trace-test-1",
+  "window_end": "2026-08-26T00:00:31Z",
+  "window_start": "2026-08-26T00:00:01Z"
+}

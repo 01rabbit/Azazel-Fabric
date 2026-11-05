@@ -1,0 +1,15 @@
+{
+  "authority_class": "active_materialized",
+  "directive": false,
+  "effect_ref": "effect:cff74a8556ff401bc72249812018afcc",
+  "evidence_refs": [],
+  "execution_ref": null,
+  "limitations": [],
+  "materialization_producer": "azazel-deception",
+  "observation_id": "effect_observation:f5bcec11a1362af80fd98cba",
+  "observed_at": "2026-09-20T12:05:00+00:00",
+  "schema_version": "effect-observation/v0.1",
+  "status": "active",
+  "termination_reason": null,
+  "trace_id": "trace-1"
+}

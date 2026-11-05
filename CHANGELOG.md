@@ -8,7 +8,25 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **Producer captures** (`azazel_fabric.testing.producer_captures`, Fabric#23):
+  30 records that real producers emitted — Azazel-Edge `e84af9a`
+  (effect, engagement, deception, outcome) and Azazel-Deception `305af85`
+  (deception, effect, outcome) — captured from each product's own producer
+  functions with the inputs its tests use, so consumers can test against what
+  the producers actually send rather than against vectors Fabric built from
+  its own models. `producer_capture_names`, `load_producer_capture`,
+  `producer_capture_body` and `producer_capture_provenance` are exported from
+  `azazel_fabric.testing`. Additive. The reviewable JSON and provenance are in
+  `tests/fixtures/producer_captures/`; the capture scripts and refusal records
+  are in `tools/producer_captures/`.
+
+### Changed
+
+- The release tools (`tools/rc_digest.py`, `tools/rc_signature.py`) run without
+  pydantic, and `release-guard.yml` returns a Release not made by `release.yml`
+  to draft.
 
 ## [0.9.0] — Stable release of the `v0.9.0` series (R1c)
 

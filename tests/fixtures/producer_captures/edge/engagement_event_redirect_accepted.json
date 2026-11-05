@@ -1,0 +1,47 @@
+{
+  "activity": "redirect_to_decoy",
+  "approach": "channel",
+  "constraints": {
+    "evidence_refs": [
+      "ev-soc-1",
+      "ev-noc-1"
+    ],
+    "max_duration_seconds": 300,
+    "outbound_allowed": false,
+    "production_access": false,
+    "scope": "decoy_segment",
+    "termination_conditions": [
+      "noc_health_degraded",
+      "max_duration_reached",
+      "operator_terminate"
+    ]
+  },
+  "event_id": "AZ-01-engev-redirect",
+  "evidence_refs": [
+    "ev-soc-1",
+    "ev-noc-1"
+  ],
+  "objective": "collect",
+  "outcome": {
+    "attacker_reaction": "decoy_engaged",
+    "ended_at": null,
+    "evidence_refs": [
+      "ev-soc-1",
+      "ev-noc-1"
+    ],
+    "reaction_window_s": null,
+    "schema_version": "engagement-outcome/v0.1",
+    "started_at": null,
+    "termination_reason": null
+  },
+  "product": "AZ-01",
+  "schema_version": "engagement-event/v0.1",
+  "trigger": {
+    "attack_technique": "T1110",
+    "confidence": 0.8,
+    "evidence_refs": [
+      "ev-soc-1",
+      "ev-noc-1"
+    ]
+  }
+}

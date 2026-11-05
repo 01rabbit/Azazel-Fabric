@@ -1,0 +1,57 @@
+{
+  "deception_transition_rejected_status": {
+    "exception": "TransitionDecisionError",
+    "message": "status must be one of ['accepted', 'modified'], got 'rejected'",
+    "producer_output": null
+  },
+  "effect_no_lease": {
+    "exception": "EffectExportRefused",
+    "message": "this action carries no lease. Fabric requires a bounded effect, and a bound invented here would report that Edge time-boxed an effect it did not",
+    "producer_output": null
+  },
+  "effect_route_change": {
+    "exception": "EffectExportRefused",
+    "message": "ROUTE_CHANGE: EffectClass has no route-change member. It is deliberately small: Fabric names an effect so two products can talk about the same one, not every effect a product can build. The nearest members describe different effects",
+    "producer_output": null
+  },
+  "effect_unknown_mechanism": {
+    "exception": "EffectExportRefused",
+    "message": "UNKNOWN: a producer may not claim an effect class for a mechanism it could not identify. Fabric's fallback to observe_only exists so a consumer fails safe; used here it would be Edge asserting observe_only",
+    "producer_output": null
+  },
+  "engagement_disabled": {
+    "exception": null,
+    "note": "enabled=False returns None (no candidate)",
+    "producer_output": null
+  },
+  "engagement_evaluation_downgraded_plain_dict": {
+    "exception": null,
+    "note": "plain dict; Edge-local, no Fabric model",
+    "producer_output": {
+      "accepted_activity": "notify",
+      "arbiter_action": "notify",
+      "authority": "azazel-edge-arbiter",
+      "evidence_refs": [
+        "ev-soc-1",
+        "ev-noc-1"
+      ],
+      "rejected_alternatives": [
+        {
+          "activity": "redirect_to_decoy",
+          "reason": "soc_high_but_noc_fragile"
+        },
+        {
+          "action": "isolate",
+          "reason": "blast too wide"
+        }
+      ],
+      "requested_activity": "redirect_to_decoy",
+      "status": "downgraded"
+    }
+  },
+  "outcome_execution_expired": {
+    "exception": "SharedOutcomeExportError",
+    "message": "execution status is not representable in shared v0.1: expired",
+    "producer_output": null
+  }
+}
