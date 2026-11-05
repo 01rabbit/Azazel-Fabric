@@ -173,7 +173,15 @@ PUBLISHED_CANDIDATES = (
 #: bytes. Collapsing them would mean a candidate could be recorded as covered
 #: by being written down, which is exactly the gap `v0.9.0rc1` sat in while
 #: Azazel-Boot pinned it.
-SIGNED_CANDIDATES = ("v0.9.0rc1", "v0.9.0rc2", "v0.9.0rc3", "v0.9.0rc4", "v0.9.0rc5", "v0.9.0rc6")
+SIGNED_CANDIDATES = (
+    "v0.9.0rc1",
+    "v0.9.0rc2",
+    "v0.9.0rc3",
+    "v0.9.0rc4",
+    "v0.9.0rc5",
+    "v0.9.0rc6",
+    "v0.9.0",
+)
 
 
 def test_this_file_covers_every_published_candidate():
