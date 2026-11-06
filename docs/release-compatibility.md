@@ -1,7 +1,9 @@
 # Release Compatibility and Support Truth
 
 Status: **R0 coordination baseline, 2026-09-19; re-verified 2026-09-19 against
-the consumer repositories.** This document records the published Fabric release
+the consumer repositories. Current consumer observations refreshed
+2026-11-06; older dated observations below remain historical.** This document
+records the published Fabric release
 and observed consumer dependency declarations. An observed pin is not, by
 itself, an interoperability certification.
 
@@ -10,8 +12,8 @@ itself, an interoperability certification.
 The latest **stable** release is `v0.10.0`. The latest **published** tag is
 `v0.10.0`, the stable release of the series. Its contract surface is
 `v0.10.0rc1`'s unchanged (only `version.py` differs), and it is additive over
-`v0.9.0`: the experimental Knowledge Context profile (Fabric#76) and the
-producer captures in `azazel_fabric.testing` (Fabric#23). `v0.9.0`'s contract surface is
+`v0.9.0`: the experimental Knowledge Context profile (proposed in Fabric#76,
+integrated by Fabric#86) and the producer captures in `azazel_fabric.testing` (Fabric#23). `v0.9.0`'s contract surface is
 `v0.9.0rc6`'s unchanged (only `version.py` differs), and it superseded
 `v0.8.0` as the stable tag. `v0.9.0rc6` is
 the experimental `external_security_contracts`
@@ -38,18 +40,20 @@ the four stable families and the rest of the `v0.8.0` surface carry a
 compatibility promise, and the five experimental families (below, now
 including `knowledge_context`) do not. The producer captures' names and the
 bytes under each name are fixed once published. What `v0.10.0` adds to the
-evidence, and no more than that, is this: Azazel-Deception, Azazel-Knowledge
-and Azazel-Edge each pin `v0.10.0rc1` (contract surface identical to
+release-time evidence, and no more than that, was this: Azazel-Deception,
+Azazel-Knowledge and Azazel-Edge each pinned `v0.10.0rc1` (contract surface identical to
 `v0.10.0`) and run consumer tests that read the producer captures in their own
 CI — Deception reads Edge's records (Deception#71), Edge reads Deception's
 (Edge#542), Knowledge reads both (Knowledge#120). Those are citations of each
 consumer's own tests against real producer output, not a cross-product
 certification, and there is still **no** aggregated, signed conformance
 attestation. **Outside the `v0.10.0` guarantee:** the Knowledge Context
-integrations that are still open candidate work — its producer
-(Azazel-Knowledge#116) and consumers (Azazel-MIO#47, Azazel-Nexus#402) — and
-anything not yet verified for Azazel-Nexus or Azazel-Boot (below). Their
-completion is not a condition of this tag and is not covered by it.
+integrations and anything not yet verified for Azazel-Nexus or Azazel-Boot.
+As of 2026-11-06, Nexus#402/#403 are merged software integrations, with the
+Context broker default-disabled and uncommissioned. Knowledge#116, MIO#47
+and Nexus#405 remain unmerged candidates. This dated status does not expand
+the experimental profile's guarantee; integration completion is not a
+condition of the stable tag.
 
 **What `v0.9.0` promises.** The non-experimental families —
 `deception_contracts`, `effect_contracts`, `engagement_contracts` and
@@ -118,11 +122,11 @@ support.
 
 | Consumer | Observed declaration | Interpretation |
 |---|---|---|
-| Azazel-Edge | `v0.10.0rc1` in `requirements/fabric.txt` (2026-11-05) | Current reference authority consumer. An **optional** extra: Edge's arbiter runs with no Fabric installed. Its CI reads Deception's producer captures (Edge#542) |
+| Azazel-Edge | `v0.10.0` in `requirements/fabric.txt` (2026-11-06) | Current reference authority consumer. An **optional** extra: Edge's arbiter runs with no Fabric installed. Its CI reads Deception's producer captures (Edge#542) |
 | Azazel-Gadget | `v0.9.0` in `requirements.txt` (2026-11-05) | On a **stable** tag. It uses `view` + `schema.mode` and none of the `v0.10.0` additions, so `v0.9.0` meets its needs and it has no reason to move (Azazel-Gadget#22) |
-| Azazel-Knowledge | `v0.10.0rc1` in the `api` optional dependency (`pyproject.toml`, ADR-0022; 2026-11-05) | Advisory API boundary only; core stays dependency-minimal. Its tests read both producers' captures (Knowledge#120). Its Knowledge Context producer (Knowledge#116) is open work, not on a tag |
-| Azazel-Deception | `v0.10.0rc1` in `pyproject.toml` (2026-11-05) | Current AZ-06 runtime declaration. Its CI reads Edge's producer captures (Deception#71) |
-| Azazel-Nexus | **no declaration** (this table's 2026-09-20 reading; not re-read for this release) | The later 2026-10-25 observation below read a pre-release pin in its `fabric` extra instead; neither reading is claimed for this release. No longer documentation-only — it carries code with deliberately zero dependencies. Its absence from this table is a design choice, not an omission. Its Knowledge Context consumer (Nexus#402) is open work against a pre-release Fabric, outside this release's guarantee |
+| Azazel-Knowledge | `v0.10.0` in the `api` optional dependency (`pyproject.toml`, ADR-0022; 2026-11-06) | Advisory API boundary only; core stays dependency-minimal. Its tests read both producers' captures (Knowledge#120). Its Knowledge Context producer (Knowledge#116) is open work, not on a tag |
+| Azazel-Deception | `v0.10.0` in `pyproject.toml` (2026-11-06) | Current AZ-06 runtime declaration. Its CI reads Edge's producer captures (Deception#71) |
+| Azazel-Nexus | `v0.10.0` in the `fabric` optional extra (`pyproject.toml`, 2026-11-06) | Base dependencies remain deliberately empty. Nexus#402/#403 are merged; the Context broker remains default-disabled and uncommissioned. Nexus#405 is an unmerged consumer update. This is a declaration, not operational interoperability or a compatibility promise for experimental families |
 | Azazel-Boot | `v0.9.0rc1` in the `fabric` optional extra (`pyproject.toml`, ADR-0004; **this table's 2026-09-20 reading, not re-read for this release**) | The later 2026-10-25 observation below found no Fabric declaration at all; neither reading is claimed for this release. Exact-tag source pin, behind. An image lock is still required before a Boot implementation release |
 
 Verification note (2026-09-20): every row was read directly from that
@@ -139,14 +143,21 @@ but it meant "the reference release" was not a single answer until `v0.9.0`
 was cut. It was then `v0.9.0`, and is now `v0.10.0`; the rows above are dated
 observations and are re-read as each consumer re-pins.
 
-Verification note (2026-11-05, for `v0.10.0`): the Edge, Gadget, Knowledge and
+Historical verification note (2026-11-05, for `v0.10.0`): the Edge, Gadget, Knowledge and
 Deception rows were read from each repository's dependency declaration at
 `main` — Edge `2ef3ea8`, Gadget `551e1af`, Knowledge `8b3f350`, Deception
-`b27c097`. The Nexus and Boot rows were **not** re-read: they still carry the
-2026-09-20 reading, which the later 2026-10-25 observation under *What each
-product actually pins* already differs from (Nexus then pinned a pre-release in
+`b27c097`. At that time the Nexus and Boot rows were **not** re-read: they carried the
+2026-09-20 reading, which the later 2026-10-25 observation under *What each product actually pins* already differs from (Nexus then pinned a pre-release in
 its `fabric` extra; Boot declared nothing). Nothing about either is claimed for
 `v0.10.0`.
+
+Verification note (2026-11-06): dependency declarations at Edge `3e6ccf4`,
+Knowledge `a1baaff`, Deception `b6f98cf` and Nexus `cad4d32` name `v0.10.0`;
+Gadget `551e1af` remains on `v0.9.0`. Edge#545, Knowledge#122 and
+Deception#73 are merged pin updates. The Boot row retains its historical
+reading. The preceding 2026-11-05 note describes release-time observations,
+not the current Nexus declaration. Source pins alone certify no deployment
+or aggregated interoperability.
 
 ## Contract family adoption and the R1c gate
 
@@ -171,7 +182,7 @@ or a family that was never gated. Five are experimental:
 | `cti_contracts` | The producing side is Azazel-Edge's threat-intelligence export, which is not built and is not on a near-term roadmap (Edge FY2027+). A family whose producer does not exist cannot be gated on adoption | **Does not block the stable tag.** Its shape may change without a candidate bump |
 | `mio_contracts` | Neither side exists. Azazel-Nexus and Azazel-Boot name the module in their design documents as a *target*, and neither imports it | **Does not block the stable tag.** Same |
 | `external_security_contracts` | Introduced experimental by the Fabric#23 program decision: a family is stable only with one producer and two independent consumers, and this one (Fabric#25) has neither yet. Its intended producers and consumers (Knowledge#95, Deception#39, Nexus#16 adapters) are downstream work, and an external EDR/firewall feed is not a Fabric adopter | **Does not block the stable tag.** Its shape may change without a candidate bump, and it carries no compatibility promise |
-| `knowledge_context` | New in `v0.10.0rc1` (Fabric#76): the [Knowledge Context](knowledge-context-contracts.md) request/response semantic profile approved in Fabric#72 on 2026-11-04, admitted to `v0.10.0` as experimental by the release owner on 2026-11-05. It is a single module (`azazel_fabric.knowledge_context`), not a `*_contracts` package. Its intended producer (Azazel-Knowledge#116) and consumers (Azazel-MIO#47, Azazel-Nexus#402) are open candidate work pinned to pre-release Fabric commits, so nothing has adopted it from a tag | **Does not block a stable tag.** Its shape may change without a candidate bump, and it carries no compatibility promise. It joins the gate when it has a producer and two independent consumers on a released tag |
+| `knowledge_context` | New in `v0.10.0rc1` (Fabric#86, from the Fabric#76 proposal): the [Knowledge Context](knowledge-context-contracts.md) request/response semantic profile approved in Fabric#72 on 2026-11-04, admitted to `v0.10.0` as experimental by the release owner on 2026-11-05. It is a single module (`azazel_fabric.knowledge_context`), not a `*_contracts` package. As of 2026-11-06, its producer (Azazel-Knowledge#116), MIO#47 and Nexus#405 are unmerged candidates. Nexus#402/#403 are merged software integrations and the Nexus optional extra pins `v0.10.0`; the broker remains default-disabled and uncommissioned. This does not establish a commissioned producer plus two independent consumers | **Does not block a stable tag.** Its shape may change without a candidate bump, and it carries no compatibility promise. It joins the gate when it has a producer and two independent consumers on a released tag |
 | `provisioning_contracts` | Moved out of the gate by the release owner on 2026-11-05, recorded in Fabric#23. Until then it was gated, on the strength of one real user: Azazel-Nexus consumes `InterfaceIdentity` through `fabric_boundary.py`. No second, independent consumer exists or is scheduled (every public product and Azazel-Boot import none of it; Boot's `PLANNED_FABRIC_MODULES` entry is a presence probe), and no product produces it, so the row could not reach one producer and two consumers without new product design that `v0.9.0` does not wait for. The decision is to stop presenting a one-user family as a stable contract, not a finding that it has two | **Does not block the stable tag.** Its shape may change without a candidate bump, and it carries no compatibility promise: Azazel-Nexus's use of `InterfaceIdentity` is not covered by `v0.9.0`'s compatibility statement and should pin an exact tag and re-check on every move. It returns to the gate when it has a producer and two independent consumers |
 
 Experimental is not "unadopted". An empty row is a gap, not a design
@@ -194,6 +205,8 @@ is in its row above), not because its row was empty.
 | `provisioning_contracts` | — | — | **experimental** |
 
 ### What each product actually pins
+
+**Historical observation (2026-10-25); superseded by the 2026-11-06 table above.**
 
 An **observation**, not a verified fact. This repository cannot read another
 repository, so each row records the revision it was read at and is stale the
@@ -222,12 +235,11 @@ Four rows moved since the 2026-09-20 observation. Deception and Nexus now pin
 Azazel-Gadget was read this time rather than left `unknown`. Edge still pins
 `v0.9.0rc4`, so it skips `rc5`.
 
-The *Observed consumer declarations* table above, and the consumer status in
-`README.md` that `tests/test_consumer_pin_tables_agree.py` holds it to, were
-re-read on 2026-11-05 for Edge, Gadget, Knowledge and Deception. Their Nexus
-and Boot rows still record the 2026-09-20 reading — Nexus as a deliberate
-non-declaration included — and so differ from this observation; they are not
-re-read for `v0.10.0`, and nothing about either is claimed for it.
+The *Observed consumer declarations* table and README above now carry the
+2026-11-06 observations for Edge, Gadget, Knowledge, Deception and Nexus.
+Their current pins supersede this 2026-10-25 table; Boot retains its explicitly
+dated historical reading. The version-gate results below belong only to the
+2026-10-25 revisions.
 
 **Nexus, Deception and Edge each refuse any Fabric but the exact tag they
 pin.** Nexus's `fabric_boundary.py` refuses an installed Fabric whose

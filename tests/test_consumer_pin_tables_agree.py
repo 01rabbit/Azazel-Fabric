@@ -42,9 +42,8 @@ EXPECTED_CONSUMERS = {
     "Azazel-Nexus",
 }
 
-#: A pin is a backticked tag, or the explicit absence of one. Nexus declares
-#: nothing on purpose, and "no declaration" is a claim this test checks like
-#: any other -- an absence that quietly became a version would be drift too.
+#: A pin is a backticked tag, or the explicit absence of one. Base runtime
+#: dependencies and optional-extra declarations are separate observations.
 NO_DECLARATION = "—none—"
 
 _TAG = re.compile(r"`(v\d+\.\d+\.\d+(?:rc\d+)?)`")
@@ -109,16 +108,16 @@ def test_the_two_tables_name_the_same_pin(consumer, readme_pins, compat_pins):
     )
 
 
-def test_the_declared_absence_is_still_an_absence(readme_pins, compat_pins):
-    """Nexus's empty row is a design statement, not a gap to be filled.
+def test_nexus_optional_extra_records_the_observed_stable_pin(readme_pins, compat_pins):
+    """Nexus cad4d32 declares v0.10.0 in its optional fabric extra.
 
-    `dependencies = []` is deliberate there. If a tag ever appears in that
-    row, it is either a real adoption that both tables and the adoption
-    matrix must record, or somebody filled a blank because it looked unfinished.
+    The 2026-11-06 observation supersedes the old no-declaration row;
+    deliberately empty base dependencies do not imply absent optional extras.
+    Keep the exact observed value independently pinned in both documents.
     """
 
-    assert readme_pins["Azazel-Nexus"] == NO_DECLARATION
-    assert compat_pins["Azazel-Nexus"] == NO_DECLARATION
+    assert readme_pins["Azazel-Nexus"] == "v0.10.0"
+    assert compat_pins["Azazel-Nexus"] == "v0.10.0"
 
 
 #: The tag inside the install command, which is a bare `@vX.Y.Z` in a fenced
