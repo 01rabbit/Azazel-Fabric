@@ -26,12 +26,15 @@ materializes only Edge-approved environments.
 
 **Latest stable release: `v0.10.0`** — additive over `v0.9.0`: the
 experimental Knowledge Context request/response profile
-(`azazel_fabric.knowledge_context`, Fabric#76) and the producer captures —
+(`azazel_fabric.knowledge_context`, proposed in Fabric#76 and integrated by
+Fabric#86) and the producer captures —
 real Azazel-Edge and Azazel-Deception output — in `azazel_fabric.testing`
 (Fabric#23). Its contract surface is `v0.10.0rc1`'s unchanged. Five families
-are experimental and carry no compatibility promise. Open Knowledge Context
-integrations (Knowledge#116, MIO#47, Nexus#402) are outside its guarantee; see
-`CHANGELOG.md` `[0.10.0]`.
+are experimental and carry no compatibility promise. As of 2026-11-06,
+Nexus#402/#403 are merged software integrations; the Context broker remains default-disabled and uncommissioned. Knowledge#116,
+MIO#47 and Nexus#405 remain unmerged candidates. These integrations do not
+expand the experimental profile's guarantee. See the dated `[Unreleased]`
+note in `CHANGELOG.md`; `[0.10.0]` records the release-time state.
 
 `v0.9.0` — the `v0.9.0rc1` … `v0.9.0rc6` contract
 work made stable (outcome, effect, `DefensiveState`, and the stable deception
@@ -86,21 +89,20 @@ See [`docs/deception-contracts.md`](docs/deception-contracts.md).
 
 | Product | Current status |
 |---|---|
-| Azazel-Edge (AZ-01) | Observed dependency pin: `v0.10.0rc1` (a candidate) in `requirements/fabric.txt`; its tests read Deception's producer captures. Fabric remains optional for baseline Edge runtime — the arbiter runs with none installed. |
+| Azazel-Edge (AZ-01) | Observed dependency pin: `v0.10.0` (stable; observed 2026-11-06) in `requirements/fabric.txt`; its tests read Deception's producer captures. Fabric remains optional for baseline Edge runtime — the arbiter runs with none installed. |
 | Azazel-Gadget (AZ-02) | Shipping Fabric integration; observed dependency pin: `v0.9.0` (stable) for StatusView, which meets its needs. AZ-06 compatibility remains a constrained future `gadget-lite` subset. |
-| Azazel-Knowledge (AZ-04) | Observed API optional-dependency pin: `v0.10.0rc1` (a candidate); its tests read both producers' captures. Core remains dependency-minimal and advisory-only. |
-| Azazel-Deception (AZ-06) | Observed dependency pin: `v0.10.0rc1` (a candidate); its tests read Edge's producer captures. Live exposure remains disabled by default. |
+| Azazel-Knowledge (AZ-04) | Observed API optional-dependency pin: `v0.10.0` (stable; observed 2026-11-06); its tests read both producers' captures. Core remains dependency-minimal and advisory-only. |
+| Azazel-Deception (AZ-06) | Observed dependency pin: `v0.10.0` (stable; observed 2026-11-06); its tests read Edge's producer captures. Live exposure remains disabled by default. |
 | Azazel-Boot (AZ-03) | Observed `fabric` optional-extra pin: `v0.9.0rc1` (a candidate), **as read 2026-09-20** (a 2026-10-25 observation in the compatibility document found no declaration; not re-read for this release); an image lock is still required before a Boot implementation release. |
-| Azazel-Nexus (AZ-07) | **No declaration** (as read 2026-09-20; a 2026-10-25 observation in the compatibility document found a pre-release pin; not re-read for this release). No longer documentation-only — it carries code (`src/azazel_nexus/`) with `dependencies = []` on purpose. Its absence here is a design choice, not an omission. |
+| Azazel-Nexus (AZ-07) | Observed `fabric` optional-extra pin: `v0.10.0` (stable; `pyproject.toml`, 2026-11-06). Base `dependencies = []` remains deliberate; an optional declaration does not require Fabric for baseline runtime. Nexus#402/#403 are merged; the Context broker is default-disabled and uncommissioned. Nexus#405 is an unmerged consumer update. |
 
-Edge, Gadget, Knowledge and Deception were re-read on 2026-11-05 at `main`
-(Edge `2ef3ea8`, Gadget `551e1af`, Knowledge `8b3f350`, Deception `b27c097`);
-the three on `v0.10.0rc1` carry the contract surface `v0.10.0` makes stable. The Boot and Nexus
-rows carry the 2026-09-20 reading (Boot `5ad2f2e`, Nexus `6831d8b`), which a
-later observation already differs from; they were not re-read, and nothing
-about them is claimed for `v0.10.0`;
-[`docs/release-compatibility.md`](docs/release-compatibility.md) is the
-authority for this table and carries the reasoning behind each row.
+Dated dependency observations (2026-11-06): Edge `3e6ccf4`, Knowledge
+`a1baaff`, Deception `b6f98cf` and Nexus `cad4d32` declare `v0.10.0`;
+Gadget `551e1af` remains on `v0.9.0`. These source declarations are not
+installed-runtime or cross-product certification evidence. The Boot row
+retains its explicitly dated historical observation and was not re-read.
+[`docs/release-compatibility.md`](docs/release-compatibility.md) records the
+same pins, prior observations and evidence limits.
 
 ## Install
 

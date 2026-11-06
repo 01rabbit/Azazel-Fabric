@@ -8,7 +8,17 @@ release corresponds to a `vX.Y.Z` tag and GitHub Release on
 
 ## [Unreleased]
 
-Nothing yet.
+### Documentation — 2026-11-06
+
+- Refresh the README and release-compatibility consumer observations: Edge,
+  Knowledge, Deception and Nexus's optional `fabric` extra declare `v0.10.0`;
+  Gadget remains on `v0.9.0`.
+- Record Nexus#402/#403 as merged software integrations with a default-disabled,
+  uncommissioned Context broker; Knowledge#116, MIO#47 and Nexus#405 remain
+  unmerged candidates. Knowledge Context v1 was integrated by Fabric#86 and
+  remains experimental, without a compatibility promise.
+- Preserve `[0.10.0]` below as the release-time record. These dated observations
+  add no conformance certification, commissioning or runtime enablement.
 
 ## [0.10.0] — Stable release of the `v0.10.0` series
 
