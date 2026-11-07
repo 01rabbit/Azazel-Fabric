@@ -30,9 +30,9 @@ experimental Knowledge Context request/response profile
 Fabric#86) and the producer captures —
 real Azazel-Edge and Azazel-Deception output — in `azazel_fabric.testing`
 (Fabric#23). Its contract surface is `v0.10.0rc1`'s unchanged. Five families
-are experimental and carry no compatibility promise. As of 2026-11-06,
-Nexus#402/#403 are merged software integrations; the Context broker remains default-disabled and uncommissioned. Knowledge#116,
-MIO#47 and Nexus#405 remain unmerged candidates. These integrations do not
+are experimental and carry no compatibility promise. As of 2026-11-07, Nexus#402/#403/#405 and Knowledge#116/MIO#47 are
+merged software integrations. The Nexus Context broker remains
+default-disabled and uncommissioned. These integrations do not
 expand the experimental profile's guarantee. See the dated `[Unreleased]`
 note in `CHANGELOG.md`; `[0.10.0]` records the release-time state.
 
@@ -93,14 +93,14 @@ See [`docs/deception-contracts.md`](docs/deception-contracts.md).
 | Azazel-Gadget (AZ-02) | Shipping Fabric integration; observed dependency pin: `v0.9.0` (stable) for StatusView, which meets its needs. AZ-06 compatibility remains a constrained future `gadget-lite` subset. |
 | Azazel-Knowledge (AZ-04) | Observed API optional-dependency pin: `v0.10.0` (stable; observed 2026-11-06); its tests read both producers' captures. Core remains dependency-minimal and advisory-only. |
 | Azazel-Deception (AZ-06) | Observed dependency pin: `v0.10.0` (stable; observed 2026-11-06); its tests read Edge's producer captures. Live exposure remains disabled by default. |
-| Azazel-Boot (AZ-03) | Observed `fabric` optional-extra pin: `v0.9.0rc1` (a candidate), **as read 2026-09-20** (a 2026-10-25 observation in the compatibility document found no declaration; not re-read for this release); an image lock is still required before a Boot implementation release. |
-| Azazel-Nexus (AZ-07) | Observed `fabric` optional-extra pin: `v0.10.0` (stable; `pyproject.toml`, 2026-11-06). Base `dependencies = []` remains deliberate; an optional declaration does not require Fabric for baseline runtime. Nexus#402/#403 are merged; the Context broker is default-disabled and uncommissioned. Nexus#405 is an unmerged consumer update. |
+| Azazel-Boot (AZ-03) | No Fabric dependency declaration in current `pyproject.toml` (observed 2026-11-07). The former candidate pin is a dated historical observation in the compatibility document. Boot is a non-operational status/design scaffold, not an image builder. |
+| Azazel-Nexus (AZ-07) | Observed `fabric` optional-extra pin: `v0.10.0` (stable; `pyproject.toml`, 2026-11-06). Base `dependencies = []` remains deliberate; an optional declaration does not require Fabric for baseline runtime. Nexus#402/#403 are merged; the Context broker is default-disabled and uncommissioned. Nexus#405 is a merged consumer update; this does not establish commissioned Context interoperability. |
 
 Dated dependency observations (2026-11-06): Edge `3e6ccf4`, Knowledge
 `a1baaff`, Deception `b6f98cf` and Nexus `cad4d32` declare `v0.10.0`;
 Gadget `551e1af` remains on `v0.9.0`. These source declarations are not
-installed-runtime or cross-product certification evidence. The Boot row
-retains its explicitly dated historical observation and was not re-read.
+installed-runtime or cross-product certification evidence. The Boot row was re-read on 2026-11-07 against its current declaration;
+the compatibility document retains the older dated observations.
 [`docs/release-compatibility.md`](docs/release-compatibility.md) records the
 same pins, prior observations and evidence limits.
 
