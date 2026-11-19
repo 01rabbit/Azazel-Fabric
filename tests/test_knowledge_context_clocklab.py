@@ -24,9 +24,9 @@ def test_policy_rejects_non_contract_budget(value):
 
 def test_policy_digest_and_mismatch():
     c=ClockContract(5000)
-    assert ClockContract.from_dict(c.as_dict()) == c
+    assert ClockContract.from_dict(c.as_dict(), consumer_revision=2) == c
     d=c.as_dict(); d['skew_budget_us']=0
-    with pytest.raises(ValueError): ClockContract.from_dict(d)
+    with pytest.raises(ValueError): ClockContract.from_dict(d, consumer_revision=2)
 
 @pytest.mark.parametrize('delta,accepted', [(-5001,False),(-5000,True),(-4999,True),(0,True)])
 def test_generation_boundary_and_binding(delta, accepted):
@@ -81,7 +81,7 @@ def test_previous_policy_revision_and_id_fail_closed():
          'contract_id':'sha256:cf12dddea0953a51e8fb91b4524b6064118d1405a92601f3f89a8a8f28603de5'}
     assert c.as_dict()['schema']=='azazel-clocklab-policy/2'
     assert c.contract_id!=old['contract_id']
-    with pytest.raises(ValueError):ClockContract.from_dict(old)
+    with pytest.raises(ValueError):ClockContract.from_dict(old, consumer_revision=2)
     req,res=pair(c)
     for obj,model,is_request in [(req,KnowledgeContextRequestV2,True),
                                  (res,KnowledgeContextResponseV2,False)]:
@@ -89,3 +89,40 @@ def test_previous_policy_revision_and_id_fail_closed():
         with pytest.raises(ValueError):
             assert_response_correlates_v2(wrong if is_request else req,
                                          res if is_request else wrong,contract=c)
+
+
+@pytest.mark.parametrize('revision',[None,True,1,2.0,3,'2'])
+def test_new_policy_requires_explicit_strict_consumer_acknowledgement(revision):
+    c=ClockContract(5000)
+    with pytest.raises(ValueError):ClockContract.from_dict(c.as_dict(),consumer_revision=revision)
+
+
+def test_old_consumer_call_without_keyword_is_refused():
+    with pytest.raises(TypeError):ClockContract.from_dict(ClockContract(5000).as_dict())
+
+
+@pytest.mark.parametrize('body_revision',[None,True,1,2.0,3])
+def test_policy_body_requires_strict_consumer_revision(body_revision):
+    d=ClockContract(5000).as_dict();d['consumer_revision']=body_revision
+    with pytest.raises(ValueError,match='malformed'):
+        ClockContract.from_dict(d,consumer_revision=2)
+
+
+def test_pre_ack_policy_two_has_distinct_id_and_is_refused():
+    old={'schema':'azazel-clocklab-policy/2','skew_budget_us':5000,
+         'max_observation_age_ms':5000,
+         'contract_id':'sha256:62281d081b7905bc4447d2f920bdb504e88edfdc86300a01bcf76d6a80246e21'}
+    c=ClockContract(5000)
+    assert c.contract_id!=old['contract_id'] and c.as_dict()['consumer_revision']==2
+    with pytest.raises(ValueError):ClockContract.from_dict(old,consumer_revision=2)
+    req,res=pair(c);d=res.model_dump(mode='python');d['contract_id']=old['contract_id']
+    with pytest.raises(ValueError):assert_response_correlates_v2(req,KnowledgeContextResponseV2.model_validate(d),contract=c)
+
+
+@pytest.mark.parametrize('mutation',['missing','extra'])
+def test_policy_body_does_not_silently_normalize_revision_keys(mutation):
+    d=ClockContract(5000).as_dict()
+    if mutation=='missing':d.pop('consumer_revision')
+    else:d['ignored_revision']=2
+    with pytest.raises(ValueError,match='malformed'):
+        ClockContract.from_dict(d,consumer_revision=2)

@@ -34,7 +34,8 @@ class ClockContract:
             raise ValueError("clocklab age must be 5000ms")
 
     def _body(self) -> dict:
-        return {"schema": "azazel-clocklab-policy/2", "skew_budget_us": self.skew_budget_us,
+        return {"schema": "azazel-clocklab-policy/2", "consumer_revision": 2,
+                "skew_budget_us": self.skew_budget_us,
                 "max_observation_age_ms": self.max_observation_age_ms}
 
     @property
@@ -45,10 +46,16 @@ class ClockContract:
         return {**self._body(), "contract_id": self.contract_id}
 
     @classmethod
-    def from_dict(cls, value: dict) -> ClockContract:
+    def from_dict(cls, value: dict, *, consumer_revision: int) -> ClockContract:
+        # Old consumers delegate parsing to Fabric and otherwise silently gain
+        # a new contract ID while retaining weaker health semantics. Requiring
+        # an explicit code-level acknowledgement fences that mixed deployment.
+        if type(consumer_revision) is not int or consumer_revision != 2:
+            raise ValueError("clocklab consumer revision must be 2")
         if type(value) is not dict or set(value) != {
-            "schema", "skew_budget_us", "max_observation_age_ms", "contract_id"
-        } or value["schema"] != "azazel-clocklab-policy/2":
+            "schema", "consumer_revision", "skew_budget_us", "max_observation_age_ms", "contract_id"
+        } or value["schema"] != "azazel-clocklab-policy/2" or (
+            type(value["consumer_revision"]) is not int or value["consumer_revision"] != 2):
             raise ValueError("clocklab policy malformed")
         result = cls(value["skew_budget_us"], value["max_observation_age_ms"])
         if value["contract_id"] != result.contract_id:
