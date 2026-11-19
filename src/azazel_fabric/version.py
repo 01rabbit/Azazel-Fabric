@@ -8,7 +8,10 @@ release digest** (``release/*.digest.json.sig``). ``rc1``'s and ``rc6``'s
 signatures were added after their tags, so the ``rc6`` tag's own tree carries
 the manifest but not the ``.sig``.
 
-This is ``0.10.0``, the stable release of the ``v0.10.0`` series, and it is the
+The current ``0.10.1.dev0`` is an unpublished development build. It carries
+the explicit lab-only clock contract and offers no release digest or tag.
+
+``0.10.0`` was the stable release of the ``v0.10.0`` series, and is the
 tree ``release/v0.10.0.digest.json`` records. Its contract surface is
 ``v0.10.0rc1``'s unchanged: at the ``v0.10.0`` tag only ``version.py`` differs
 from ``rc1``. It is **additive** over ``v0.9.0``: the experimental Knowledge
@@ -65,4 +68,4 @@ one against a moved ``main`` would make it claim to be a digest of a tag it no
 longer matches, and would strand the signature that covers its current bytes.
 """
 
-__version__ = "0.10.0+u68.clocklab2"
+__version__ = "0.10.1.dev0"
