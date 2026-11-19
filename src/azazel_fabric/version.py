@@ -65,4 +65,4 @@ one against a moved ``main`` would make it claim to be a digest of a tag it no
 longer matches, and would strand the signature that covers its current bytes.
 """
 
-__version__ = "0.10.0+u67.clocklab1"
+__version__ = "0.10.0+u68.clocklab2"

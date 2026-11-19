@@ -72,3 +72,20 @@ def test_nested_subclass_rejected_before_dump_drops_state():
     extra=ExtraEntity(entity_type=entity.entity_type,value=entity.value)
     forged=req.model_copy(update={'entities':(extra,)})
     with pytest.raises(TypeError): canonical_clocklab_bytes(forged)
+
+
+def test_previous_policy_revision_and_id_fail_closed():
+    c=ClockContract(5000)
+    old={'schema':'azazel-clocklab-policy/1','skew_budget_us':5000,
+         'max_observation_age_ms':5000,
+         'contract_id':'sha256:cf12dddea0953a51e8fb91b4524b6064118d1405a92601f3f89a8a8f28603de5'}
+    assert c.as_dict()['schema']=='azazel-clocklab-policy/2'
+    assert c.contract_id!=old['contract_id']
+    with pytest.raises(ValueError):ClockContract.from_dict(old)
+    req,res=pair(c)
+    for obj,model,is_request in [(req,KnowledgeContextRequestV2,True),
+                                 (res,KnowledgeContextResponseV2,False)]:
+        d=obj.model_dump(mode='python');d['contract_id']=old['contract_id'];wrong=model.model_validate(d)
+        with pytest.raises(ValueError):
+            assert_response_correlates_v2(wrong if is_request else req,
+                                         res if is_request else wrong,contract=c)
